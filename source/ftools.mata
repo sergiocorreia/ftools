@@ -90,13 +90,13 @@ void Factor::panelsetup()
 	//   See https://www.wikiwand.com/en/Counting_sort
 	// - A better implementation can make this parallel for num_levels small
 
-	timer_on(89)
+	//timer_on(89)
 	p = J(num_obs, 1, .)
 	for (obs = 1; obs <= num_obs; obs++) {
 		level = levels[obs]
 		p[index[level] = index[level] + 1] = obs
 	}
-	timer_off(89)
+	//timer_off(89)
 }
 
 `DataFrame' Factor::sort(`DataFrame' data)
@@ -188,9 +188,9 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	`StringVector'			values
 
 	vars = tokens(varnames)
-	timer_on(60)
+	//timer_on(60)
 	data = __fload_data(vars, touse)
-	timer_off(60)
+	//timer_off(60)
 
 	// Are the variables integers (so maybe we can use the fast hash)?
 	for (i = integers_only = 1; i <= cols(vars); i++) {
@@ -201,10 +201,10 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 		}
 	}
 	
-	timer_on(61)
+	//timer_on(61)
 	F = _factor(data, integers_only, verbose, method,
 	            sort_levels, count_levels, hash_ratio)
-	timer_off(61)
+	//timer_off(61)
 	F.varlist = vars
 	F.touse = touse
 	F.varformats = F.varlabels = F.varvaluelabels = F.vartypes = J(1, cols(vars), "")
@@ -265,7 +265,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	assert_msg(count_levels == 0 | count_levels == 1, "count_levels")
 
 	// Compute upper bound for number of levels
-	timer_on(70)
+	//timer_on(70)
 	if (integers_only) {
 		min_max = colminmax(data)
 		delta = 1 :+ min_max[2, .] - min_max[1, .]
@@ -283,7 +283,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	else {
 		size0 = .
 	}
-	timer_off(70)
+	//timer_off(70)
 
 
 	max_numkeys1 = min((size0, num_obs))
@@ -313,7 +313,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	// Mata hard coded limit! (2,147,483,647 rows)
 	assert_msg(dict_size <= 2 ^ 31, "dict size exceeds Mata limits")
  
- 	timer_on(71)
+ 	//timer_on(71)
 	if (method == "hash0") {
 		F = __factor_hash0(data, verbose, dict_size, count_levels, min_max)
 	}
@@ -323,7 +323,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	else {
 		F = __factor_hash2(data, verbose, dict_size, sort_levels, max_numkeys1)
 	}
-	timer_off(71)
+	//timer_off(71)
 
 	F.num_obs = num_obs
 	assert_msg(rows(F.levels) == F.num_obs & cols(F.levels) == 1, "levels")
@@ -362,7 +362,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	max_val = min_max[2, .]
 
 	// Build the hash
-	timer_on(80)
+	//timer_on(80)
 	
 	// 2x speedup when K = 1 wrt the formula with [., K]
 	if (K == 1) {
@@ -389,18 +389,18 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	else {
 		dict = 1
 	}
-	timer_off(80)
+	//timer_off(80)
 
-	timer_on(81)
+	//timer_on(81)
 	levels = `selectindex'
-	timer_off(81)
+	//timer_off(81)
 
-	timer_on(82)
+	//timer_on(82)
 	num_levels = rows(levels)
 	dict[levels] = 1::num_levels
-	timer_off(82)
+	//timer_off(82)
 
-	timer_on(83)
+	//timer_on(83)
 	if (K == 1) {
 		keys = levels :+ (min_val - 1)
 	}
@@ -413,16 +413,16 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 		}
 		keys = keys :+ min_val
 	}
-	timer_off(83)
+	//timer_off(83)
 
-	timer_on(84)
+	//timer_on(84)
 	// faster than "levels = dict[hashes, .]"
 	levels = rows(dict) > 1 ? dict[hashes] : hashes
 
 	hashes = dict = . // Save memory
-	timer_off(84)
+	//timer_off(84)
 
-	timer_on(85)
+	//timer_on(85)
 	if (count_levels) {
 		counts = J(num_levels, 1, 0)
 		for (i = 1; i <= num_obs; i++) {
@@ -430,7 +430,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 			counts[j] = counts[j] + 1
 		}
 	}
-	timer_off(85)
+	//timer_off(85)
 
 	F = Factor()
 	F.num_levels = num_levels
@@ -463,7 +463,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	
 	assert(dict_size > 0 & dict_size < .)
 
-	timer_on(81)
+	//timer_on(81)
 	num_obs = rows(data)
 	num_vars = cols(data)
 	dict = J(dict_size, 1, 0)
@@ -471,9 +471,9 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	keys = J(max_numkeys, num_vars, missingof(data))
 	counts = J(max_numkeys, 1, 1) // keys are at least present once!
 	single_col = num_vars == 1
-	timer_off(81)
+	//timer_off(81)
 
-	timer_on(82)
+	//timer_on(82)
 	j = 0 // counts the number of levels; at the end j == num_levels
 	val = J(0, 0, .)
 	num_collisions = 0
@@ -594,14 +594,14 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 			last_key = key
 		} // end for >>>
 	} // end else >>>
-	timer_off(82)
+	//timer_off(82)
 
 	dict = data = . // save memory
 
 	keys = keys[| 1 , 1 \ j , . |]
 	counts = counts[| 1 \ j |]
 	
-	timer_on(83)
+	//timer_on(83)
 	if (sort_levels & j > 1) {
 		p = order(keys, 1..num_vars) // this is O(K log K) !!!
 		keys = keys[p, .] // _collate(keys, p)
@@ -609,7 +609,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 		levels = rows(levels) > 1 ? invorder(p)[levels] : 1
 	}
 	p = . // save memory
-	timer_off(83)
+	//timer_off(83)
 
 
 	if (verbose) {
@@ -650,16 +650,16 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	// dict_size = 2 ^ ceil(ln(dict_size) / ln(2)) // to a power of 2
 	assert(dict_size > 0 & dict_size < .)
 
-	timer_on(81)
+	//timer_on(81)
 	num_obs = rows(data)
 	num_vars = cols(data)
 	dict = J(dict_size, 1, 0)
 	levels = J(num_obs, 1, 0)
 	keys = J(max_numkeys, num_vars, missingof(data))
 	counts = J(max_numkeys, 1, 1) // keys are at least present once!
-	timer_off(81)
+	//timer_off(81)
 
-	timer_on(82)
+	//timer_on(82)
 	j = 0 // counts the number of levels; at the end j == num_levels
 	val = J(0, 0, .)
 	num_collisions = 0
@@ -725,14 +725,14 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 		levels[obs] = val
 		last_key = key
 	}
-	timer_off(82)
+	//timer_off(82)
 
 	dict = data = . // save memory
 
 	keys = keys[| 1 , 1 \ j , . |]
 	counts = counts[| 1 , 1 \ j , . |]
 	
-	timer_on(83)
+	//timer_on(83)
 	if (sort_levels) {
 		p = order(keys, 1..num_vars) // this is O(K log K) !!!
 		_collate(keys, p)
@@ -740,7 +740,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 		levels = invorder(p)[levels, .]
 	}
 	p = . // save memory
-	timer_off(83)
+	//timer_off(83)
 
 	if (verbose) {
 		msg = "{txt}(%s hash collisions - %4.2f{txt}%%)\n"
@@ -772,13 +772,13 @@ void store_levels(`String' varnames,
                   `Integer' hash_ratio)
 {
 	`Factor'		F
-	timer_on(50)
+	//timer_on(50)
 	F = factor(varnames, touse, verbose, method,
 	           sort_levels, 0, hash_ratio)
-	timer_off(50)
-	timer_on(51)
+	//timer_off(50)
+	//timer_on(51)
 	F.store_levels(newvar)
-	timer_off(51)
+	//timer_off(51)
 }
 
 `DataFrame' __fload_data(`Varlist' varlist,

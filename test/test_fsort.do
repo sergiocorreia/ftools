@@ -128,7 +128,7 @@ end
 // Benchmark
 	clear
 	timer clear
-	loc n = 50 * 1000 * 1000
+	loc n = 50 * 1000 // * 1000
 	crData `n' 0 // x1 ... x5
 	gen idx = _n
 	gen long index_bench = .

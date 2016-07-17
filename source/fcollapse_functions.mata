@@ -1,4 +1,19 @@
 // FCOLLAPSE - Aggregate Functions
+
+
+// panelsum() is an undocumented Mata function introduced in Stata 13
+// Since most of the time is not spent here, we don't save much by using it
+
+//if (c(stata_version) < 13) {
+//	loc panelsum
+//}
+//else{
+//	loc panelsum "return(length(weights) ? panelsum(data, weights, F.info) : panelsum(data, F.info))"
+//}
+
+// I disabled this for now because panelsum() is missing when all obs are missing (instead of being zero like with collapse)
+
+
 mata:
 mata set matastrict on
 
@@ -54,10 +69,9 @@ mata set matastrict on
 	return(results)
 }
 
-// TODO: use panelsum() here and for mean
-// http://www.statalist.org/forums/forum/general-stata-discussion/mata/1319628-making-mata-libraries-for-multiple-stata-versions-gracefully
 `Vector' aggregate_sum(`Factor' F, `Vector' data, `Vector' weights)
 {
+	`panelsum' // Hack
 	`Integer'	            i
 	`Vector'	            results
 	results = J(F.num_levels, 1, .)

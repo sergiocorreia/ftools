@@ -123,7 +123,7 @@ set niceness 10, permanently // default 5
 	clear
 	adopath + "./comparison"
 	timer clear
-	loc n = 20 * 1000 * 1000
+	loc n = 20 * 1000 // * 1000
 	crData `n' 10 // x1 ... x5; y1..
 	loc all_vars `" x1 "x2 x3" x4 x5 "'
 

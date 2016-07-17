@@ -106,7 +106,7 @@ set trace off
 
 	clear
 	timer clear
-	loc n = 20 * 1000 * 1000
+	loc n = 20 * 1000 // * 1000
 	crData `n' 0 // x1 ... x5
 	loc vars x5 // x2 x3 // x1 or x5
 

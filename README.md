@@ -86,6 +86,7 @@ Notes:
 - The gap is larger if you want to collapse fewer variables
 - The gap is larger if you want to collapse to fewer levels
 - The gap is larger for more complex stats. (such as median)
+- `compress`ing the by() identifiers beforehand might lead to significant improvements in speed (by allowing the use of the internal hash0 function instead of hash1).
 
 ### collapse: alternative benchmark
 
