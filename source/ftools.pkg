@@ -1,0 +1,54 @@
+v 3
+
+d ftools. Alternatives to common Stata commands optimized for large datasets
+d
+d Author: Sergio Correia. Fuqua School of Business, Duke University
+d Support: sergio.correia@gmail.com
+d
+d ftools consists of a Mata file and several Stata commands:
+d
+d The Mata file creates identifiers (factors) from variables by using
+d hash functions instead of sorting the data, so it runs in time O(N)
+d and not in O(N log N).
+d
+d The Stata commands exploit this to avoid -sort- operations, 
+d at the cost of being slower for small datasets (mainly because of the
+d cost involved in moving data from Stata to Mata).
+d
+d Implemented commands are fcollapse, fegen group, and fsort.
+d Note that most of the capabilities of -levels- and -contract-
+d are already supported by these commands.
+d
+d Possible commands include more -egen- functions and -merge- and
+d -reshape- alternatives.
+d
+d KW: levels
+d KW: collapse
+d KW: contract
+d KW: egen
+d KW: sort
+d KW: factor variables
+d KW: mata
+d
+d Requires: Stata version 11.2
+d
+d Distribution-Date: 20160716
+d
+
+f ftools.mata
+f ftools.sthlp
+f fcollapse.ado
+f fcollapse.sthlp
+f fsort.ado
+f fsort.sthlp
+f fegen.ado
+f fegen.sthlp
+f fegen.ado
+f fegen_group.ado
+
+f ftools.mlib
+f ftools.ado
+f ftools_type_aliases.mata
+f fcollapse_main.mata
+f fcollapse_functions.mata
+
