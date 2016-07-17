@@ -25,7 +25,7 @@ pr ftools
 
 	if ("`flavor'" == "dummy") {
 		di as text "(compiling fake lftools.mlib)"
-		// assert `version' < 12
+		assert `version' < 12
 		qui findfile "ftools_dummy.mata"
 		loc fn "`r(fn)'"
 		run "`fn'"
