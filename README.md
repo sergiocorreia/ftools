@@ -2,7 +2,7 @@
 
 **ftools** is two things:
 
-1. A Mata called *Factor* that creates identifiers ("factors") from a set of variables or vectors. It is very fast for big datasets because it avoids sorting the data.
+1. A Mata class (*Factor*) that creates identifiers ("factors") from a set of variables or vectors. It is very fast for big datasets because it avoids sorting the data.
 2. A list of Stata commands that exploit the *Factor* class,
 providing alternatives to common commands such as collapse,
 contract, egen group, sort, levelsof, etc.
