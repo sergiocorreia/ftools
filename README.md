@@ -50,11 +50,11 @@ Then, we compare five different variants of egen group:
 
 | Method               | Min    | Avg    |
 |----------------------|--------|--------|
-| egen id = group(x)           | 49.174 | 51.263 |
-| fegen id = group(x)  | 1.438  | 1.532  |
-| fegen id = group(x), method(hash0)      | 1.414  | 1.597  |
-| fegen id = group(x), method(hash1)      | 8.868  | 9.346  |
-| fegen id = group(x), method(stata)     | 34.733 | 35.43  |
+| egen id = group(x)           | 49.17 | 51.26 |
+| fegen id = group(x)  | 1.44  | 1.53  |
+| fegen id = group(x), method(hash0)      | 1.41  | 1.60  |
+| fegen id = group(x), method(hash1)      | 8.87  | 9.35  |
+| fegen id = group(x), method(stata)     | 34.73 | 35.43  |
 
 Our variant takes roughly 3% of the time of egen group.
 If we were to choose a more complex hash method, it would take 18% of the time.
@@ -75,17 +75,37 @@ On a dataset of similar size, we run `collapse (sum) y1-y15`:
 |--------------------|-------|
 | collapse           | 50.01 |
 | fcollapse          | 17.45 |
-| fcollapse, pool(1) | 20.47 |
+| fcollapse, pool(5) | 20.47 |
 
 We can see that `fcollapse` takes roughly a third of the time of `collapse` (although using more memory when
 moving data from Stata to Mata).
-Alternatively, the `pool(1)` option uses very little memory (similar to `collapse`) at also very good speeds.
+Alternatively, the `pool(#)` option uses very little memory (similar to `collapse`) at also very good speeds.
 
 Notes:
 
 - The gap is larger if you want to collapse fewer variables
 - The gap is larger if you want to collapse to fewer levels
 - The gap is larger for more complex stats. (such as median)
+
+### collapse: alternative benchmark
+
+We can run a more complex query, also with 20mm obs.:
+
+1. ```qui sumup x3 y1-y3, by(`vars') statistics(mean median)```
+2. ```collapse (sum) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3, by(x3) fast```
+3. ```fcollapse (sum) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3, by(x3) fast```
+4. ```fcollapse (sum) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3, by(x3) fast pool(5)```
+
+| Method              | Avg.  | % of collapse |
+|---------------------|-------|------------|
+| [sumup](https://github.com/matthieugomez/stata-sumup)               | 43.77 | 56.0       |
+| collapse            | 78.18 | 100.0      |
+| fcollapse           | 26.66 | 34.1       |
+| fcollapse, pool(15) | 27.25 | 34.9       |
+
+*(Note: `sumup` might be better for medium-sized datasets, although some benchmarking is needed)*
+
+And we can see that the results are similar
 
 ## fsort
 
