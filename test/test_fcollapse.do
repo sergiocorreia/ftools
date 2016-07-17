@@ -123,12 +123,12 @@ set niceness 10, permanently // default 5
 	clear
 	adopath + "./comparison"
 	timer clear
-	loc n = 50 * 1000 * 1000
+	loc n = 20 * 1000 * 1000
 	crData `n' 10 // x1 ... x5; y1..
 	loc all_vars `" x1 "x2 x3" x4 x5 "'
 
-	loc all_vars x1 // `" "x2 x3" "' // x1
-	loc clist (sum) x3 y* // (median) x5 (max) z=x5
+	loc all_vars x3 // `" "x2 x3" "' // x1
+	loc clist (mean) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3 // (median) x5 (max) z=x5
 	
 	* prevent this bug:
 	* http://www.statalist.org/forums/forum/general-stata-discussion/general/1312288-stata-mp-slows-the-sort
@@ -141,6 +141,10 @@ set niceness 10, permanently // default 5
 		preserve
 		timer clear
 		di as text "{bf:`vars'}"
+		
+		timer on 1
+		qui sumup x3 y1-y3, by(`vars') statistics(mean median)
+		timer off 1
 
 		timer on 2
 		collapse `clist', by(`vars') fast
@@ -148,9 +152,7 @@ set niceness 10, permanently // default 5
 		li in 1/5
 		li in -5/-1
 		
-		sleep 5000
 		restore, preserve
-		sleep 5000
 
 		di "(starting fcollapse)"
 		timer on 3
@@ -160,9 +162,7 @@ set niceness 10, permanently // default 5
 		li in -5/-1
 		//timer list
 		//timer clear
-		sleep 5000
 		restore
-		sleep 5000
 		
 		timer on 4
 		fcollapse `clist', by(`vars') verbose pool(5) fast

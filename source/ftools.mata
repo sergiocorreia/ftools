@@ -181,7 +181,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	`Varlist'				vars
 	`DataFrame'				data
 	`Integer'				i
-	`Boolean'				are_ints
+	`Boolean'				integers_only
 	`String'				type, var, lbl
 	`Dict'					map
 	`Vector'				keys
@@ -193,16 +193,16 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	timer_off(60)
 
 	// Are the variables integers (so maybe we can use the fast hash)?
-	for (i = are_ints = 1; i <= cols(vars); i++) {
+	for (i = integers_only = 1; i <= cols(vars); i++) {
 		type = st_vartype(vars[i])
 		if (!anyof(("byte", "int", "long"), type)) {
-			are_ints = 0
+			integers_only = 0
 			break
 		}
 	}
 	
 	timer_on(61)
-	F = _factor(data, are_ints, verbose, method,
+	F = _factor(data, integers_only, verbose, method,
 	            sort_levels, count_levels, hash_ratio)
 	timer_off(61)
 	F.varlist = vars
@@ -232,7 +232,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 }
 
 `Factor' _factor(`DataFrame' data,
-               | `Boolean' are_ints,
+               | `Boolean' integers_only,
                  `Boolean' verbose,
                  `String' method,
                  `Boolean' sort_levels,
@@ -247,7 +247,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	`Matrix'				min_max
 	`RowVector'				delta
 	`String'				msg
-	if (are_ints == .) are_ints = 0
+	if (integers_only == .) integers_only = 0
 	if (verbose == .) verbose = 0
 	if (method == "") method = "mata"
 	if (sort_levels == .) sort_levels = 1
@@ -266,7 +266,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 
 	// Compute upper bound for number of levels
 	timer_on(70)
-	if (are_ints) {
+	if (integers_only) {
 		min_max = colminmax(data)
 		delta = 1 :+ min_max[2, .] - min_max[1, .]
 		for (i = size0 = 1; i <= num_vars; i++) {

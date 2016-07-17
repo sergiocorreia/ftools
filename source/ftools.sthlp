@@ -40,6 +40,16 @@
 {it:hash_ratio}]{cmd:)}
 
 {p 8 16 2}
+{it:class Factor scalar}
+{bind: }{cmd:_factor(}{it:data} [{cmd:,}
+{it:integers_only}{cmd:,} 
+{it:verbose}{cmd:,} 
+{it:method}{cmd:,} 
+{it:sort_levels}{cmd:,} 
+{it:count_levels}{cmd:,} 
+{it:hash_ratio}]{cmd:)}
+
+{p 8 16 2}
 {it:void}{bind: }{cmd:store_levels(}
 {it:varnames}{cmd:,}
 {it:newvar} [{cmd:,}
@@ -60,16 +70,14 @@
 {synopt:{it:real} sort_levels}set to 0 under {it:hash1} to increase speed, but the new levels will not match the order of the varlist{p_end}
 {synopt:{it:real} count_levels}set to 0 under {it:hash0} to increase speed, but the {it:F.counts} vector will not be generated{p_end}
 {synopt:{it:real} hash_ratio}(advanced) size of the hash vector compared to the maximum number of keys (often num. obs.){p_end}
+
+{synopt:{it:string} data}transmorphic matrix with the group identifiers{p_end}
+{synopt:{it:string} integers_only}whether {it:data} is numeric and takes only {it:integers} or not (unless you are sure of the former, set it to 0){p_end}
 {p2colreset}{...}
 
 
 {marker properties}{...}
 {title:Properties and methods}
-
-{pstd}
-Note: if you just downloaded the package and want to use the
-Mata functions directly (instead of the Stata commands),
-run {stata ftools} to create the library.
 
 {pstd}
 First, create a Factor object:
@@ -118,8 +126,16 @@ but calls {cmd:F.panelsetup()} if required; {it:data} is a {it:transmorphic matr
 {synopt:{it:real vector} F{cmd:.p}}equivalent to {cmd:order(F.levels)}
 but implemented with a counting sort that is asymptotically
 faster ({it:O(N)} instead of {it:O(N log N)}{p_end}
-
 {p2colreset}{...}
+
+
+{pstd}Notes:
+
+{synoptset 3 tabbed}{...}
+{synopt:- }If you just downloaded the package and want to use the Mata functions directly (instead of the Stata commands), run {stata ftools} to create the library.{p_end}
+{synopt:- }If you already have your data in Mata, use {cmd:F = _factor(data)} instead of {cmd:F = factor(varlist)}{p_end}
+
+
 
 {marker description}{...}
 {title:Description}
