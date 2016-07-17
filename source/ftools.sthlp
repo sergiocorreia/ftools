@@ -19,6 +19,7 @@
 {viewerjumpto "Remarks" "ftools##remarks"}{...}
 {viewerjumpto "Source code" "ftools_source"}{...}
 {viewerjumpto "Author" "ftools##contact"}{...}
+
 {title:Title}
 
 {p2colset 5 15 20 2}{...}
@@ -64,6 +65,11 @@
 
 {marker properties}{...}
 {title:Properties and methods}
+
+{pstd}
+Note: if you just downloaded the package and want to use the
+Mata functions directly (instead of the Stata commands),
+run {stata ftools} to create the library.
 
 {pstd}
 First, create a Factor object:

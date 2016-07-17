@@ -67,6 +67,7 @@ program define Parse
 	}
 end
 
+ftools check
 exit
 /*
 	Note, the utility routine should not present unnecessary messages

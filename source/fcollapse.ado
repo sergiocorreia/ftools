@@ -56,7 +56,7 @@ pr Inner
 	cap qui mata: mata which _mm_quantile()
 	loc rc = c(rc)
 	if (`rc') {
-		di as error "SSC Package Moremata required (to compute the quantiles)"
+		di as error "SSC Package Moremata required (to compute quantiles)"
 		di as smcl "{err}To install: {stata ssc install moremata}"
 		error `rc'
 	}
@@ -217,3 +217,4 @@ findfile "fcollapse_functions.mata"
 include "`r(fn)'"
 findfile "fcollapse_main.mata"
 include "`r(fn)'"
+exit

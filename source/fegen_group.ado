@@ -107,3 +107,6 @@ pr Group_FirstPrinciples, sortpreserve
 	}
 	qui compress `id'
 end
+
+ftools check
+exit

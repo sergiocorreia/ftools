@@ -7,13 +7,24 @@
 	findfile "ftools_type_aliases.mata"
 	include "`r(fn)'"
 	set matadebug off
-	//set matastrict on // , permanently
-	//capture erase "lftools.mlib"
-	//copy "ftools.mata" "ftools_source.sthlp", replace
+
+// selectindex() appeared on Stata 13
+// For lower versions, we'll use a slower alternative
+// (how much slower?!)
+loc selectindex "selectindex(dict)"
+if (c(stata_version) < 13) {
+	loc selectindex "select(1::rows(dict), dict)"
+}
 
 mata:
-//mata clear
+mata clear
 mata set matastrict on
+mata set mataoptimize on
+mata set matalnum off
+
+// Taken from David Roodman's boottest
+string scalar ftools_stata_version() return("`c(stata_version)'")
+
 
 // Main class ----------------------------------------------------------------
 
@@ -381,7 +392,7 @@ void Factor::store_keys(| sort_by_keys)
 	timer_off(80)
 
 	timer_on(81)
-	levels = selectindex(dict)
+	levels = `selectindex'
 	timer_off(81)
 
 	timer_on(82)
@@ -811,11 +822,6 @@ void __fstore_data(`DataFrame' data,
 		if (touse == "") st_store(., idx, data)
 		else st_store(., idx, touse, data)
 	}
-}
-
-real ftools_needs_compile()
-{
-	return(0)
 }
 end
 

@@ -35,7 +35,7 @@ d
 d Distribution-Date: 20160716
 d
 
-f ftools.mata
+f ftools.ado
 f ftools.sthlp
 f fcollapse.ado
 f fcollapse.sthlp
@@ -43,12 +43,9 @@ f fsort.ado
 f fsort.sthlp
 f fegen.ado
 f fegen.sthlp
-f fegen.ado
 f fegen_group.ado
 
-f ftools.mlib
-f ftools.ado
 f ftools_type_aliases.mata
+f ftools.mata
 f fcollapse_main.mata
 f fcollapse_functions.mata
-

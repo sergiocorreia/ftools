@@ -44,3 +44,6 @@ pr fsort
 	mata: mata drop F
 	sort `varlist'
 end
+
+ftools check
+exit

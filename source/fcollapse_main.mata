@@ -55,8 +55,9 @@ void f_collapse(`Factor' F,
 	}
 
 	// Load variables
-	niceness = st_numscalar("c(niceness)")
-	stata("set niceness 10")
+	niceness = st_numscalar("c(niceness)") // requires stata 13+
+	if (length(niceness) == 0) niceness = .
+	stata("cap set niceness 10") // requires stata 13+
 	data_cstore = asarray_create("real", 1)
 	var_positions = asarray_create("string", 1)
 	num_obs = st_nobs()
@@ -168,6 +169,6 @@ void f_collapse(`Factor' F,
 		st_varlabel(targets[i], target_labels[i])
 		st_varformat(targets[i], target_formats[i])
 	}
-	stata(sprintf("set niceness %s", strofreal(niceness)))
+	stata(sprintf("cap set niceness %s", strofreal(niceness)))
 }
 end

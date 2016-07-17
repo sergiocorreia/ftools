@@ -3,12 +3,16 @@
 cap pr drop ftools
 pr ftools
 	args flavor
+	if ("`flavor'" == "") loc flavor check
 
-	* Check if we need to rerun
+	* Check if we need to recompile
 	if ("`flavor'" == "check") {
-		mata: st_local("needs_compile", strofreal(ftools_needs_compile()))
-		assert inlist(`needs_compile', 0, 1)
-		if (!`needs_compile') exit
+		cap mata: mata drop ftools_stata_version()
+		loc compiled_with 0
+		cap mata: st_local("compiled_with", ftools_stata_version())
+		_assert inlist(`c(rc)', 0, 3499), msg("ftools check: unexpected error")
+		if (`compiled_with' == c(stata_version)) exit
+		* If we reach this point, we need to recompile
 		local flavor compile
 	}
 
@@ -23,25 +27,24 @@ pr ftools
 	        cap findfile "`mlib'"
 	}
 
-	if ("`flavor'" == "dummy") {
-		di as text "(compiling fake lftools.mlib)"
-		assert `version' < 12
-		qui findfile "ftools_dummy.mata"
-		loc fn "`r(fn)'"
-		run "`fn'"
-		qui mata: mata mlib create lftools  , dir(.) replace
-		qui mata: mata mlib add lftools *() , dir(.) complete
-		mata: mata describe using lftools
-	}
-	else {
-		di as text "(compiling lftools.mlib for Stata `version')"
-		qui findfile "ftools.mata"
-		loc fn "`r(fn)'"
-		run "`fn'"
-		loc path = c(sysdir_plus) + c(dirsep) + "l"
+	di as text "(compiling lftools.mlib for Stata `version')"
+	qui findfile "ftools.mata"
+	loc fn "`r(fn)'"
+	run "`fn'"
+	loc path = c(sysdir_plus) + c(dirsep) + "l"
+	cap {
 		qui mata: mata mlib create lftools  , dir("`path'") replace
 		qui mata: mata mlib add lftools *() , dir("`path'") complete
-		// mata: mata describe using lftools
+	}
+	if (c(rc)) {
+		// Exit with error but still save the file somewhere
+		di as error `"could not save file in "`path'"; saving it in ".""'
+		qui mata: mata mlib create lftools  , dir(.) replace
+		qui mata: mata mlib add lftools *() , dir(.) complete
+		qui findfile lftools.mlib
+		loc fn `r(fn)'
+		di as text `"(library saved in `fn')"'
+		exit 603
 	}
 
 	* Verify
