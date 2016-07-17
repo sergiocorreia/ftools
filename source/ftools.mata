@@ -121,7 +121,7 @@ void Factor::store_levels(`Varname' newvar)
 	__fstore_data(levels, newvar, type, touse)
 }
 
-void Factor::store_keys(| sort_by_keys)
+void Factor::store_keys(| `Integer' sort_by_keys)
 {
 	`String'				lbl
 	`Integer'				i

@@ -1,0 +1,2331 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Git\ftools\test\benchmarks.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}17 Jul 2016, 03:33:15
+{txt}
+{com}. 
+. do test_mata
+{txt}
+{com}. pr drop _all
+{txt}
+{com}. clear all
+{txt}
+{com}. set more off
+{txt}
+{com}. include "test_utils.do"
+{txt}
+{com}. 
+. // -------------------------
+. // Programs
+. 
+. cap pr drop crData
+{txt}
+{com}. pr crData
+{txt}  1{com}.         args n k
+{txt}  2{com}.         loc kk = 2^`=`k'-1'
+{txt}  3{com}.         clear
+{txt}  4{com}.         qui set obs `n'
+{txt}  5{com}.         noi di "(obs set)"
+{txt}  6{com}.         loc m = ceil(`n' / 10)
+{txt}  7{com}.         //set seed 234238921
+.         *gen long x1 = ceil(uniform()*`m')
+.         gen long x1 = ceil(uniform()*10000) * 100
+{txt}  8{com}. 
+.         gen int x2 = ceil(uniform()*3000)
+{txt}  9{com}.         gen byte x3 = ceil(uniform()*100)
+{txt} 10{com}.         gen str x4 = "u" + string(ceil(uniform()*100), "%5.0f")
+{txt} 11{com}.         gen long x5 = ceil(uniform()*5000)
+{txt} 12{com}.         // compress
+.         noi di "(Xs set)"
+{txt} 13{com}. 
+.         forv i=1/`k' {c -(}
+{txt} 14{com}.                 gen double y`i' = 123
+{txt} 15{com}.         {c )-}
+{txt} 16{com}. 
+.         loc obs_k = ceil(`c(N)' / 1000)
+{txt} 17{com}. end
+{txt}
+{com}. 
+. cap pr drop FactorsAgree
+{txt}
+{com}. pr FactorsAgree, sortpreserve
+{txt}  1{com}.         args id1 id2
+{txt}  2{com}.         tempvar ok
+{txt}  3{com}.         
+.         bys `id1' (`id2'): gen byte `ok' = `id2'[1] == `id2'[_N]
+{txt}  4{com}.         assert `ok' == 1
+{txt}  5{com}.         drop `ok'
+{txt}  6{com}.         
+.         bys `id2' (`id1'): gen byte `ok' = `id1'[1] == `id1'[_N]
+{txt}  7{com}.         assert `ok' == 1
+{txt}  8{com}.         drop `ok'
+{txt}  9{com}. end
+{txt}
+{com}. 
+. cap pr drop ValidateFactor
+{txt}
+{com}. pr ValidateFactor
+{txt}  1{com}.         syntax varlist [in] [if], [factor(string) method(string)]
+{txt}  2{com}.         preserve
+{txt}  3{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OPTIONS]{c )-} {c -(}res{c )-}`0'"
+{txt}  4{com}.         if ("`factor'" == "") {c -(}
+{txt}  5{com}.                 loc factor F
+{txt}  6{com}.         {c )-}
+{txt}  7{com}.         if ("`in'`if'" != "") {c -(}
+{txt}  8{com}.                 marksample touse
+{txt}  9{com}.                 cou if `touse'
+{txt} 10{com}.                 loc num_obs = r(N)
+{txt} 11{com}.         {c )-}
+{txt} 12{com}.         else {c -(}
+{txt} 13{com}.                 loc num_obs = c(N)
+{txt} 14{com}.         {c )-}
+{txt} 15{com}.         // factor(varlist, touse, verbose, method, sort_levels, count_levels, hash_ratio)
+.         loc cmd mata: `factor' = factor("`varlist'", "`touse'", 1, "`method'")
+{txt} 16{com}.         di as res `"          `cmd'"'
+{txt} 17{com}.         `cmd'
+{txt} 18{com}.         loc cmd mata: `factor'.store_levels("new_id")
+{txt} 19{com}.         di as res `"          `cmd'"'
+{txt} 20{com}.         `cmd'
+{txt} 21{com}.         loc cmd mata: `factor'.panelsetup()
+{txt} 22{com}.         di as res `"          `cmd'"'
+{txt} 23{com}.         `cmd'
+{txt} 24{com}. 
+.         di as smcl "{c -(}txt{c )-}{c -(}bf:[TESTING] {c )-}" _c
+{txt} 25{com}. 
+.         // Output:
+.         // num_levels num_obs touse varlist
+.         // levels keys counts info p
+.         di as res "F.num_obs " _c
+{txt} 26{com}.         mata: assert(`factor'.num_obs == `num_obs')
+{txt} 27{com}.         egen long benchmark_id = group(`varlist')
+{txt} 28{com}.         di as res "F.levels " _c
+{txt} 29{com}.         assert benchmark_id == new_id
+{txt} 30{com}.         
+.         gen long i = _n
+{txt} 31{com}.         sort benchmark_id, stable
+{txt} 32{com}.         mata: benchmark_id = st_data(., "benchmark_id")
+{txt} 33{com}.         sort i
+{txt} 34{com}.         drop i
+{txt} 35{com}. 
+.         gen byte counts = 1
+{txt} 36{com}.         collapse (first) `varlist' (count) counts , by(benchmark_id)
+{txt} 37{com}.         di as res "F.num_levels " _c
+{txt} 38{com}.         loc num_levels = c(N)
+{txt} 39{com}.         mata: assert(`factor'.num_levels == `num_levels')
+{txt} 40{com}.         di as res "F.touse " _c
+{txt} 41{com}.         mata: assert(`factor'.touse == "`touse'")
+{txt} 42{com}.         di as res "F.varlist " _c
+{txt} 43{com}.         mata: assert(`factor'.varlist == tokens("`varlist'"))
+{txt} 44{com}.         di as res "F.keys " _c
+{txt} 45{com}.         mata: benchmark_keys = __fload_data("`varlist'")
+{txt} 46{com}.         mata: assert(benchmark_keys == `factor'.keys)
+{txt} 47{com}.         di as res "F.counts " _c
+{txt} 48{com}.         mata: benchmark_counts = st_data(., "counts")
+{txt} 49{com}.         mata: assert(benchmark_counts == `factor'.counts)
+{txt} 50{com}.         di as res "F.offsets "
+{txt} 51{com}.         sort benchmark_id
+{txt} 52{com}.         mata: assert(panelsetup(benchmark_id, 1) == `factor'.info)
+{txt} 53{com}. 
+.         // note: order is not a stable sort so we also sort by _n
+.         mata: assert(`factor'.p == order((`factor'.levels, (1::`factor'.num_obs)), 1..2) )
+{txt} 54{com}. 
+.         // same for offsets, p
+.         mata: mata drop `factor'
+{txt} 55{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OK]{c )-}"
+{txt} 56{com}. end
+{txt}
+{com}. {txt}
+{com}. cls
+{txt}
+{com}. 
+. // -------------------------
+. 
+. sysuse auto, clear
+{txt}(1978 Automobile Data)
+
+{com}. loc vars turn trunk
+{txt}
+{com}. replace trunk = 5 if trunk==17
+{txt}(8 real changes made)
+
+{com}. gen m1 = substr(make, 1, 1)
+{txt}
+{com}. gen m2 = "x" + string(foreign)
+{txt}
+{com}. 
+. // -------------------------
+. 
+. ValidateFactor turn
+{txt}{bf:[OPTIONS]} {res}turn
+          mata: F = factor("turn", "", 1, "")
+{txt}(obs: {res}74{txt}; levels: {res}18{txt};{txt} method: {res}hash0{txt}; dict size: {res}21{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor turn, method(hash0)
+{txt}{bf:[OPTIONS]} {res}turn, method(hash0)
+          mata: F = factor("turn", "", 1, "hash0")
+{txt}(obs: {res}74{txt}; levels: {res}18{txt};{txt} method: {res}hash0{txt}; dict size: {res}21{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor turn, method(hash1)
+{txt}{bf:[OPTIONS]} {res}turn, method(hash1)
+          mata: F = factor("turn", "", 1, "hash1")
+{txt}(0 hash collisions - 0.00{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}18{txt};{txt} method: {res}hash1{txt}; dict size: {res}105{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor turn, method(hash2)
+{txt}{bf:[OPTIONS]} {res}turn, method(hash2)
+          mata: F = factor("turn", "", 1, "hash2")
+{txt}(0 hash collisions - 0.00{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}18{txt};{txt} method: {res}hash2{txt}; dict size: {res}105{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor turn trunk
+{txt}{bf:[OPTIONS]} {res}turn trunk
+          mata: F = factor("turn trunk", "", 1, "")
+{txt}(obs: {res}74{txt}; levels: {res}55{txt};{txt} method: {res}hash0{txt}; dict size: {res}399{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor turn trunk, method(hash0)
+{txt}{bf:[OPTIONS]} {res}turn trunk, method(hash0)
+          mata: F = factor("turn trunk", "", 1, "hash0")
+{txt}(obs: {res}74{txt}; levels: {res}55{txt};{txt} method: {res}hash0{txt}; dict size: {res}399{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor turn trunk, method(hash1)
+{txt}{bf:[OPTIONS]} {res}turn trunk, method(hash1)
+          mata: F = factor("turn trunk", "", 1, "hash1")
+{txt}(6 hash collisions - 8.11{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}55{txt};{txt} method: {res}hash1{txt}; dict size: {res}370{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor turn trunk, method(hash2)
+{txt}{bf:[OPTIONS]} {res}turn trunk, method(hash2)
+          mata: F = factor("turn trunk", "", 1, "hash2")
+{txt}(6 hash collisions - 8.11{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}55{txt};{txt} method: {res}hash2{txt}; dict size: {res}370{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor m1
+{txt}{bf:[OPTIONS]} {res}m1
+          mata: F = factor("m1", "", 1, "")
+{txt}(3 hash collisions - 4.05{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}14{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor m1, method(hash0)
+{txt}{bf:[OPTIONS]} {res}m1, method(hash0)
+          mata: F = factor("m1", "", 1, "hash0")
+{txt}method hash0 cannot be applied, using hash1
+{txt}(3 hash collisions - 4.05{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}14{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor m1, method(hash1)
+{txt}{bf:[OPTIONS]} {res}m1, method(hash1)
+          mata: F = factor("m1", "", 1, "hash1")
+{txt}(3 hash collisions - 4.05{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}14{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor m1, method(hash2)
+{txt}{bf:[OPTIONS]} {res}m1, method(hash2)
+          mata: F = factor("m1", "", 1, "hash2")
+{txt}(3 hash collisions - 4.05{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}14{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. 
+. ValidateFactor m1 m2
+{txt}{bf:[OPTIONS]} {res}m1 m2
+          mata: F = factor("m1 m2", "", 1, "")
+{txt}(3 hash collisions - 4.05{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}20{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor m1 m2, method(hash0)
+{txt}{bf:[OPTIONS]} {res}m1 m2, method(hash0)
+          mata: F = factor("m1 m2", "", 1, "hash0")
+{txt}method hash0 cannot be applied, using hash1
+{txt}(3 hash collisions - 4.05{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}20{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor m1 m2, method(hash1)
+{txt}{bf:[OPTIONS]} {res}m1 m2, method(hash1)
+          mata: F = factor("m1 m2", "", 1, "hash1")
+{txt}(3 hash collisions - 4.05{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}20{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. ValidateFactor m1 m2, method(hash2)
+{txt}{bf:[OPTIONS]} {res}m1 m2, method(hash2)
+          mata: F = factor("m1 m2", "", 1, "hash2")
+{txt}(3 hash collisions - 4.05{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}20{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}          mata: F.store_levels("new_id")
+          mata: F.panelsetup()
+{txt}{bf:[TESTING] }{res}F.num_obs F.levels F.num_levels F.touse F.varlist F.keys F.counts F.offsets 
+{txt}{bf:[OK]}
+
+{com}. 
+. // -------------------------
+. sysuse auto, clear
+{txt}(1978 Automobile Data)
+
+{com}. mata: F = factor("foreign turn")
+{res}{txt}
+{com}. mata: F.varformats
+{res}       {txt}    1       2
+    {c TLC}{hline 17}{c TRC}
+  1 {c |}  {res}%8.0g   %8.0g{txt}  {c |}
+    {c BLC}{hline 17}{c BRC}
+
+{com}. mata: F.varlabels
+{res}       {txt}                 1                    2
+    {c TLC}{hline 43}{c TRC}
+  1 {c |}  {res}          Car type   Turn Circle (ft.) {txt}  {c |}
+    {c BLC}{hline 43}{c BRC}
+
+{com}. mata: F.varvaluelabels
+{res}       {txt}     1        2
+    {c TLC}{hline 19}{c TRC}
+  1 {c |}  {res}origin         {txt}  {c |}
+    {c BLC}{hline 19}{c BRC}
+
+{com}. mata: F.vartypes
+{res}       {txt}   1      2
+    {c TLC}{hline 15}{c TRC}
+  1 {c |}  {res}byte    int{txt}  {c |}
+    {c BLC}{hline 15}{c BRC}
+
+{com}. mata: F.vl
+{res}  0xdbc6b50
+{txt}
+{com}. collapse (mean) price, by(foreign turn) fast
+{txt}
+{com}. rename foreign FOREIGN
+{res}{txt}
+{com}. rename turn TURN
+{res}{txt}
+{com}. label drop _all
+{txt}
+{com}. mata: F.store_keys(1)
+{res}{txt}
+{com}. 
+. 
+. exit
+
+{txt}end of do-file
+
+{com}. do test_stata
+{txt}
+{com}. pr drop _all
+{txt}
+{com}. clear all
+{txt}
+{com}. set more off
+{txt}
+{com}. set matadebug off
+{txt}
+{com}. include "test_utils.do"
+{txt}
+{com}. 
+. // -------------------------
+. // Programs
+. 
+. cap pr drop crData
+{txt}
+{com}. pr crData
+{txt}  1{com}.         args n k
+{txt}  2{com}.         loc kk = 2^`=`k'-1'
+{txt}  3{com}.         clear
+{txt}  4{com}.         qui set obs `n'
+{txt}  5{com}.         noi di "(obs set)"
+{txt}  6{com}.         loc m = ceil(`n' / 10)
+{txt}  7{com}.         //set seed 234238921
+.         *gen long x1 = ceil(uniform()*`m')
+.         gen long x1 = ceil(uniform()*10000) * 100
+{txt}  8{com}. 
+.         gen int x2 = ceil(uniform()*3000)
+{txt}  9{com}.         gen byte x3 = ceil(uniform()*100)
+{txt} 10{com}.         gen str x4 = "u" + string(ceil(uniform()*100), "%5.0f")
+{txt} 11{com}.         gen long x5 = ceil(uniform()*5000)
+{txt} 12{com}.         // compress
+.         noi di "(Xs set)"
+{txt} 13{com}. 
+.         forv i=1/`k' {c -(}
+{txt} 14{com}.                 gen double y`i' = 123
+{txt} 15{com}.         {c )-}
+{txt} 16{com}. 
+.         loc obs_k = ceil(`c(N)' / 1000)
+{txt} 17{com}. end
+{txt}
+{com}. 
+. cap pr drop FactorsAgree
+{txt}
+{com}. pr FactorsAgree, sortpreserve
+{txt}  1{com}.         args id1 id2
+{txt}  2{com}.         tempvar ok
+{txt}  3{com}.         
+.         bys `id1' (`id2'): gen byte `ok' = `id2'[1] == `id2'[_N]
+{txt}  4{com}.         assert `ok' == 1
+{txt}  5{com}.         drop `ok'
+{txt}  6{com}.         
+.         bys `id2' (`id1'): gen byte `ok' = `id1'[1] == `id1'[_N]
+{txt}  7{com}.         assert `ok' == 1
+{txt}  8{com}.         drop `ok'
+{txt}  9{com}. end
+{txt}
+{com}. 
+. cap pr drop ValidateFactor
+{txt}
+{com}. pr ValidateFactor
+{txt}  1{com}.         syntax varlist [in] [if], [factor(string) method(string)]
+{txt}  2{com}.         preserve
+{txt}  3{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OPTIONS]{c )-} {c -(}res{c )-}`0'"
+{txt}  4{com}.         if ("`factor'" == "") {c -(}
+{txt}  5{com}.                 loc factor F
+{txt}  6{com}.         {c )-}
+{txt}  7{com}.         if ("`in'`if'" != "") {c -(}
+{txt}  8{com}.                 marksample touse
+{txt}  9{com}.                 cou if `touse'
+{txt} 10{com}.                 loc num_obs = r(N)
+{txt} 11{com}.         {c )-}
+{txt} 12{com}.         else {c -(}
+{txt} 13{com}.                 loc num_obs = c(N)
+{txt} 14{com}.         {c )-}
+{txt} 15{com}.         // factor(varlist, touse, verbose, method, sort_levels, count_levels, hash_ratio)
+.         loc cmd mata: `factor' = factor("`varlist'", "`touse'", 1, "`method'")
+{txt} 16{com}.         di as res `"          `cmd'"'
+{txt} 17{com}.         `cmd'
+{txt} 18{com}.         loc cmd mata: `factor'.store_levels("new_id")
+{txt} 19{com}.         di as res `"          `cmd'"'
+{txt} 20{com}.         `cmd'
+{txt} 21{com}.         loc cmd mata: `factor'.panelsetup()
+{txt} 22{com}.         di as res `"          `cmd'"'
+{txt} 23{com}.         `cmd'
+{txt} 24{com}. 
+.         di as smcl "{c -(}txt{c )-}{c -(}bf:[TESTING] {c )-}" _c
+{txt} 25{com}. 
+.         // Output:
+.         // num_levels num_obs touse varlist
+.         // levels keys counts info p
+.         di as res "F.num_obs " _c
+{txt} 26{com}.         mata: assert(`factor'.num_obs == `num_obs')
+{txt} 27{com}.         egen long benchmark_id = group(`varlist')
+{txt} 28{com}.         di as res "F.levels " _c
+{txt} 29{com}.         assert benchmark_id == new_id
+{txt} 30{com}.         
+.         gen long i = _n
+{txt} 31{com}.         sort benchmark_id, stable
+{txt} 32{com}.         mata: benchmark_id = st_data(., "benchmark_id")
+{txt} 33{com}.         sort i
+{txt} 34{com}.         drop i
+{txt} 35{com}. 
+.         gen byte counts = 1
+{txt} 36{com}.         collapse (first) `varlist' (count) counts , by(benchmark_id)
+{txt} 37{com}.         di as res "F.num_levels " _c
+{txt} 38{com}.         loc num_levels = c(N)
+{txt} 39{com}.         mata: assert(`factor'.num_levels == `num_levels')
+{txt} 40{com}.         di as res "F.touse " _c
+{txt} 41{com}.         mata: assert(`factor'.touse == "`touse'")
+{txt} 42{com}.         di as res "F.varlist " _c
+{txt} 43{com}.         mata: assert(`factor'.varlist == tokens("`varlist'"))
+{txt} 44{com}.         di as res "F.keys " _c
+{txt} 45{com}.         mata: benchmark_keys = __fload_data("`varlist'")
+{txt} 46{com}.         mata: assert(benchmark_keys == `factor'.keys)
+{txt} 47{com}.         di as res "F.counts " _c
+{txt} 48{com}.         mata: benchmark_counts = st_data(., "counts")
+{txt} 49{com}.         mata: assert(benchmark_counts == `factor'.counts)
+{txt} 50{com}.         di as res "F.offsets "
+{txt} 51{com}.         sort benchmark_id
+{txt} 52{com}.         mata: assert(panelsetup(benchmark_id, 1) == `factor'.info)
+{txt} 53{com}. 
+.         // note: order is not a stable sort so we also sort by _n
+.         mata: assert(`factor'.p == order((`factor'.levels, (1::`factor'.num_obs)), 1..2) )
+{txt} 54{com}. 
+.         // same for offsets, p
+.         mata: mata drop `factor'
+{txt} 55{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OK]{c )-}"
+{txt} 56{com}. end
+{txt}
+{com}. {txt}
+{com}. cls
+{txt}
+{com}. 
+. // -------------------------
+. // Test egen internal command
+.         sysuse auto, clear
+{txt}(1978 Automobile Data)
+
+{com}. 
+.         egen long id0 = group(turn) if foreign
+{txt}(52 missing values generated)
+
+{com}.         fegen_group if foreign, name(id1) args(turn)
+{res}{txt}
+{com}.         fegen id2 = group(turn) if foreign
+{res}{txt}(52 missing values generated)
+
+{com}.         assert id0 == id1
+{txt}
+{com}.         assert id0 == id2
+{txt}
+{com}.         drop id*
+{txt}
+{com}. 
+.         egen long id0 = group(turn)
+{txt}
+{com}.         fegen_group, name(id1) args(turn)
+{txt}
+{com}.         fegen id2 = group(turn)
+{txt}
+{com}.         assert id0 == id1
+{txt}
+{com}.         assert id0 == id2
+{txt}
+{com}.         drop id*
+{txt}
+{com}. 
+.         egen long id0 = group(trunk foreign)
+{txt}
+{com}.         fegen_group, name(id1) args(trunk foreign)
+{txt}
+{com}.         fegen id2 = group(trunk foreign)
+{txt}
+{com}.         assert id0 == id1
+{txt}
+{com}.         assert id0 == id2
+{txt}
+{com}.         drop id*
+{txt}
+{com}. 
+. // -------------------------
+. // Test Stata part
+. 
+.         sysuse auto, clear
+{txt}(1978 Automobile Data)
+
+{com}.         loc vars turn foreign
+{txt}
+{com}.         egen id1 = group(`vars')
+{txt}
+{com}.         fegen id2 = group(`vars')
+{txt}
+{com}.         fegen id3 = group(`vars'), method(mata)
+{res}{txt}
+{com}.         assert id1 == id2
+{txt}
+{com}.         assert id1 == id3
+{txt}
+{com}. 
+.         sysuse auto, clear
+{txt}(1978 Automobile Data)
+
+{com}.         loc vars m
+{txt}
+{com}.         gen m = substr(make, 1, 2)
+{txt}
+{com}.         egen id1 = group(`vars')
+{txt}
+{com}.         fegen id2 = group(`vars')
+{txt}
+{com}.         fegen id3 = group(`vars'), method(mata)
+{res}{txt}
+{com}.         assert id1 == id2
+{txt}
+{com}.         assert id1 == id3
+{txt}
+{com}. 
+.         sysuse auto, clear
+{txt}(1978 Automobile Data)
+
+{com}.         loc vars m for
+{txt}
+{com}.         gen m = substr(make, 1, 2)
+{txt}
+{com}.         egen id1 = group(`vars')
+{txt}
+{com}.         fegen id2 = group(`vars')
+{txt}
+{com}.         fegen id3 = group(`vars'), method(mata)
+{txt}
+{com}.         assert id1 == id2
+{txt}
+{com}.         assert id1 == id3
+{txt}
+{com}. 
+.         sysuse auto, clear
+{txt}(1978 Automobile Data)
+
+{com}.         loc vars m for
+{txt}
+{com}.         gen m = substr(make, 1, 2)
+{txt}
+{com}.         egen id1 = group(`vars') if !foreign
+{txt}(22 missing values generated)
+
+{com}.         fegen id2 = group(`vars') if !foreign
+{txt}(22 missing values generated)
+
+{com}.         assert id1 == id2
+{txt}
+{com}. 
+. exit
+
+{txt}end of do-file
+
+{com}. do benchmark
+{txt}
+{com}. pr drop _all
+{txt}
+{com}. clear all
+{txt}
+{com}. set more off
+{txt}
+{com}. set matadebug off
+{txt}
+{com}. include "test_utils.do"
+{txt}
+{com}. 
+. // -------------------------
+. // Programs
+. 
+. cap pr drop crData
+{txt}
+{com}. pr crData
+{txt}  1{com}.         args n k
+{txt}  2{com}.         loc kk = 2^`=`k'-1'
+{txt}  3{com}.         clear
+{txt}  4{com}.         qui set obs `n'
+{txt}  5{com}.         noi di "(obs set)"
+{txt}  6{com}.         loc m = ceil(`n' / 10)
+{txt}  7{com}.         //set seed 234238921
+.         *gen long x1 = ceil(uniform()*`m')
+.         gen long x1 = ceil(uniform()*10000) * 100
+{txt}  8{com}. 
+.         gen int x2 = ceil(uniform()*3000)
+{txt}  9{com}.         gen byte x3 = ceil(uniform()*100)
+{txt} 10{com}.         gen str x4 = "u" + string(ceil(uniform()*100), "%5.0f")
+{txt} 11{com}.         gen long x5 = ceil(uniform()*5000)
+{txt} 12{com}.         // compress
+.         noi di "(Xs set)"
+{txt} 13{com}. 
+.         forv i=1/`k' {c -(}
+{txt} 14{com}.                 gen double y`i' = 123
+{txt} 15{com}.         {c )-}
+{txt} 16{com}. 
+.         loc obs_k = ceil(`c(N)' / 1000)
+{txt} 17{com}. end
+{txt}
+{com}. 
+. cap pr drop FactorsAgree
+{txt}
+{com}. pr FactorsAgree, sortpreserve
+{txt}  1{com}.         args id1 id2
+{txt}  2{com}.         tempvar ok
+{txt}  3{com}.         
+.         bys `id1' (`id2'): gen byte `ok' = `id2'[1] == `id2'[_N]
+{txt}  4{com}.         assert `ok' == 1
+{txt}  5{com}.         drop `ok'
+{txt}  6{com}.         
+.         bys `id2' (`id1'): gen byte `ok' = `id1'[1] == `id1'[_N]
+{txt}  7{com}.         assert `ok' == 1
+{txt}  8{com}.         drop `ok'
+{txt}  9{com}. end
+{txt}
+{com}. 
+. cap pr drop ValidateFactor
+{txt}
+{com}. pr ValidateFactor
+{txt}  1{com}.         syntax varlist [in] [if], [factor(string) method(string)]
+{txt}  2{com}.         preserve
+{txt}  3{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OPTIONS]{c )-} {c -(}res{c )-}`0'"
+{txt}  4{com}.         if ("`factor'" == "") {c -(}
+{txt}  5{com}.                 loc factor F
+{txt}  6{com}.         {c )-}
+{txt}  7{com}.         if ("`in'`if'" != "") {c -(}
+{txt}  8{com}.                 marksample touse
+{txt}  9{com}.                 cou if `touse'
+{txt} 10{com}.                 loc num_obs = r(N)
+{txt} 11{com}.         {c )-}
+{txt} 12{com}.         else {c -(}
+{txt} 13{com}.                 loc num_obs = c(N)
+{txt} 14{com}.         {c )-}
+{txt} 15{com}.         // factor(varlist, touse, verbose, method, sort_levels, count_levels, hash_ratio)
+.         loc cmd mata: `factor' = factor("`varlist'", "`touse'", 1, "`method'")
+{txt} 16{com}.         di as res `"          `cmd'"'
+{txt} 17{com}.         `cmd'
+{txt} 18{com}.         loc cmd mata: `factor'.store_levels("new_id")
+{txt} 19{com}.         di as res `"          `cmd'"'
+{txt} 20{com}.         `cmd'
+{txt} 21{com}.         loc cmd mata: `factor'.panelsetup()
+{txt} 22{com}.         di as res `"          `cmd'"'
+{txt} 23{com}.         `cmd'
+{txt} 24{com}. 
+.         di as smcl "{c -(}txt{c )-}{c -(}bf:[TESTING] {c )-}" _c
+{txt} 25{com}. 
+.         // Output:
+.         // num_levels num_obs touse varlist
+.         // levels keys counts info p
+.         di as res "F.num_obs " _c
+{txt} 26{com}.         mata: assert(`factor'.num_obs == `num_obs')
+{txt} 27{com}.         egen long benchmark_id = group(`varlist')
+{txt} 28{com}.         di as res "F.levels " _c
+{txt} 29{com}.         assert benchmark_id == new_id
+{txt} 30{com}.         
+.         gen long i = _n
+{txt} 31{com}.         sort benchmark_id, stable
+{txt} 32{com}.         mata: benchmark_id = st_data(., "benchmark_id")
+{txt} 33{com}.         sort i
+{txt} 34{com}.         drop i
+{txt} 35{com}. 
+.         gen byte counts = 1
+{txt} 36{com}.         collapse (first) `varlist' (count) counts , by(benchmark_id)
+{txt} 37{com}.         di as res "F.num_levels " _c
+{txt} 38{com}.         loc num_levels = c(N)
+{txt} 39{com}.         mata: assert(`factor'.num_levels == `num_levels')
+{txt} 40{com}.         di as res "F.touse " _c
+{txt} 41{com}.         mata: assert(`factor'.touse == "`touse'")
+{txt} 42{com}.         di as res "F.varlist " _c
+{txt} 43{com}.         mata: assert(`factor'.varlist == tokens("`varlist'"))
+{txt} 44{com}.         di as res "F.keys " _c
+{txt} 45{com}.         mata: benchmark_keys = __fload_data("`varlist'")
+{txt} 46{com}.         mata: assert(benchmark_keys == `factor'.keys)
+{txt} 47{com}.         di as res "F.counts " _c
+{txt} 48{com}.         mata: benchmark_counts = st_data(., "counts")
+{txt} 49{com}.         mata: assert(benchmark_counts == `factor'.counts)
+{txt} 50{com}.         di as res "F.offsets "
+{txt} 51{com}.         sort benchmark_id
+{txt} 52{com}.         mata: assert(panelsetup(benchmark_id, 1) == `factor'.info)
+{txt} 53{com}. 
+.         // note: order is not a stable sort so we also sort by _n
+.         mata: assert(`factor'.p == order((`factor'.levels, (1::`factor'.num_obs)), 1..2) )
+{txt} 54{com}. 
+.         // same for offsets, p
+.         mata: mata drop `factor'
+{txt} 55{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OK]{c )-}"
+{txt} 56{com}. end
+{txt}
+{com}. {txt}
+{com}. cls
+{txt}
+{com}. set trace off
+{txt}
+{com}. // -------------------------
+. // Profile mata
+. 
+.         clear
+{txt}
+{com}.         timer clear
+{txt}
+{com}.         loc n = 10 * 1000
+{txt}
+{com}.         crData `n' 0 // x1 ... x5
+(obs set)
+(Xs set)
+{txt}
+{com}.         loc vars x5 // x2 x3 // x1 or x5
+{txt}
+{com}. 
+.         timer clear
+{txt}
+{com}.         timer on 1
+{txt}
+{com}.         // store_levels(varnames, newvar,| touse, verbose, method, sortit, ratio)
+.         mata: store_levels("`vars'", "id", "", 0, "hash0", ., .)
+{res}{txt}
+{com}.         timer off 1
+{txt}
+{com}.         timer list
+{res}   1:      0.01 /        1 =       0.0140
+  50:      0.01 /        1 =       0.0070
+  51:      0.00 /        1 =       0.0010
+  60:      0.00 /        1 =       0.0010
+  61:      0.00 /        1 =       0.0030
+  70:      0.00 /        1 =       0.0000
+  71:      0.00 /        1 =       0.0010
+  80:      0.00 /        1 =       0.0000
+  81:      0.00 /        1 =       0.0000
+  82:      0.00 /        1 =       0.0000
+  83:      0.00 /        1 =       0.0010
+  84:      0.00 /        1 =       0.0000
+  85:      0.00 /        1 =       0.0000
+{txt}
+{com}.         drop id
+{txt}
+{com}. 
+.         timer clear
+{txt}
+{com}.         timer on 1
+{txt}
+{com}.         mata: store_levels("`vars'", "id", "", 0, "hash1", 1, .)
+{res}{txt}
+{com}.         timer off 1
+{txt}
+{com}.         timer list
+{res}   1:      0.02 /        1 =       0.0160
+  50:      0.01 /        1 =       0.0070
+  51:      0.00 /        1 =       0.0000
+  60:      0.00 /        1 =       0.0010
+  61:      0.01 /        1 =       0.0060
+  70:      0.00 /        1 =       0.0000
+  71:      0.01 /        1 =       0.0060
+  81:      0.00 /        1 =       0.0000
+  82:      0.00 /        1 =       0.0040
+  83:      0.00 /        1 =       0.0010
+{txt}
+{com}.         drop id
+{txt}
+{com}. 
+.         timer clear
+{txt}
+{com}.         timer on 1
+{txt}
+{com}.         mata: store_levels("`vars'", "id", "", 0, "hash1", 0, .)
+{res}{txt}
+{com}.         timer off 1
+{txt}
+{com}.         timer list
+{res}   1:      0.01 /        1 =       0.0050
+  50:      0.00 /        1 =       0.0040
+  51:      0.00 /        1 =       0.0010
+  60:      0.00 /        1 =       0.0010
+  61:      0.00 /        1 =       0.0030
+  70:      0.00 /        1 =       0.0000
+  71:      0.00 /        1 =       0.0030
+  81:      0.00 /        1 =       0.0000
+  82:      0.00 /        1 =       0.0030
+  83:      0.00 /        1 =       0.0000
+{txt}
+{com}.         drop id
+{txt}
+{com}. 
+.         timer clear
+{txt}
+{com}.         timer on 1
+{txt}
+{com}.         mata: store_levels("`vars'", "id", "", 0, "hash2", 1, .)
+{res}{txt}
+{com}.         timer off 1
+{txt}
+{com}.         timer list
+{res}   1:      0.01 /        1 =       0.0060
+  50:      0.01 /        1 =       0.0060
+  51:      0.00 /        1 =       0.0000
+  60:      0.00 /        1 =       0.0000
+  61:      0.01 /        1 =       0.0060
+  70:      0.00 /        1 =       0.0000
+  71:      0.01 /        1 =       0.0060
+  81:      0.00 /        1 =       0.0000
+  82:      0.01 /        1 =       0.0050
+  83:      0.00 /        1 =       0.0010
+{txt}
+{com}.         drop id
+{txt}
+{com}. 
+.         timer clear
+{txt}
+{com}.         timer on 1
+{txt}
+{com}.         mata: store_levels("`vars'", "id", "", 0, "hash2", 0, .)
+{res}{txt}
+{com}.         timer off 1
+{txt}
+{com}.         timer list
+{res}   1:      0.01 /        1 =       0.0060
+  50:      0.01 /        1 =       0.0050
+  51:      0.00 /        1 =       0.0010
+  60:      0.00 /        1 =       0.0000
+  61:      0.01 /        1 =       0.0050
+  70:      0.00 /        1 =       0.0010
+  71:      0.00 /        1 =       0.0040
+  81:      0.00 /        1 =       0.0000
+  82:      0.00 /        1 =       0.0040
+  83:      0.00 /        1 =       0.0000
+{txt}
+{com}.         drop id
+{txt}
+{com}. 
+. // -------------------------
+. // Corner cases
+. 
+.         clear
+{txt}
+{com}.         timer clear
+{txt}
+{com}.         set obs 10000
+{txt}obs was 0, now 10000
+
+{com}. 
+.         gen long id1 = _n // many levels!!!
+{txt}
+{com}.         gen long id2 = 1 + int(_n/1000) // a lot of levels
+{txt}
+{com}.         gen long id3 = 1 // one level
+{txt}
+{com}. 
+.         gen float u = runiform()
+{txt}
+{com}.         //sort u // activate to see how it's unsorted
+. 
+.         forval i = 1/3 {c -(}
+{txt}  2{com}.                 loc j = 10 * `i' + 1
+{txt}  3{com}.                 timer on `j'
+{txt}  4{com}.                 egen long bench = group(id`i')
+{txt}  5{com}.                 timer off `j'
+{txt}  6{com}. 
+.                 loc ++j
+{txt}  7{com}.                 timer on `j'
+{txt}  8{com}.                 fegen small = group(id`i') ,  method(hash0) 
+{txt}  9{com}.                 timer off `j'
+{txt} 10{com}. 
+.                 loc ++j
+{txt} 11{com}.                 timer on `j'
+{txt} 12{com}.                 fegen default = group(id`i') ,  method(hash1) // ratio(2.0) nosort v 
+{txt} 13{com}.                 timer off `j'
+{txt} 14{com}. 
+.                 loc ++j
+{txt} 15{com}.                 timer on `j'
+{txt} 16{com}.                 fegen large = group(id`i') ,  method(mata) v
+{txt} 17{com}.                 timer off `j'
+{txt} 18{com}. 
+.                 assert bench == small
+{txt} 19{com}.                 assert bench == large
+{txt} 20{com}.                 assert bench == default
+{txt} 21{com}.                 drop bench small large default
+{txt} 22{com}.         {c )-}
+{res}{txt}(obs: {res}10000{txt}; levels: {res}10000{txt};{txt} method: {res}hash0{txt}; dict size: {res}10000{txt})
+{res}{txt}(obs: {res}10000{txt}; levels: {res}11{txt};{txt} method: {res}hash0{txt}; dict size: {res}11{txt})
+{res}{txt}(obs: {res}10000{txt}; levels: {res}1{txt};{txt} method: {res}hash0{txt}; dict size: {res}1{txt})
+
+{com}. 
+.         keep in 1
+{txt}(9999 observations deleted)
+
+{com}.         fegen small = group(id1) ,  method(hash0)
+{res}{txt}
+{com}.         fegen large = group(id2) ,  method(hash1)
+{res}{txt}
+{com}.         assert small == 1
+{txt}
+{com}.         assert large == 1
+{txt}
+{com}. 
+.         di "*1 bench *2 hash0 *3 hash1 *4 choose"
+{res}*1 bench *2 hash0 *3 hash1 *4 choose
+{txt}
+{com}.         di "0* _n 1* int(_n/1000) 2* 1"
+{res}0* _n 1* int(_n/1000) 2* 1
+{txt}
+{com}.         timer list
+{res}  11:      0.00 /        1 =       0.0030
+  12:      0.01 /        1 =       0.0100
+  13:      0.01 /        1 =       0.0080
+  14:      0.01 /        1 =       0.0060
+  21:      0.00 /        1 =       0.0030
+  22:      0.00 /        1 =       0.0020
+  23:      0.00 /        1 =       0.0020
+  24:      0.01 /        1 =       0.0120
+  31:      0.00 /        1 =       0.0030
+  32:      0.00 /        1 =       0.0020
+  33:      0.00 /        1 =       0.0020
+  34:      0.00 /        1 =       0.0020
+  50:      0.02 /       11 =       0.0022
+  51:      0.00 /       11 =       0.0003
+  60:      0.00 /       11 =       0.0000
+  61:      0.02 /       11 =       0.0022
+  70:      0.00 /       11 =       0.0001
+  71:      0.01 /       11 =       0.0013
+  80:      0.00 /        7 =       0.0001
+  81:      0.00 /       11 =       0.0000
+  82:      0.01 /       11 =       0.0005
+  83:      0.00 /       11 =       0.0002
+  84:      0.00 /        7 =       0.0000
+  85:      0.00 /        7 =       0.0000
+{txt}
+{com}. 
+. // -------------------------
+. // Profile different approaches
+. 
+.         clear
+{txt}
+{com}.         timer clear
+{txt}
+{com}.         loc n = 20 * 1000 * 1000
+{txt}
+{com}.         crData `n' 0 // x1 ... x5
+(obs set)
+(Xs set)
+{txt}
+{com}.         loc vars x5 // x2 x3 // x1 or x5
+{txt}
+{com}. 
+.         gen u = runiform()
+{txt}
+{com}.         loc cond // in 1/20000 if u>0.1
+{txt}
+{com}.         set processors 2 // 1
+{txt}{p 4 4 2}
+The maximum number of processors or cores being used is changed from {res:4} to {res:2}.
+It can be set to any number between {res:1} and {res:4}
+{p_end}
+
+{com}.         forval j = 1/6 {c -(}
+{txt}  2{com}.                 loc min_t`j' = .
+{txt}  3{com}.                 loc mean_t`j' = 0
+{txt}  4{com}.         {c )-}
+{txt}
+{com}. 
+.         loc num_t = 5
+{txt}
+{com}. 
+. loc min99 .
+{txt}
+{com}. 
+. forval i = 1/`num_t' {c -(}
+{txt}  2{com}.         cap drop id*
+{txt}  3{com}. 
+.         // Benchmark
+.         timer on 1
+{txt}  4{com}.         egen id1 = group(`vars') `cond'
+{txt}  5{com}.         timer off 1
+{txt}  6{com}.         cap drop id*
+{txt}  7{com}. 
+.         // First principles
+.         timer on 2
+{txt}  8{com}.         fegen id2 = group(`vars') `cond', method(stata) v
+{txt}  9{com}.         timer off 2
+{txt} 10{com}.         cap drop id*
+{txt} 11{com}. 
+.         // Force hash1 but sort
+.         timer on 3
+{txt} 12{com}.         fegen id3 = group(`vars') `cond', method(hash1) v sort
+{txt} 13{com}.         timer off 3
+{txt} 14{com}.         cap drop id*
+{txt} 15{com}. 
+.         // Force hash1; do not sort (faster)
+.         timer on 4
+{txt} 16{com}.         fegen id4 = group(`vars') `cond', method(hash1) v nosort
+{txt} 17{com}.         timer off 4
+{txt} 18{com}.         cap drop id*
+{txt} 19{com}. 
+.         // Force hash0; do not sort (faster)
+.         timer on 5
+{txt} 20{com}.         fegen id5 = group(`vars') `cond', method(hash0) v
+{txt} 21{com}.         timer off 5
+{txt} 22{com}.         drop id*
+{txt} 23{com}. 
+.         // Auto choose method
+.         timer on 6
+{txt} 24{com}.         fegen id6 = group(`vars') `cond', v
+{txt} 25{com}.         timer off 6
+{txt} 26{com}.         drop id*
+{txt} 27{com}. 
+.         qui timer list
+{txt} 28{com}.         forval j = 1/6 {c -(}
+{txt} 29{com}.                 loc min_t`j' = min(`min_t`j'', r(t`j'))
+{txt} 30{com}.                 loc mean_t`j' = `mean_t`j'' + r(t`j')
+{txt} 31{com}.         {c )-}
+{txt} 32{com}.         loc min99 = min(`min99', r(t99))
+{txt} 33{com}.         timer clear
+{txt} 34{com}. {c )-}
+{txt}(method: {res}stata{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{txt}(method: {res}stata{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{txt}(method: {res}stata{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{txt}(method: {res}stata{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{txt}(method: {res}stata{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(2360916 hash collisions - 11.80{txt}%)
+{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash1{txt}; dict size: {res}25000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+
+{com}. set processors 4
+{txt}{p 4 4 2}
+The maximum number of processors or cores being used is changed from {res:2} to {res:4}.
+It can be set to any number between {res:1} and {res:4}
+{p_end}
+
+{com}. *assert id1 == id2
+. *assert id1 == id3
+. *FactorsAgree id1 id4
+. *assert id1 == id5
+. mata: mata desc
+
+      {txt}# bytes   type                        name and extent
+{hline 79}
+{hline 79}
+
+{com}. 
+. loc cmds `" "benchmark " "stata-bys " hash1-sort hash1-noso "hash0     " "mata-auto " "'
+{txt}
+{com}. di as text "Profile results with `num_t' tries:"
+{res}{txt}Profile results with 5 tries:
+
+{com}. forval j = 1/6 {c -(}
+{txt}  2{com}.         loc mean_t`j' = `mean_t`j'' / `num_t'
+{txt}  3{com}.         gettoken cmd cmds : cmds
+{txt}  4{com}.         di as text "  [`cmd'] min " %6.3f `min_t`j'' _c
+{txt}  5{com}.         di as text " | avg " %6.3f `mean_t`j''
+{txt}  6{com}. {c )-}
+{txt}  [benchmark ] min 49.174 | avg 51.263
+  [stata-bys ] min 34.733 | avg 35.430
+  [hash1-sort] min  8.868 | avg  9.346
+  [hash1-noso] min  8.625 | avg  9.092
+  [hash0     ] min  1.414 | avg  1.597
+  [mata-auto ] min  1.438 | avg  1.532
+
+{com}. 
+. di as error `min99'
+{res}{err}.
+{txt}
+{com}. exit
+
+{txt}end of do-file
+
+{com}. 
+. do test_fcollapse
+{txt}
+{com}. pr drop _all
+{txt}
+{com}. clear all
+{txt}
+{com}. set more off
+{txt}
+{com}. set matadebug off
+{txt}
+{com}. include "test_utils.do"
+{txt}
+{com}. 
+. // -------------------------
+. // Programs
+. 
+. cap pr drop crData
+{txt}
+{com}. pr crData
+{txt}  1{com}.         args n k
+{txt}  2{com}.         loc kk = 2^`=`k'-1'
+{txt}  3{com}.         clear
+{txt}  4{com}.         qui set obs `n'
+{txt}  5{com}.         noi di "(obs set)"
+{txt}  6{com}.         loc m = ceil(`n' / 10)
+{txt}  7{com}.         //set seed 234238921
+.         *gen long x1 = ceil(uniform()*`m')
+.         gen long x1 = ceil(uniform()*10000) * 100
+{txt}  8{com}. 
+.         gen int x2 = ceil(uniform()*3000)
+{txt}  9{com}.         gen byte x3 = ceil(uniform()*100)
+{txt} 10{com}.         gen str x4 = "u" + string(ceil(uniform()*100), "%5.0f")
+{txt} 11{com}.         gen long x5 = ceil(uniform()*5000)
+{txt} 12{com}.         // compress
+.         noi di "(Xs set)"
+{txt} 13{com}. 
+.         forv i=1/`k' {c -(}
+{txt} 14{com}.                 gen double y`i' = 123
+{txt} 15{com}.         {c )-}
+{txt} 16{com}. 
+.         loc obs_k = ceil(`c(N)' / 1000)
+{txt} 17{com}. end
+{txt}
+{com}. 
+. cap pr drop FactorsAgree
+{txt}
+{com}. pr FactorsAgree, sortpreserve
+{txt}  1{com}.         args id1 id2
+{txt}  2{com}.         tempvar ok
+{txt}  3{com}.         
+.         bys `id1' (`id2'): gen byte `ok' = `id2'[1] == `id2'[_N]
+{txt}  4{com}.         assert `ok' == 1
+{txt}  5{com}.         drop `ok'
+{txt}  6{com}.         
+.         bys `id2' (`id1'): gen byte `ok' = `id1'[1] == `id1'[_N]
+{txt}  7{com}.         assert `ok' == 1
+{txt}  8{com}.         drop `ok'
+{txt}  9{com}. end
+{txt}
+{com}. 
+. cap pr drop ValidateFactor
+{txt}
+{com}. pr ValidateFactor
+{txt}  1{com}.         syntax varlist [in] [if], [factor(string) method(string)]
+{txt}  2{com}.         preserve
+{txt}  3{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OPTIONS]{c )-} {c -(}res{c )-}`0'"
+{txt}  4{com}.         if ("`factor'" == "") {c -(}
+{txt}  5{com}.                 loc factor F
+{txt}  6{com}.         {c )-}
+{txt}  7{com}.         if ("`in'`if'" != "") {c -(}
+{txt}  8{com}.                 marksample touse
+{txt}  9{com}.                 cou if `touse'
+{txt} 10{com}.                 loc num_obs = r(N)
+{txt} 11{com}.         {c )-}
+{txt} 12{com}.         else {c -(}
+{txt} 13{com}.                 loc num_obs = c(N)
+{txt} 14{com}.         {c )-}
+{txt} 15{com}.         // factor(varlist, touse, verbose, method, sort_levels, count_levels, hash_ratio)
+.         loc cmd mata: `factor' = factor("`varlist'", "`touse'", 1, "`method'")
+{txt} 16{com}.         di as res `"          `cmd'"'
+{txt} 17{com}.         `cmd'
+{txt} 18{com}.         loc cmd mata: `factor'.store_levels("new_id")
+{txt} 19{com}.         di as res `"          `cmd'"'
+{txt} 20{com}.         `cmd'
+{txt} 21{com}.         loc cmd mata: `factor'.panelsetup()
+{txt} 22{com}.         di as res `"          `cmd'"'
+{txt} 23{com}.         `cmd'
+{txt} 24{com}. 
+.         di as smcl "{c -(}txt{c )-}{c -(}bf:[TESTING] {c )-}" _c
+{txt} 25{com}. 
+.         // Output:
+.         // num_levels num_obs touse varlist
+.         // levels keys counts info p
+.         di as res "F.num_obs " _c
+{txt} 26{com}.         mata: assert(`factor'.num_obs == `num_obs')
+{txt} 27{com}.         egen long benchmark_id = group(`varlist')
+{txt} 28{com}.         di as res "F.levels " _c
+{txt} 29{com}.         assert benchmark_id == new_id
+{txt} 30{com}.         
+.         gen long i = _n
+{txt} 31{com}.         sort benchmark_id, stable
+{txt} 32{com}.         mata: benchmark_id = st_data(., "benchmark_id")
+{txt} 33{com}.         sort i
+{txt} 34{com}.         drop i
+{txt} 35{com}. 
+.         gen byte counts = 1
+{txt} 36{com}.         collapse (first) `varlist' (count) counts , by(benchmark_id)
+{txt} 37{com}.         di as res "F.num_levels " _c
+{txt} 38{com}.         loc num_levels = c(N)
+{txt} 39{com}.         mata: assert(`factor'.num_levels == `num_levels')
+{txt} 40{com}.         di as res "F.touse " _c
+{txt} 41{com}.         mata: assert(`factor'.touse == "`touse'")
+{txt} 42{com}.         di as res "F.varlist " _c
+{txt} 43{com}.         mata: assert(`factor'.varlist == tokens("`varlist'"))
+{txt} 44{com}.         di as res "F.keys " _c
+{txt} 45{com}.         mata: benchmark_keys = __fload_data("`varlist'")
+{txt} 46{com}.         mata: assert(benchmark_keys == `factor'.keys)
+{txt} 47{com}.         di as res "F.counts " _c
+{txt} 48{com}.         mata: benchmark_counts = st_data(., "counts")
+{txt} 49{com}.         mata: assert(benchmark_counts == `factor'.counts)
+{txt} 50{com}.         di as res "F.offsets "
+{txt} 51{com}.         sort benchmark_id
+{txt} 52{com}.         mata: assert(panelsetup(benchmark_id, 1) == `factor'.info)
+{txt} 53{com}. 
+.         // note: order is not a stable sort so we also sort by _n
+.         mata: assert(`factor'.p == order((`factor'.levels, (1::`factor'.num_obs)), 1..2) )
+{txt} 54{com}. 
+.         // same for offsets, p
+.         mata: mata drop `factor'
+{txt} 55{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OK]{c )-}"
+{txt} 56{com}. end
+{txt}
+{com}. {txt}
+{com}. cls
+{txt}
+{com}. 
+. // -------------------------
+. // Simple commands
+. 
+.         qui sysuse auto, clear
+{txt}
+{com}.         fcollapse (sum) price weight gear, by(turn) fast
+{res}{txt}
+{com}.         qui sysuse auto, clear
+{txt}
+{com}.         fcollapse (sum) price weight, by(turn) pool(1) fast
+{res}{txt}
+{com}.         qui sysuse auto, clear
+{txt}
+{com}.         fcollapse (sum) price weight, by(turn) pool(5)
+{res}{txt}
+{com}.         qui sysuse auto, clear
+{txt}
+{com}.         fcollapse (sum) price weight (first) make (mean) gear, by(turn) pool(2) fast
+{res}{txt}
+{com}.         qui sysuse auto, clear
+{txt}
+{com}.         fcollapse (sum) price weight (first) make (mean) gear, by(turn) pool(.)
+{res}{txt}
+{com}.         qui sysuse auto, clear
+{txt}
+{com}.         replace trunk = . if trunk == 5
+{txt}(1 real change made, 1 to missing)
+
+{com}.         fcollapse (sum) price weight (first) make p=price (last) q=price m=make (count) foreign trunk, by(turn) fast
+{res}{txt}
+{com}.         
+. // -------------------------
+. // With missing Values
+.         qui sysuse auto, clear
+{txt}
+{com}.         replace price = . if foreign
+{txt}(22 real changes made, 22 to missing)
+
+{com}.         replace gear = . if turn == 31
+{txt}(1 real change made, 1 to missing)
+
+{com}.         gen z = 1 in 1
+{txt}(73 missing values generated)
+
+{com}.         local stats mean median p1 p2 p4 p50 p99 sum count percent max min iqr first last firstnm lastnm
+{txt}
+{com}.         loc i 0
+{txt}
+{com}.         foreach stat of local stats {c -(}
+{txt}  2{com}.                 loc ++i
+{txt}  3{com}.                 loc clist `clist' (`stat') x_price_`stat'=price x_gear_`stat'=gear x_z_`stat'=z
+{txt}  4{com}.         {c )-}
+{txt}
+{com}.         preserve
+{txt}
+{com}.         
+.         collapse `clist', by(foreign)
+{txt}
+{com}.         reshape long x_ , i(foreign) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+x_gear_percent:  {res}2{txt} values would be changed; not changed
+x_gear_sum:  {res}2{txt} values would be changed; not changed
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       2   {txt}->{res}     102
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+
+{com}.         rename x_ collapse
+{res}{txt}
+{com}.         tempfile benchmark
+{txt}
+{com}.         save "`benchmark'", replace
+
+{com}.         restore, preserve
+{txt}
+{com}.         
+.         fcollapse `clist', by(foreign)
+{res}{txt}
+{com}.         reshape long x_ , i(foreign) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       2   {txt}->{res}     102
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+
+{com}.         rename x_ fcollapse
+{res}{txt}
+{com}.         merge 1:1 foreign cat using "`benchmark'", assert(match) nogen
+{res}{txt}(label origin already defined)
+
+{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}               0
+{txt}{col 5}matched{col 30}{res}             102{txt}  
+{col 5}{hline 41}
+
+{com}.         gen double diff = reldif(fcollapse, collapse)
+{txt}
+{com}.         su diff
+
+{txt}    Variable {c |}       Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 56}
+{space 8}diff {c |}{res}       102    9.55e-10    5.17e-09          0   3.71e-08
+{txt}
+{com}.         assert diff < 1e-6
+{txt}
+{com}.         restore, preserve
+{txt}
+{com}.         
+.         * repeat for a different by()
+.         
+.         collapse `clist', by(turn)
+{txt}
+{com}.         reshape long x_ , i(turn) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+x_gear_percent:  {res}17{txt} values would be changed; not changed
+x_gear_sum:  {res}9{txt} values would be changed; not changed
+x_price_percent:  {res}17{txt} values would be changed; not changed
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}      18   {txt}->{res}     918
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+
+{com}.         rename x_ collapse
+{res}{txt}
+{com}.         tempfile benchmark
+{txt}
+{com}.         save "`benchmark'", replace
+
+{com}.         restore, preserve
+{txt}
+{com}.         
+.         fcollapse `clist', by(turn)
+{res}{txt}
+{com}.         reshape long x_ , i(turn) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}      18   {txt}->{res}     918
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+
+{com}.         rename x_ fcollapse
+{res}{txt}
+{com}.         merge 1:1 turn cat using "`benchmark'", assert(match) nogen
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}               0
+{txt}{col 5}matched{col 30}{res}             918{txt}  
+{col 5}{hline 41}
+
+{com}.         gen double diff = reldif(fcollapse, collapse)
+{txt}
+{com}.         su diff
+
+{txt}    Variable {c |}       Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 56}
+{space 8}diff {c |}{res}       918    9.34e-10    5.88e-09          0   1.04e-07
+{txt}
+{com}.         assert diff < 1e-6
+{txt}
+{com}.         restore, preserve
+{txt}
+{com}. 
+.         * repeat with no by()
+.         
+.         collapse `clist'
+{txt}
+{com}.         assert _N == 1
+{txt}
+{com}.         gen byte i = 1
+{txt}
+{com}.         reshape long x_ , i(i) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+x_gear_sum:  {res}1{txt} value would be changed; not changed
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       1   {txt}->{res}      51
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+
+{com}.         rename x_ collapse
+{res}{txt}
+{com}.         tempfile benchmark
+{txt}
+{com}.         save "`benchmark'", replace
+
+{com}.         restore, preserve
+{txt}
+{com}.         
+.         fcollapse `clist'
+{res}{txt}
+{com}.         assert _N == 1
+{txt}
+{com}.         gen byte i = 1
+{txt}
+{com}.         reshape long x_ , i(i) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       1   {txt}->{res}      51
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+
+{com}.         rename x_ fcollapse
+{res}{txt}
+{com}.         merge 1:1 cat using "`benchmark'", assert(match) nogen
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}               0
+{txt}{col 5}matched{col 30}{res}              51{txt}  
+{col 5}{hline 41}
+
+{com}.         gen double diff = reldif(fcollapse, collapse)
+{txt}
+{com}.         su diff
+
+{txt}    Variable {c |}       Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 56}
+{space 8}diff {c |}{res}        51    7.59e-10    5.20e-09          0   3.71e-08
+{txt}
+{com}.         assert diff < 1e-6
+{txt}
+{com}.         restore, preserve
+{txt}
+{com}. 
+.         * repeat with no by() and one obs
+.         
+.         collapse `clist' in 1
+{txt}
+{com}.         assert _N == 1
+{txt}
+{com}.         gen byte i = 1
+{txt}
+{com}.         reshape long x_ , i(i) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       1   {txt}->{res}      51
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+
+{com}.         rename x_ collapse
+{res}{txt}
+{com}.         tempfile benchmark
+{txt}
+{com}.         save "`benchmark'", replace
+
+{com}.         restore, preserve
+{txt}
+{com}.         
+.         fcollapse `clist' in 1
+{res}{txt}(73 observations deleted)
+{res}{txt}
+{com}.         assert _N == 1
+{txt}
+{com}.         gen byte i = 1
+{txt}
+{com}.         reshape long x_ , i(i) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       1   {txt}->{res}      51
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+
+{com}.         rename x_ fcollapse
+{res}{txt}
+{com}.         merge 1:1 cat using "`benchmark'", assert(match) nogen
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}               0
+{txt}{col 5}matched{col 30}{res}              51{txt}  
+{col 5}{hline 41}
+
+{com}.         gen double diff = reldif(fcollapse, collapse)
+{txt}
+{com}.         su diff
+
+{txt}    Variable {c |}       Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 56}
+{space 8}diff {c |}{res}        51           0           0          0          0
+{txt}
+{com}.         assert diff < 1e-6
+{txt}
+{com}.         //restore, preserve
+.         restore, not
+{txt}
+{com}.         
+. 
+. // -------------------------
+. // Larger random datasets
+. set segmentsize 128m // default 32m
+{txt}
+{com}. set niceness 10, permanently // default 5
+{txt}({cmd:set niceness} preference recorded)
+
+{com}.         clear
+{txt}
+{com}.         adopath + "./comparison"
+{txt}  [1]  (BASE)      "{res}C:\Warehouse\Bin\Stata13\ado\base/{txt}"
+  [2]  (SITE)      "{res}C:\Warehouse\Bin\Stata13\ado\site/{txt}"
+  [3]              "{res}.{txt}"
+  [4]  (PERSONAL)  "{res}c:\ado\personal/{txt}"
+  [5]  (PLUS)      "{res}c:\ado\plus/{txt}"
+  [6]  (OLDPLACE)  "{res}c:\ado/{txt}"
+  [7]              "{res}C:/Warehouse/Scripts{txt}"
+  [8]              "{res}C:/Warehouse/prg{txt}"
+  [9]              "{res}D:/Dropbox/Research/SBS/Data/Branches/src{txt}"
+  [10]             "{res}D:\Dropbox\Projects\stata\misc{txt}"
+  [11]             "{res}./comparison{txt}"
+
+{com}.         timer clear
+{txt}
+{com}.         loc n = 20 * 1000 * 1000
+{txt}
+{com}.         crData `n' 10 // x1 ... x5; y1..
+(obs set)
+(Xs set)
+{txt}
+{com}.         loc all_vars `" x1 "x2 x3" x4 x5 "'
+{txt}
+{com}. 
+.         loc all_vars x1 // `" "x2 x3" "' // x1
+{txt}
+{com}.         loc clist (sum) x3 x5 y*
+{txt}
+{com}.         
+.         * prevent this bug:
+.         * http://www.statalist.org/forums/forum/general-stata-discussion/general/1312288-stata-mp-slows-the-sort
+.         set processors 3
+{txt}{p 4 4 2}
+The maximum number of processors or cores being used is changed from {res:4} to {res:3}.
+It can be set to any number between {res:1} and {res:4}
+{p_end}
+
+{com}.         
+.         //sort `all_vars'
+.         de
+
+{txt}Contains data
+  obs:{res}    20,000,000                          
+{txt} vars:{res}            15                          
+{txt} size:{res} 1,900,000,000                          
+{txt}{hline}
+              storage   display    value
+variable name   type    format     label      variable label
+{hline}
+{p 0 48}{res}{bind:x1             }{txt}{bind: long    }{bind:{txt}%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:x2             }{txt}{bind: int     }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:x3             }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:x4             }{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:x5             }{txt}{bind: long    }{bind:{txt}%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y1             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y2             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y3             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y4             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y5             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y6             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y7             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y8             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y9             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y10            }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{txt}{hline}
+Sorted by:  
+{res}     Note:  dataset has changed since last saved
+{txt}
+{com}. 
+.         foreach vars of local all_vars {c -(}
+{txt}  2{com}.                 preserve
+{txt}  3{com}.                 timer clear
+{txt}  4{com}.                 di as text "{c -(}bf:`vars'{c )-}"
+{txt}  5{com}. 
+.                 timer on 2
+{txt}  6{com}.                 collapse `clist', by(`vars') fast
+{txt}  7{com}.                 timer off 2
+{txt}  8{com}.                 li in 1/5
+{txt}  9{com}.                 li in -5/-1
+{txt} 10{com}.                 restore, preserve
+{txt} 11{com}. 
+.                 di "(starting fcollapse)"
+{txt} 12{com}.                 timer on 3
+{txt} 13{com}.                 fcollapse `clist', by(`vars') verbose fast
+{txt} 14{com}.                 timer off 3
+{txt} 15{com}.                 li in 1/5
+{txt} 16{com}.                 li in -5/-1
+{txt} 17{com}.                 //timer list
+.                 //timer clear
+.                 restore
+{txt} 18{com}.                 
+.                 timer on 4
+{txt} 19{com}.                 fcollapse `clist', by(`vars') verbose pool(5) fast
+{txt} 20{com}.                 timer off 4
+{txt} 21{com}.                 li in 1/5
+{txt} 22{com}.                 li in -5/-1
+{txt} 23{com}. 
+.                 di as text "1 other 2 default 3 me"
+{txt} 24{com}.                 di as text "20 mark 21 factor() 22 fcollapse() 23 sort"
+{txt} 25{com}.                 di as text "30 F.panelsetup() 31 st_data() 32 F.paneldata() 33 J() "
+{txt} 26{com}.                 di as text "34 results= 35 store-keys 36 store-res 37 compress"
+{txt} 27{com}.                 di as text "60 st_data 61 _factor(data)"
+{txt} 28{com}.                 di as text "70 minmax 71 hash"
+{txt} 29{com}.                 di as text "80 hash0 81 selectindex 82 dict[] 83 keys="
+{txt} 30{com}.                 di as text "84 levels= 85 counts="
+{txt} 31{com}.                 timer list
+{txt} 32{com}.         {c )-}
+{txt}{bf:x1}
+
+     {c TLC}{hline 5}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c TRC}
+     {c |} {res} x1       x3        x5       y1       y2       y3       y4       y5       y6       y7       y8       y9      y10 {txt}{c |}
+     {c LT}{hline 5}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c RT}
+  1. {c |} {res}100   102196   5049077   245385   245385   245385   245385   245385   245385   245385   245385   245385   245385 {txt}{c |}
+  2. {c |} {res}200   100464   4990098   242310   242310   242310   242310   242310   242310   242310   242310   242310   242310 {txt}{c |}
+  3. {c |} {res}300   102302   5001089   247230   247230   247230   247230   247230   247230   247230   247230   247230   247230 {txt}{c |}
+  4. {c |} {res}400   102118   4938214   245139   245139   245139   245139   245139   245139   245139   245139   245139   245139 {txt}{c |}
+  5. {c |} {res}500    98829   5014723   241203   241203   241203   241203   241203   241203   241203   241203   241203   241203 {txt}{c |}
+     {c BLC}{hline 5}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c BRC}
+
+       {c TLC}{hline 9}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c TRC}
+       {c |} {res}     x1       x3        x5       y1       y2       y3       y4       y5       y6       y7       y8       y9      y10 {txt}{c |}
+       {c LT}{hline 9}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c RT}
+ 9996. {c |} {res} 999600    98468   4898534   243048   243048   243048   243048   243048   243048   243048   243048   243048   243048 {txt}{c |}
+ 9997. {c |} {res} 999700   101674   4952496   243663   243663   243663   243663   243663   243663   243663   243663   243663   243663 {txt}{c |}
+ 9998. {c |} {res} 999800   101881   5020449   248460   248460   248460   248460   248460   248460   248460   248460   248460   248460 {txt}{c |}
+ 9999. {c |} {res} 999900    96789   4862182   239604   239604   239604   239604   239604   239604   239604   239604   239604   239604 {txt}{c |}
+10000. {c |} {res}1000000   103484   5187951   250797   250797   250797   250797   250797   250797   250797   250797   250797   250797 {txt}{c |}
+       {c BLC}{hline 9}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c BRC}
+(starting fcollapse)
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}10000{txt};{txt} method: {res}hash0{txt}; dict size: {res}999901{txt})
+{res}{txt}
+     {c TLC}{hline 5}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c TRC}
+     {c |} {res} x1       x3        x5       y1       y2       y3       y4       y5       y6       y7       y8       y9      y10 {txt}{c |}
+     {c LT}{hline 5}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c RT}
+  1. {c |} {res}100   102196   5049077   245385   245385   245385   245385   245385   245385   245385   245385   245385   245385 {txt}{c |}
+  2. {c |} {res}200   100464   4990098   242310   242310   242310   242310   242310   242310   242310   242310   242310   242310 {txt}{c |}
+  3. {c |} {res}300   102302   5001089   247230   247230   247230   247230   247230   247230   247230   247230   247230   247230 {txt}{c |}
+  4. {c |} {res}400   102118   4938214   245139   245139   245139   245139   245139   245139   245139   245139   245139   245139 {txt}{c |}
+  5. {c |} {res}500    98829   5014723   241203   241203   241203   241203   241203   241203   241203   241203   241203   241203 {txt}{c |}
+     {c BLC}{hline 5}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c BRC}
+
+       {c TLC}{hline 9}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c TRC}
+       {c |} {res}     x1       x3        x5       y1       y2       y3       y4       y5       y6       y7       y8       y9      y10 {txt}{c |}
+       {c LT}{hline 9}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c RT}
+ 9996. {c |} {res} 999600    98468   4898534   243048   243048   243048   243048   243048   243048   243048   243048   243048   243048 {txt}{c |}
+ 9997. {c |} {res} 999700   101674   4952496   243663   243663   243663   243663   243663   243663   243663   243663   243663   243663 {txt}{c |}
+ 9998. {c |} {res} 999800   101881   5020449   248460   248460   248460   248460   248460   248460   248460   248460   248460   248460 {txt}{c |}
+ 9999. {c |} {res} 999900    96789   4862182   239604   239604   239604   239604   239604   239604   239604   239604   239604   239604 {txt}{c |}
+10000. {c |} {res}1000000   103484   5187951   250797   250797   250797   250797   250797   250797   250797   250797   250797   250797 {txt}{c |}
+       {c BLC}{hline 9}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c BRC}
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}10000{txt};{txt} method: {res}hash0{txt}; dict size: {res}999901{txt})
+{res}{txt}
+     {c TLC}{hline 5}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c TRC}
+     {c |} {res} x1       x3        x5       y1       y2       y3       y4       y5       y6       y7       y8       y9      y10 {txt}{c |}
+     {c LT}{hline 5}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c RT}
+  1. {c |} {res}100   102196   5049077   245385   245385   245385   245385   245385   245385   245385   245385   245385   245385 {txt}{c |}
+  2. {c |} {res}200   100464   4990098   242310   242310   242310   242310   242310   242310   242310   242310   242310   242310 {txt}{c |}
+  3. {c |} {res}300   102302   5001089   247230   247230   247230   247230   247230   247230   247230   247230   247230   247230 {txt}{c |}
+  4. {c |} {res}400   102118   4938214   245139   245139   245139   245139   245139   245139   245139   245139   245139   245139 {txt}{c |}
+  5. {c |} {res}500    98829   5014723   241203   241203   241203   241203   241203   241203   241203   241203   241203   241203 {txt}{c |}
+     {c BLC}{hline 5}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c BRC}
+
+       {c TLC}{hline 9}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c TRC}
+       {c |} {res}     x1       x3        x5       y1       y2       y3       y4       y5       y6       y7       y8       y9      y10 {txt}{c |}
+       {c LT}{hline 9}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c RT}
+ 9996. {c |} {res} 999600    98468   4898534   243048   243048   243048   243048   243048   243048   243048   243048   243048   243048 {txt}{c |}
+ 9997. {c |} {res} 999700   101674   4952496   243663   243663   243663   243663   243663   243663   243663   243663   243663   243663 {txt}{c |}
+ 9998. {c |} {res} 999800   101881   5020449   248460   248460   248460   248460   248460   248460   248460   248460   248460   248460 {txt}{c |}
+ 9999. {c |} {res} 999900    96789   4862182   239604   239604   239604   239604   239604   239604   239604   239604   239604   239604 {txt}{c |}
+10000. {c |} {res}1000000   103484   5187951   250797   250797   250797   250797   250797   250797   250797   250797   250797   250797 {txt}{c |}
+       {c BLC}{hline 9}{c -}{hline 8}{c -}{hline 9}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c -}{hline 8}{c BRC}
+1 other 2 default 3 me
+20 mark 21 factor() 22 fcollapse() 23 sort
+30 F.panelsetup() 31 st_data() 32 F.paneldata() 33 J() 
+34 results= 35 store-keys 36 store-res 37 compress
+60 st_data 61 _factor(data)
+70 minmax 71 hash
+80 hash0 81 selectindex 82 dict[] 83 keys=
+84 levels= 85 counts=
+{res}   2:     50.01 /        1 =      50.0140
+   3:     17.45 /        1 =      17.4550
+   4:     20.47 /        1 =      20.4720
+  60:      0.48 /        2 =       0.2415
+  61:      6.39 /        2 =       3.1935
+  70:      0.37 /        2 =       0.1855
+  71:      6.02 /        2 =       3.0080
+  80:      0.51 /        2 =       0.2530
+  81:      0.01 /        2 =       0.0025
+  82:      0.00 /        2 =       0.0005
+  83:      0.00 /        2 =       0.0000
+  84:      0.36 /        2 =       0.1780
+  85:      5.15 /        2 =       2.5740
+  89:      7.12 /        2 =       3.5620
+{txt}
+{com}. 
+. set processors 4
+{txt}{p 4 4 2}
+The maximum number of processors or cores being used is changed from {res:3} to {res:4}.
+It can be set to any number between {res:1} and {res:4}
+{p_end}
+
+{com}. exit
+
+{txt}end of do-file
+
+{com}. do test_fsort
+{txt}
+{com}. pr drop _all
+{txt}
+{com}. clear all
+{txt}
+{com}. set more off
+{txt}
+{com}. set matadebug off
+{txt}
+{com}. include "test_utils.do"
+{txt}
+{com}. 
+. // -------------------------
+. // Programs
+. 
+. cap pr drop crData
+{txt}
+{com}. pr crData
+{txt}  1{com}.         args n k
+{txt}  2{com}.         loc kk = 2^`=`k'-1'
+{txt}  3{com}.         clear
+{txt}  4{com}.         qui set obs `n'
+{txt}  5{com}.         noi di "(obs set)"
+{txt}  6{com}.         loc m = ceil(`n' / 10)
+{txt}  7{com}.         //set seed 234238921
+.         *gen long x1 = ceil(uniform()*`m')
+.         gen long x1 = ceil(uniform()*10000) * 100
+{txt}  8{com}. 
+.         gen int x2 = ceil(uniform()*3000)
+{txt}  9{com}.         gen byte x3 = ceil(uniform()*100)
+{txt} 10{com}.         gen str x4 = "u" + string(ceil(uniform()*100), "%5.0f")
+{txt} 11{com}.         gen long x5 = ceil(uniform()*5000)
+{txt} 12{com}.         // compress
+.         noi di "(Xs set)"
+{txt} 13{com}. 
+.         forv i=1/`k' {c -(}
+{txt} 14{com}.                 gen double y`i' = 123
+{txt} 15{com}.         {c )-}
+{txt} 16{com}. 
+.         loc obs_k = ceil(`c(N)' / 1000)
+{txt} 17{com}. end
+{txt}
+{com}. 
+. cap pr drop FactorsAgree
+{txt}
+{com}. pr FactorsAgree, sortpreserve
+{txt}  1{com}.         args id1 id2
+{txt}  2{com}.         tempvar ok
+{txt}  3{com}.         
+.         bys `id1' (`id2'): gen byte `ok' = `id2'[1] == `id2'[_N]
+{txt}  4{com}.         assert `ok' == 1
+{txt}  5{com}.         drop `ok'
+{txt}  6{com}.         
+.         bys `id2' (`id1'): gen byte `ok' = `id1'[1] == `id1'[_N]
+{txt}  7{com}.         assert `ok' == 1
+{txt}  8{com}.         drop `ok'
+{txt}  9{com}. end
+{txt}
+{com}. 
+. cap pr drop ValidateFactor
+{txt}
+{com}. pr ValidateFactor
+{txt}  1{com}.         syntax varlist [in] [if], [factor(string) method(string)]
+{txt}  2{com}.         preserve
+{txt}  3{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OPTIONS]{c )-} {c -(}res{c )-}`0'"
+{txt}  4{com}.         if ("`factor'" == "") {c -(}
+{txt}  5{com}.                 loc factor F
+{txt}  6{com}.         {c )-}
+{txt}  7{com}.         if ("`in'`if'" != "") {c -(}
+{txt}  8{com}.                 marksample touse
+{txt}  9{com}.                 cou if `touse'
+{txt} 10{com}.                 loc num_obs = r(N)
+{txt} 11{com}.         {c )-}
+{txt} 12{com}.         else {c -(}
+{txt} 13{com}.                 loc num_obs = c(N)
+{txt} 14{com}.         {c )-}
+{txt} 15{com}.         // factor(varlist, touse, verbose, method, sort_levels, count_levels, hash_ratio)
+.         loc cmd mata: `factor' = factor("`varlist'", "`touse'", 1, "`method'")
+{txt} 16{com}.         di as res `"          `cmd'"'
+{txt} 17{com}.         `cmd'
+{txt} 18{com}.         loc cmd mata: `factor'.store_levels("new_id")
+{txt} 19{com}.         di as res `"          `cmd'"'
+{txt} 20{com}.         `cmd'
+{txt} 21{com}.         loc cmd mata: `factor'.panelsetup()
+{txt} 22{com}.         di as res `"          `cmd'"'
+{txt} 23{com}.         `cmd'
+{txt} 24{com}. 
+.         di as smcl "{c -(}txt{c )-}{c -(}bf:[TESTING] {c )-}" _c
+{txt} 25{com}. 
+.         // Output:
+.         // num_levels num_obs touse varlist
+.         // levels keys counts info p
+.         di as res "F.num_obs " _c
+{txt} 26{com}.         mata: assert(`factor'.num_obs == `num_obs')
+{txt} 27{com}.         egen long benchmark_id = group(`varlist')
+{txt} 28{com}.         di as res "F.levels " _c
+{txt} 29{com}.         assert benchmark_id == new_id
+{txt} 30{com}.         
+.         gen long i = _n
+{txt} 31{com}.         sort benchmark_id, stable
+{txt} 32{com}.         mata: benchmark_id = st_data(., "benchmark_id")
+{txt} 33{com}.         sort i
+{txt} 34{com}.         drop i
+{txt} 35{com}. 
+.         gen byte counts = 1
+{txt} 36{com}.         collapse (first) `varlist' (count) counts , by(benchmark_id)
+{txt} 37{com}.         di as res "F.num_levels " _c
+{txt} 38{com}.         loc num_levels = c(N)
+{txt} 39{com}.         mata: assert(`factor'.num_levels == `num_levels')
+{txt} 40{com}.         di as res "F.touse " _c
+{txt} 41{com}.         mata: assert(`factor'.touse == "`touse'")
+{txt} 42{com}.         di as res "F.varlist " _c
+{txt} 43{com}.         mata: assert(`factor'.varlist == tokens("`varlist'"))
+{txt} 44{com}.         di as res "F.keys " _c
+{txt} 45{com}.         mata: benchmark_keys = __fload_data("`varlist'")
+{txt} 46{com}.         mata: assert(benchmark_keys == `factor'.keys)
+{txt} 47{com}.         di as res "F.counts " _c
+{txt} 48{com}.         mata: benchmark_counts = st_data(., "counts")
+{txt} 49{com}.         mata: assert(benchmark_counts == `factor'.counts)
+{txt} 50{com}.         di as res "F.offsets "
+{txt} 51{com}.         sort benchmark_id
+{txt} 52{com}.         mata: assert(panelsetup(benchmark_id, 1) == `factor'.info)
+{txt} 53{com}. 
+.         // note: order is not a stable sort so we also sort by _n
+.         mata: assert(`factor'.p == order((`factor'.levels, (1::`factor'.num_obs)), 1..2) )
+{txt} 54{com}. 
+.         // same for offsets, p
+.         mata: mata drop `factor'
+{txt} 55{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OK]{c )-}"
+{txt} 56{com}. end
+{txt}
+{com}. {txt}
+{com}. cls
+{txt}
+{com}. 
+. cap pr drop CheckOrder
+{txt}
+{com}. pr CheckOrder
+{txt}  1{com}.         syntax, vars(string) idx(string) id(string) [stable]
+{txt}  2{com}.         if ("`stable'" != "") {c -(}
+{txt}  3{com}.                 assert `idx' == _n
+{txt}  4{com}.                 di as res "STABLE OK"
+{txt}  5{com}.         {c )-}
+{txt}  6{com}.         else {c -(}
+{txt}  7{com}.                 assert `id'[_n-1] <= `id' | _n == 1
+{txt}  8{com}.                 di as res "UNSTABLE OK"
+{txt}  9{com}.         {c )-}
+{txt} 10{com}. end
+{txt}
+{com}. 
+. // -------------------------
+. // Simple commands
+. 
+.         * Initialize with random sort
+.         loc sortvars `" "turn" "trunk turn" "foreign turn" "foreign turn trunk" one "'
+{txt}
+{com}.         foreach vars of local sortvars {c -(}
+{txt}  2{com}.                 di as text "{c -(}bf:`vars'{c )-}"
+{txt}  3{com}.                 qui sysuse auto, clear
+{txt}  4{com}.                 gen u = uniform()
+{txt}  5{com}.                 gen byte one = 1
+{txt}  6{com}.                 keep `vars' u
+{txt}  7{com}.                 
+.                 sort u
+{txt}  8{com}.                 sort `vars', stable
+{txt}  9{com}.                 gen long index_bench = _n
+{txt} 10{com}.                 egen long id_bench = group(`vars'), missing
+{txt} 11{com}.                 
+.                 sort u
+{txt} 12{com}.                 fsort `vars'
+{txt} 13{com}.                 CheckOrder, vars(`vars') idx(index_bench) id(id_bench) stable
+{txt} 14{com}.         {c )-}
+{txt}{bf:turn}
+{res}{txt}(obs: {res}74{txt}; levels: {res}18{txt};{txt} method: {res}hash0{txt}; dict size: {res}21{txt})
+{res}STABLE OK
+{txt}{bf:trunk turn}
+{res}{txt}(obs: {res}74{txt}; levels: {res}55{txt};{txt} method: {res}hash0{txt}; dict size: {res}399{txt})
+{res}STABLE OK
+{txt}{bf:foreign turn}
+{res}{txt}(obs: {res}74{txt}; levels: {res}24{txt};{txt} method: {res}hash0{txt}; dict size: {res}42{txt})
+{res}STABLE OK
+{txt}{bf:foreign turn trunk}
+{res}{txt}(obs: {res}74{txt}; levels: {res}57{txt};{txt} method: {res}hash0{txt}; dict size: {res}798{txt})
+{res}STABLE OK
+{txt}{bf:one}
+{res}{txt}(obs: {res}74{txt}; levels: {res}1{txt};{txt} method: {res}hash0{txt}; dict size: {res}1{txt})
+{res}STABLE OK
+{txt}
+{com}. 
+. // -------------------------
+. // With missing Values
+.         qui sysuse auto, clear
+{txt}
+{com}.         gen u = uniform()
+{txt}
+{com}.         loc vars turn
+{txt}
+{com}.         keep `vars' u
+{txt}
+{com}.         replace turn = . if turn < 39
+{txt}(32 real changes made, 32 to missing)
+
+{com}.         
+.         sort u
+{txt}
+{com}.         sort `vars', stable
+{txt}
+{com}.         gen long index_bench = _n
+{txt}
+{com}.         egen long id_bench = group(`vars'), missing
+{txt}
+{com}.         
+.         sort u
+{txt}
+{com}.         fsort `vars'
+{res}{txt}(0 hash collisions - 0.00{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}11{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}{txt}
+{com}.         CheckOrder, vars(`vars') idx(index_bench) id(id_bench) stable
+{res}STABLE OK
+{txt}
+{com}. 
+. // -------------------------
+. // Generating IDs
+.         qui sysuse auto, clear
+{txt}
+{com}.         gen u = uniform()
+{txt}
+{com}.         loc vars turn
+{txt}
+{com}.         keep `vars' u
+{txt}
+{com}.         replace turn = . if turn < 39
+{txt}(32 real changes made, 32 to missing)
+
+{com}.         
+.         sort u
+{txt}
+{com}.         sort `vars', stable
+{txt}
+{com}.         gen long index_bench = _n
+{txt}
+{com}.         egen long id_bench = group(`vars'), missing
+{txt}
+{com}.         
+.         sort u
+{txt}
+{com}.         fsort `vars', gen(id)
+{res}{txt}(0 hash collisions - 0.00{txt}%)
+{txt}(obs: {res}74{txt}; levels: {res}11{txt};{txt} method: {res}hash1{txt}; dict size: {res}111{txt})
+{res}{txt}
+{com}.         CheckOrder, vars(`vars') idx(index_bench) id(id_bench) stable
+{res}STABLE OK
+{txt}
+{com}.         assert id == id_bench
+{txt}
+{com}. 
+. // -------------------------
+. // Larger random datasets
+.         clear
+{txt}
+{com}.         timer clear
+{txt}
+{com}.         loc n = 10 * 1000
+{txt}
+{com}.         crData `n' 0 // x1 ... x5
+(obs set)
+(Xs set)
+{txt}
+{com}.         gen idx = _n
+{txt}
+{com}.         gen long index_bench = .
+{txt}(10000 missing values generated)
+
+{com}.         loc all_vars `" x1 "x2 x3" x4 x5 "'
+{txt}
+{com}. 
+.         foreach vars of local all_vars {c -(}
+{txt}  2{com}.                 di as text "{c -(}bf:`vars'{c )-}"
+{txt}  3{com}.                 sort idx
+{txt}  4{com}.                 sort `vars', stable
+{txt}  5{com}.                 qui replace index_bench = _n
+{txt}  6{com}.                 egen long id_bench = group(`vars'), missing
+{txt}  7{com}. 
+.                 sort idx
+{txt}  8{com}.                 fsort `vars'
+{txt}  9{com}.                 CheckOrder, vars(`vars') idx(index_bench) id(id_bench) stable
+{txt} 10{com}. 
+.                 drop id_bench
+{txt} 11{com}.         {c )-}
+{txt}{bf:x1}
+{res}{txt}(obs: {res}10000{txt}; levels: {res}6371{txt};{txt} method: {res}hash0{txt}; dict size: {res}999901{txt})
+{res}STABLE OK
+{txt}{bf:x2 x3}
+{res}{txt}(obs: {res}10000{txt}; levels: {res}9819{txt};{txt} method: {res}hash0{txt}; dict size: {res}300000{txt})
+{res}STABLE OK
+{txt}{bf:x4}
+{res}{txt}(0 hash collisions - 0.00{txt}%)
+{txt}(obs: {res}10000{txt}; levels: {res}100{txt};{txt} method: {res}hash1{txt}; dict size: {res}15000{txt})
+{res}STABLE OK
+{txt}{bf:x5}
+{res}{txt}(obs: {res}10000{txt}; levels: {res}4328{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{res}STABLE OK
+{txt}
+{com}. 
+. // -------------------------
+. // Profile
+.         clear
+{txt}
+{com}.         timer clear
+{txt}
+{com}.         loc n = 10 * 1000
+{txt}
+{com}.         crData `n' 0 // x1 ... x5
+(obs set)
+(Xs set)
+{txt}
+{com}.         gen idx = _n
+{txt}
+{com}.         gen long index_bench = .
+{txt}(10000 missing values generated)
+
+{com}.         loc vars x1 // x1 "x2 x3" x4 x5
+{txt}
+{com}. 
+.         profiler on
+{txt}
+{com}.         fsort `vars'
+{res}{txt}(obs: {res}10000{txt}; levels: {res}6326{txt};{txt} method: {res}hash0{txt}; dict size: {res}999901{txt})
+{res}{txt}
+{com}.         profiler off
+{txt}
+{com}.         profiler report
+{txt}fsort
+{res}     1    0.011{txt}  fsort
+Overall total count = {res}     1
+{txt}Overall total time  = {res}     0.011{txt} (sec)
+
+{com}.         profiler clear
+{txt}
+{com}.         timer list
+{res}  60:      0.00 /        1 =       0.0000
+  61:      0.01 /        1 =       0.0050
+  70:      0.00 /        1 =       0.0000
+  71:      0.01 /        1 =       0.0050
+  80:      0.00 /        1 =       0.0020
+  81:      0.00 /        1 =       0.0010
+  82:      0.00 /        1 =       0.0000
+  83:      0.00 /        1 =       0.0000
+  84:      0.00 /        1 =       0.0010
+  85:      0.00 /        1 =       0.0010
+  89:      0.00 /        1 =       0.0010
+{txt}
+{com}.         sort idx
+{txt}
+{com}. 
+.         timer clear
+{txt}
+{com}.         timer on 1
+{txt}
+{com}.         fsort `vars'
+{res}{txt}(obs: {res}10000{txt}; levels: {res}6326{txt};{txt} method: {res}hash0{txt}; dict size: {res}999901{txt})
+{res}{txt}
+{com}.         timer off 1
+{txt}
+{com}.         sort idx
+{txt}
+{com}.         timer list
+{res}   1:      0.01 /        1 =       0.0120
+  60:      0.00 /        1 =       0.0000
+  61:      0.01 /        1 =       0.0060
+  70:      0.00 /        1 =       0.0000
+  71:      0.01 /        1 =       0.0060
+  80:      0.00 /        1 =       0.0030
+  81:      0.00 /        1 =       0.0010
+  82:      0.00 /        1 =       0.0000
+  83:      0.00 /        1 =       0.0000
+  84:      0.00 /        1 =       0.0010
+  85:      0.00 /        1 =       0.0010
+  89:      0.00 /        1 =       0.0010
+{txt}
+{com}. 
+. // -------------------------
+. // Benchmark
+.         clear
+{txt}
+{com}.         timer clear
+{txt}
+{com}.         loc n = 50 * 1000 * 1000
+{txt}
+{com}.         crData `n' 0 // x1 ... x5
+(obs set)
+(Xs set)
+{txt}
+{com}.         gen idx = _n
+{txt}
+{com}.         gen long index_bench = .
+{txt}(50000000 missing values generated)
+
+{com}.         loc all_vars `" x1 "x2 x3" x4 x5 "'
+{txt}
+{com}.         set processors 4
+{txt}{p 4 4 2}
+The maximum number of processors or cores being used is {res:4}.
+It can be set to any number between {res:1} and {res:4}.
+{p_end}
+
+{com}.         
+.         loc j 0
+{txt}
+{com}.         foreach vars of local all_vars {c -(}
+{txt}  2{com}.                 loc ++j
+{txt}  3{com}.                 di as text "{c -(}bf:`vars'{c )-}"
+{txt}  4{com}. 
+.                 sort idx
+{txt}  5{com}.                 timer on `j'1
+{txt}  6{com}.                 sort `vars', stable
+{txt}  7{com}.                 timer off `j'1
+{txt}  8{com}. 
+.                 sort idx
+{txt}  9{com}.                 timer on `j'2
+{txt} 10{com}.                 sort `vars'
+{txt} 11{com}.                 timer off `j'2
+{txt} 12{com}. 
+.                 sort idx
+{txt} 13{com}.                 timer on `j'3
+{txt} 14{com}.                 fsort `vars'
+{txt} 15{com}.                 timer off `j'3
+{txt} 16{com}.         {c )-}
+{txt}{bf:x1}
+{res}{txt}(obs: {res}50000000{txt}; levels: {res}10000{txt};{txt} method: {res}hash0{txt}; dict size: {res}999901{txt})
+{res}{txt}{bf:x2 x3}
+{res}{txt}(obs: {res}50000000{txt}; levels: {res}300000{txt};{txt} method: {res}hash0{txt}; dict size: {res}300000{txt})
+{res}{txt}{bf:x4}
+{res}{txt}(0 hash collisions - 0.00{txt}%)
+{txt}(obs: {res}50000000{txt}; levels: {res}100{txt};{txt} method: {res}hash1{txt}; dict size: {res}75000000{txt})
+{res}{txt}{bf:x5}
+{res}{txt}(obs: {res}50000000{txt}; levels: {res}5000{txt};{txt} method: {res}hash0{txt}; dict size: {res}5000{txt})
+{res}{txt}
+{com}. 
+.         set processors 4
+{txt}{p 4 4 2}
+The maximum number of processors or cores being used is {res:4}.
+It can be set to any number between {res:1} and {res:4}.
+{p_end}
+
+{com}.         di "10=10k 20=3k*.1k 30=str.1k 40=5k"
+{res}10=10k 20=3k*.1k 30=str.1k 40=5k
+{txt}
+{com}.         di "1=sort+stable 2=sort 3=fsort+stable"
+{res}1=sort+stable 2=sort 3=fsort+stable
+{txt}
+{com}.         timer list
+{res}  11:     62.52 /        1 =      62.5170
+  12:     63.74 /        1 =      63.7450
+  13:     55.40 /        1 =      55.3990
+  21:     71.15 /        1 =      71.1500
+  22:     65.72 /        1 =      65.7180
+  23:     67.62 /        1 =      67.6160
+  31:     97.97 /        1 =      97.9690
+  32:     53.40 /        1 =      53.3990
+  33:     71.54 /        1 =      71.5370
+  41:     54.69 /        1 =      54.6920
+  42:     47.50 /        1 =      47.4980
+  43:     49.71 /        1 =      49.7110
+  60:      2.51 /        4 =       0.6285
+  61:     64.58 /        4 =      16.1438
+  70:      1.69 /        4 =       0.4215
+  71:     62.89 /        4 =      15.7220
+  80:      2.81 /        3 =       0.9353
+  81:      0.56 /        4 =       0.1398
+  82:     27.79 /        4 =       6.9487
+  83:      0.66 /        4 =       0.1643
+  84:      1.30 /        3 =       0.4333
+  85:     21.59 /        3 =       7.1953
+  89:     41.01 /        4 =      10.2513
+{txt}
+{com}. 
+. exit
+
+{txt}end of do-file
+
+{com}. 
+. log off
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}C:\Git\ftools\test\benchmarks.smcl
+  {txt}log type:  {res}smcl
+ {txt}paused on:  {res}17 Jul 2016, 04:09:06
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}
