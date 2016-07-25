@@ -146,6 +146,17 @@ Where *SOME_FOLDER* is the folder that contains the *stata.toc* and related file
 
 In case of a Mata error, try typing `ftools` to create the Mata library (lftools.mlib).
 
+## Dev. install
+
+To install from a git fork, type
+
+```
+cap ado uninstall ftools
+net install ftools, from("C:/git/ftools/source")
+```
+
+(Changing "C:/git/" to your own folder)
+
 ## Dependencies
 
 The `fcollapse` function requires the `moremata` package from SSC.
