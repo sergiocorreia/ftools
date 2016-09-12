@@ -1,3 +1,4 @@
+*! version 1.0.1 12sep2016
 cap pr drop fcollapse
 pr fcollapse
 	cap noi Inner `0'

@@ -1,4 +1,4 @@
-*! version 1.0.0 10jul2016
+*! version 1.0.1 12sep2016
 cap pr drop fsort
 pr fsort
 	syntax varlist [if] [in] , [Generate(name)]

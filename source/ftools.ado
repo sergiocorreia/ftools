@@ -1,4 +1,5 @@
-// This file is just used to compile ftools.mlib
+*! version 1.0.1 12sep2016
+* This file is just used to compile ftools.mlib
 
 cap pr drop ftools
 pr ftools
@@ -31,7 +32,7 @@ pr ftools
 	qui findfile "ftools.mata"
 	loc fn "`r(fn)'"
 	run "`fn'"
-	loc path = c(sysdir_plus) + c(dirsep) + "l"
+	loc path = c(sysdir_plus) + "l"
 	cap {
 		qui mata: mata mlib create lftools  , dir("`path'") replace
 		qui mata: mata mlib add lftools *() , dir("`path'") complete
