@@ -1,4 +1,4 @@
-*! version 1.0.1 12sep2016
+*! version 1.1.0 29sep2016
 cap pr drop fegen_group
 pr fegen_group
 	syntax [if] [in] , [by(varlist) type(string)] /// -by- is ignored
@@ -82,8 +82,13 @@ pr fegen_group
 			touse(`touse') verbose(`verbose')
 	}
 	else {
-		loc count 0 // Don't need to count if we can avoid it (hash0 only)
-		mata: store_levels("`varlist'", "`name'", "`touse'", `verbose', "`method'", `sort', `ratio')
+		cap noi {
+			mata: F = factor("`varlist'", "`touse'", `verbose', "`method'", `sort', 0, `ratio')
+			mata: F.store_levels("`name'")
+		}
+		loc rc = c(rc)
+		cap mata: mata drop F
+		error `rc'
 	}
 	la var `name' "group(`varlist')"
 end

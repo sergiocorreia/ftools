@@ -1,4 +1,4 @@
-*! version 1.0.1 12sep2016
+*! version 1.1.0 29sep2016
 * This file is just used to compile ftools.mlib
 
 cap pr drop ftools

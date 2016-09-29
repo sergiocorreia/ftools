@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1 12sep2016}{...}
+{* *! version 1.1.0 29sep2016}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fsort" "help fsort"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
@@ -31,7 +31,8 @@
 
 {p 8 16 2}
 {it:class Factor scalar}
-{bind: }{cmd:factor(}{it:varnames} [{cmd:,}
+{bind: }{cmd:factor(}{space 3}{it:varnames} [{space 1}
+{cmd:,}
 {it:touse}{cmd:,} 
 {it:verbose}{cmd:,} 
 {it:method}{cmd:,} 
@@ -49,15 +50,6 @@
 {it:count_levels}{cmd:,} 
 {it:hash_ratio}]{cmd:)}
 
-{p 8 16 2}
-{it:void}{bind: }{cmd:store_levels(}
-{it:varnames}{cmd:,}
-{it:newvar} [{cmd:,}
-{it:touse}{cmd:,} 
-{it:verbose}{cmd:,} 
-{it:method}{cmd:,} 
-{it:sort_levels}{cmd:,} 
-{it:hash_ratio}]{cmd:)}
 
 {marker arguments}{...}
 {synoptset 38 tabbed}{...}
@@ -132,7 +124,7 @@ faster ({it:O(N)} instead of {it:O(N log N)}{p_end}
 {pstd}Notes:
 
 {synoptset 3 tabbed}{...}
-{synopt:- }If you just downloaded the package and want to use the Mata functions directly (instead of the Stata commands), run {stata ftools} to create the library.{p_end}
+{synopt:- }If you just downloaded the package and want to use the Mata functions directly (instead of the Stata commands), run once the {stata ftools} command to create the library.{p_end}
 {synopt:- }If you already have your data in Mata, use {cmd:F = _factor(data)} instead of {cmd:F = factor(varlist)}{p_end}
 
 
@@ -170,7 +162,9 @@ If you only want to create identifiers based on one or more variables,
 run something like:
 
 {inp}sysuse auto, clear
-mata: store_levels("foreign turn", "id")
+mata: F = factor("foreign turn")
+mata: F.store_levels("id")
+mata: mata drop F
 {txt}
 
 {pstd}
@@ -232,7 +226,7 @@ mata: reg_by_group("price", "weight length", "foreign")
 All-numeric and all-string varlists are allowed, but
 hybrid varlists (where some but not all variables are strings) are not possible
 due to Mata limitations.
-As a workaround, first convert the string variables to numeric (e.g. using {cmd:store_levels()}) and then run your intended command.
+As a workaround, first convert the string variables to numeric (e.g. using {cmd:fegen group()}) and then run your intended command.
 
 {pstd}
 You can pass as {varlist} a string like "turn trunk"

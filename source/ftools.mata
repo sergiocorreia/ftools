@@ -733,20 +733,6 @@ void assert_msg(real scalar t, | string scalar msg)
         if (t==0) _error(msg)
 }
 
-void store_levels(`String' varnames,
-                  `Varname' newvar,
-                | `String' touse,
-                  `Boolean' verbose,
-                  `String' method,
-                  `Boolean' sort_levels,
-                  `Integer' hash_ratio)
-{
-	`Factor'		F
-	F = factor(varnames, touse, verbose, method,
-	           sort_levels, 0, hash_ratio)
-	F.store_levels(newvar)
-}
-
 `DataFrame' __fload_data(`Varlist' varlist,
                        | `String' touse)
 {

@@ -126,6 +126,17 @@ slower than `fsort` (which always produces a stable sort)
 
 # Installation
 
+## Stable Version
+
+Within Stata, type:
+
+```
+cap ado uninstall ftools
+ssc install ftools
+```
+
+## Dev Version
+
 With Stata 13+, type:
 
 ```
@@ -146,9 +157,9 @@ Where *SOME_FOLDER* is the folder that contains the *stata.toc* and related file
 
 In case of a Mata error, try typing `ftools` to create the Mata library (lftools.mlib).
 
-## Dev. install
+## Installing local versions
 
-To install from a git fork, type
+To install from a git fork, type something like:
 
 ```
 cap ado uninstall ftools
