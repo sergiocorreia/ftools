@@ -119,7 +119,7 @@ and {it:F.p} (see below); used in panel computations{p_end}
 {cmd:data = data[F.p, .]}
 but calls {cmd:F.panelsetup()} if required; {it:data} is a {it:transmorphic matrix}{p_end}
 {synopt:{it:void} F{cmd:._sort(}{it:data}{cmd:)}}in-place version of {cmd:.paneldata()} (slower but uses less memory){p_end}
-{synopt:{it:real vector} F{cmd:.info}}equivalent to {help mf_panelsetup:panelsetup()
+{synopt:{it:real vector} F{cmd:.info}}equivalent to {help mf_panelsetup:panelsetup()}
 (returns a {it:(num_levels X 2)} matrix with start and end positions of each level/panel).
 {bf:Note:} instead of using {cmd:F.info} direclty, call panelsubmatrix():
 {cmd:x = panelsubmatrix(X, i, F.info)} (see the example at the end){p_end}
