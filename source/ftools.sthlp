@@ -121,7 +121,7 @@ but calls {cmd:F.panelsetup()} if required; {it:data} is a {it:transmorphic matr
 {synopt:{it:void} F{cmd:._sort(}{it:data}{cmd:)}}in-place version of {cmd:.paneldata()} (slower but uses less memory){p_end}
 {synopt:{it:real vector} F{cmd:.info}}equivalent to {help mf_panelsetup:panelsetup()}
 (returns a {it:(num_levels X 2)} matrix with start and end positions of each level/panel).
-{bf:Note:} instead of using {cmd:F.info} direclty, call panelsubmatrix():
+{bf:Note:} instead of using {cmd:F.info} directly, call panelsubmatrix():
 {cmd:x = panelsubmatrix(X, i, F.info)} (see the example at the end){p_end}
 {synopt:{it:real vector} F{cmd:.p}}equivalent to {cmd:order(F.levels)}
 but implemented with a counting sort that is asymptotically
