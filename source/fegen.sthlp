@@ -45,10 +45,38 @@ Then, inside the file, use the following scaffolding:
 {tab}{tab}}
 {tab}end{text}{sf}
 
+
+{marker author}{...}
 {title:Author}
 
 {pstd}Sergio Correia{break}
-Fuqua School of Business, Duke University{break}
-Email: {browse "mailto:sergio.correia@gmail.com":sergio.correia@gmail.com}{break}
-Project URL: {browse "https://github.com/sergiocorreia/ftools"}{break}
+Board of Governors of the Federal Reserve System, USA{break}
+{browse "mailto:sergio.correia@gmail.com":sergio.correia@gmail.com}{break}
 {p_end}
+
+
+{marker project}{...}
+{title:More Information}
+
+{pstd}{break}
+To report bugs, contribute, ask for help, etc. please see the project URL in Github:{break}
+{browse "https://github.com/sergiocorreia/ftools"}{break}
+{p_end}
+
+
+{marker acknowledgment}{...}
+{title:Acknowledgment}
+
+{pstd}
+This help file was based on StataCorp's own help file
+for {it:collapse}.
+{p_end}
+
+{pstd}
+This project was largely inspired by the works of
+{browse "http://wesmckinney.com/blog/nycpython-1102012-a-look-inside-pandas-design-and-development/":Wes McKinney}, 
+{browse "http://www.stata.com/meeting/uk15/abstracts/":Andrew Maurer}
+and
+{browse "https://ideas.repec.org/c/boc/bocode/s455001.html":Benn Jann}.
+{p_end}
+

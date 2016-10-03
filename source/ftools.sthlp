@@ -112,8 +112,8 @@ and {it:F.p} (see below); used in panel computations{p_end}
 but calls {cmd:F.panelsetup()} if required; {it:data} is a {it:transmorphic matrix}{p_end}
 {synopt:{it:void} F{cmd:._sort(}{it:data}{cmd:)}}in-place version of {cmd:.paneldata()} (slower but uses less memory){p_end}
 {synopt:{it:real vector} F{cmd:.info}}equivalent to {help mf_panelsetup:panelsetup()}
-(returns a {it:(num_levels X 2)} matrix with start and end positions of each level/panel).
-{bf:Note:} instead of using {cmd:F.info} directly, call panelsubmatrix():
+(returns a {it:(num_levels X 2)} matrix with start and end positions of each level/panel).{p_end}
+{p2coldent:}{bf:Note:} instead of using {cmd:F.info} directly, call panelsubmatrix():
 {cmd:x = panelsubmatrix(X, i, F.info)} (see the example at the end){p_end}
 {synopt:{it:real vector} F{cmd:.p}}equivalent to {cmd:order(F.levels)}
 but implemented with a counting sort that is asymptotically
@@ -266,8 +266,33 @@ b) Type {stata findfile ftools_type_aliases.mata} and {stata findfile ftools.mat
 {title:Author}
 
 {pstd}Sergio Correia{break}
-Fuqua School of Business, Duke University{break}
-Email: {browse "mailto:sergio.correia@gmail.com":sergio.correia@gmail.com}{break}
-Project URL: {browse "https://github.com/sergiocorreia/ftools"}{break}
+Board of Governors of the Federal Reserve System, USA{break}
+{browse "mailto:sergio.correia@gmail.com":sergio.correia@gmail.com}{break}
+{p_end}
+
+
+{marker project}{...}
+{title:More Information}
+
+{pstd}{break}
+To report bugs, contribute, ask for help, etc. please see the project URL in Github:{break}
+{browse "https://github.com/sergiocorreia/ftools"}{break}
+{p_end}
+
+
+{marker acknowledgment}{...}
+{title:Acknowledgment}
+
+{pstd}
+This help file was based on StataCorp's own help file
+for {it:collapse}.
+{p_end}
+
+{pstd}
+This project was largely inspired by the works of
+{browse "http://wesmckinney.com/blog/nycpython-1102012-a-look-inside-pandas-design-and-development/":Wes McKinney}, 
+{browse "http://www.stata.com/meeting/uk15/abstracts/":Andrew Maurer}
+and
+{browse "https://ideas.repec.org/c/boc/bocode/s455001.html":Benn Jann}.
 {p_end}
 

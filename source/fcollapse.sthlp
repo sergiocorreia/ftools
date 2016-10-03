@@ -100,7 +100,7 @@ or very low value ({it:pool(1)}) to save memory at the cost of speed
 {title:Description}
 
 {pstd}
-{opt collapse} converts the dataset in memory into a dataset of means, sums,
+{opt fcollapse} converts the dataset in memory into a dataset of means, sums,
 medians, etc.  {it:clist} can refer to numeric and string variables
 although string variables are only supported by a few functions
 (first, last, firstnm, lastnm).
@@ -109,7 +109,7 @@ although string variables are only supported by a few functions
 Weights are currently not supported.
 
 {pstd}
-You can implement your own Mata functions and include them in your collapse command.
+You can implement your own Mata functions to easily extend the fcollapse command.
 
 
 {marker options}{...}
@@ -127,19 +127,27 @@ string or numeric variables.
 {opt cw} specifies casewise deletion.  If {opt cw} is not specified, all
 possible observations are used for each calculated statistic.
 
-{pstd}The following option is available with {opt collapse} but is not shown
-in the dialog box:
+{phang}
+{opt fast} specifies that {opt fcollapse} not restore the original dataset
+should the user press {hi:Break}.
 
 {phang}
-{opt fast} specifies that {opt collapse} not restore the original dataset
-should the user press {hi:Break}.  {opt fast} is intended for use by
-programmers.
+{opt freq} stores frequencies on a new variable {it:_freq}.
+To choose the name of the variable, use {opth freq(newvar)}
 
+{phang}
+{opt register(fun1 ...)} registers Mata functions {it:fun1}, etc. so 
+to extend {cmd fcollapse}; see example below.
+
+{phang}
+{opt pool(#)} load the data into Stata in blocks of # variables Default is pool(.),
+select a low value (pool(5)) or very low value (pool(1)) to save memory at the cost of speed.
 
 {marker example}{...}
 {title:Example: Adding your own aggregation functions}
 
 The following code adds the stat. {it:variance}:
+
 
 {inp}    sysuse auto, clear
 
@@ -166,14 +174,28 @@ The following code adds the stat. {it:variance}:
     li
 {text}
 
+Note that the to create a new stat {it:variance} we created a Mata function
+called {it:aggregate_variance}. To avoid overlap with other Mata functions,
+your function must start with {it:aggregate_}.
+
+
 {marker author}{...}
 {title:Author}
 
 {pstd}Sergio Correia{break}
-Fuqua School of Business, Duke University{break}
-Email: {browse "mailto:sergio.correia@gmail.com":sergio.correia@gmail.com}{break}
-Project URL: {browse "https://github.com/sergiocorreia/ftools"}{break}
+Board of Governors of the Federal Reserve System, USA{break}
+{browse "mailto:sergio.correia@gmail.com":sergio.correia@gmail.com}{break}
 {p_end}
+
+
+{marker project}{...}
+{title:More Information}
+
+{pstd}{break}
+To report bugs, contribute, ask for help, etc. please see the project URL in Github:{break}
+{browse "https://github.com/sergiocorreia/ftools"}{break}
+{p_end}
+
 
 {marker acknowledgment}{...}
 {title:Acknowledgment}
@@ -181,3 +203,13 @@ Project URL: {browse "https://github.com/sergiocorreia/ftools"}{break}
 {pstd}
 This help file was based on StataCorp's own help file
 for {it:collapse}.
+{p_end}
+
+{pstd}
+This project was largely inspired by the works of
+{browse "http://wesmckinney.com/blog/nycpython-1102012-a-look-inside-pandas-design-and-development/":Wes McKinney}, 
+{browse "http://www.stata.com/meeting/uk15/abstracts/":Andrew Maurer}
+and
+{browse "https://ideas.repec.org/c/boc/bocode/s455001.html":Benn Jann}.
+{p_end}
+
