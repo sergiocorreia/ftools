@@ -1,9 +1,9 @@
-*! version 1.2.0 04oct2016
+*! version 1.3.0 04oct2016
 * This file is just used to compile ftools.mlib
 
 cap pr drop ftools
 pr ftools
-	loc ftools_version = "1.2.0 04oct2016"
+	loc ftools_version = "1.3.0 04oct2016"
 	loc stata_version = c(stata_version)
 
 	args flavor

@@ -3,10 +3,12 @@
 // ---------------------------------------------------------------------------
 // Project URL: https://github.com/sergiocorreia/ftools
 
+
 // Miscellanea ---------------------------------------------------------------
 	findfile "ftools_type_aliases.mata"
 	include "`r(fn)'"
 	set matadebug off
+
 
 // selectindex() appeared on Stata 13
 // For lower versions, we'll use a slower alternative
@@ -16,14 +18,16 @@ if (c(stata_version) < 13) {
 	loc selectindex "select(1::rows(dict), dict)"
 }
 
+
 mata:
 mata clear
 mata set matastrict on
 mata set mataoptimize on
 mata set matalnum off
 
-// Taken from David Roodman's boottest
-string scalar ftools_version() return("1.2.0 04oct2016")
+
+// Based on David Roodman's boottest
+string scalar ftools_version() return("1.3.0 04oct2016")
 string scalar ftools_stata_version() return("`c(stata_version)'")
 
 
@@ -50,17 +54,25 @@ class Factor
 	void					store_keys()		// Store keys & format/lbls
 	`DataFrame'				sort()				// Initialize panel view
 	void					_sort()				// as above but in-place
-	`Boolean'				nested_within()	// True if nested within a var
+
+	`Boolean'				nested_within()		// True if nested within a var
+	`Boolean'				equals()			// True if F1 == F2
+	void					drop_obs()			// Adjust to dropping obs.
+	void					keep_obs()			// Adjust to dropping obs.
+	void					drop_if()			// Adjust to dropping obs.
+	void					keep_if()			// Adjust to dropping obs.
 }
+
 
 void Factor::new()
 {
 	varlist = J(1, 0, "")
 	info = J(0, 2, .)
-	counts = J(0, 0, .)
-	p = J(0, 0, .)
+	counts = J(0, 1, .)
+	p = J(0, 1, .)
 	touse = ""
 }
+
 
 void Factor::panelsetup()
 {
@@ -69,8 +81,8 @@ void Factor::panelsetup()
 	`Integer'				obs
 	`Vector'				index
 
-	if (counts == J(0, 0, .)) {
-		_error(123, "panelsetup() requires a the -counts- vector")
+	if (counts == J(0, 1, .)) {
+		_error(123, "panelsetup() requires the -counts- vector")
 	}
 
 	if (num_levels == 1) {
@@ -99,20 +111,23 @@ void Factor::panelsetup()
 	}
 }
 
+
 `DataFrame' Factor::sort(`DataFrame' data)
 {
-	if (p == J(0,0,.)) panelsetup()
+	if (p == J(0, 1, .)) panelsetup()
 	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 	// For some reason, this is much faster that doing it in-place with collate
 	return(cols(data)==1 ? data[p] : data[p, .])
 }
 
+
 void Factor::_sort(`DataFrame' data)
 {
-	if (p == J(0,0,.)) panelsetup()
+	if (p == J(0, 1, .)) panelsetup()
 	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 	_collate(data, p)
 }
+
 
 void Factor::store_levels(`Varname' newvar)
 {
@@ -120,6 +135,7 @@ void Factor::store_levels(`Varname' newvar)
 	type = (num_levels<=100 ? "byte" : (num_levels <= 32740 ? "int" : "long"))
 	__fstore_data(levels, newvar, type, touse)
 }
+
 
 void Factor::store_keys(| `Integer' sort_by_keys)
 {
@@ -167,6 +183,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	}
 }
 
+
 `Boolean' Factor::nested_within(`DataCol' x)
 {
 	`Integer'				i, j
@@ -190,6 +207,87 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	}
 	return(1)
 }
+
+
+`Boolean' Factor::equals(`Factor' F)
+{
+	if (num_obs != F.num_obs) return(0)
+	if (num_levels != F.num_levels) return(0)
+	if (keys != F.keys) return(0)
+	if (counts != F.counts) return(0)
+	if (levels != F.levels) return(0)
+	return(1)
+}
+
+
+void Factor::keep_if(`Vector' mask)
+{
+	drop_obs(selectindex(!mask))
+}
+
+
+void Factor::drop_if(`Vector' mask)
+{
+	drop_obs(selectindex(mask))
+}
+
+
+void Factor::keep_obs(`Vector' idx)
+{
+	`Vector'				tmp
+	tmp = J(num_obs, 1, 1)
+	tmp[idx] = J(rows(idx), 1, 0)
+	drop_obs(selectindex(tmp))
+}
+
+
+void Factor::drop_obs(`Vector' idx)
+{
+	`Integer'				i, j, num_dropped_obs, num_dropped_levels
+	`Vector'				dropped_levels, offset
+
+	assert(all(idx :>0))
+	assert(all(idx :<=num_obs))
+
+	if (counts == J(0, 1, .)) {
+		_error(123, "drop_obs() requires the -counts- vector")
+	}
+
+	num_dropped_obs = rows(idx)
+	num_obs = num_obs - num_dropped_obs
+
+	// Decrement F.counts to reflect dropped observations
+	for (i = 1; i <= num_dropped_obs; i++) {
+		j = levels[idx[i]]
+		counts[j] = counts[j] - 1
+	}
+	assert(all(counts :>= 0))
+
+	// Levels that have a count of 0 are now dropped
+	dropped_levels = selectindex(!counts) // select i where counts[i] == 0
+	num_dropped_levels = rows(dropped_levels)
+
+	// Need to decrement F.levels to reflect that we have fewer levels
+	// (This is the trickiest part)
+	offset = J(num_levels, 1, 0)
+	offset[dropped_levels] = J(num_dropped_levels, 1, 1)
+	offset = runningsum(offset)
+	levels = levels - offset[levels]
+
+	// Remove the obs of F.levels that were dropped
+	levels[idx] = J(num_dropped_obs, 1, .)
+	levels = select(levels, levels :!= .)
+
+	// Update the remaining properties
+	num_levels = num_levels - num_dropped_levels
+	keys = select(keys, counts)
+	counts = select(counts, counts) // must be at the end!
+
+	// Clear these out to prevent mistakes
+	p = J(0, 1, .)
+	info = J(0, 2, .)
+}
+
 
 // Main functions -------------------------------------------------------------
 
@@ -254,6 +352,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	}
 	return(F)
 }
+
 
 `Factor' _factor(`DataFrame' data,
                | `Boolean' integers_only,
@@ -360,6 +459,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	return(F)
 }
 
+
 // Perfect hashing (with limitations) -----------------------------------------
 // Use this for properly encoded byte/int/long variables
 
@@ -447,6 +547,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	swap(F.counts, counts)
 	return(F)
 }
+
 
 // Open addressing hash function (linear probing) =----------------------------
 // Use this for non-integers (2.5, "Bank A") and big ints (e.g. 2014124233573)
@@ -627,6 +728,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	return(F)
 }
 
+
 // Open addressing hash function (quadratic probing) =-------------------------
 // Note: this function needs to be optimized (run a diff against factor_hash1)
 
@@ -751,6 +853,7 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	return(F)
 }
 
+
 // Helper functions ----------------------------------------------------------
 
 void assert_msg(real scalar t, | string scalar msg)
@@ -802,6 +905,7 @@ void __fstore_data(`DataFrame' data,
 	}
 }
 end
+
 
 // Possible Improvements
 // ----------------------

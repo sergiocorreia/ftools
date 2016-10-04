@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.0 04oct2016}{...}
+{* *! version 1.3.0 04oct2016}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fsort" "help fsort"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
@@ -69,19 +69,19 @@
 
 
 {marker properties}{...}
-{title:Properties and methods}
+{title:Properties and Methods}
 
 {pstd}
-First, create a Factor object:
+We first need to create a Factor object:
 
 {p 8 8 2}
-{it:class Factor scalar F}{break}
-{it:F }{cmd:=}{bind: }{cmd:factor(}{it:varnames}{cmd:)}
+{it:class Factor scalar F} // Optional variable declaration{break}
+{it:F }{cmd:=}{bind: }{cmd:factor(}{it:varnames}{cmd:)} // Use {it:F=_factor(..)} if creating from a Mata vector or matrix instead of {it:varnames}
 
 {marker arguments}{...}
 {synoptset 38 tabbed}{...}
 
-{synopthdr:available after F=factor(...)}
+{synopthdr:properties}
 {synoptline}
 {synopt:{it:real} F{cmd:.num_levels}}number of levels (distinct values) of the factor{p_end}
 {synopt:{it:real} F{cmd:.num_obs}}number of observations of the sample used to create the factor ({cmd:c(N)} if touse was empty){p_end}
@@ -97,18 +97,47 @@ First, create a Factor object:
 {synopt:{it:string rowvector} F{cmd:.vl}}value label definitions used by the input variables{p_end}
 {synopt:{it:string} F{cmd:.touse}}name of touse variable{p_end}
 
+
+{synopthdr:main methods}
+{synoptline}
 {synopt:{it:void} F{cmd:.store_levels(}{newvar}{cmd:)}}save
 the levels back into the dataset (using the same {it:touse}){p_end}
 {synopt:{it:void} F{cmd:.store_keys(}[{it:sort}]{cmd:)}}save
 the original key variables into a reduced dataset, including formatting and labels. If {it:sort} is 1, Stata will report the dataset as sorted{p_end}
-{synopt:{it:void} F{opt .nested_within(vec)}}return 1 if the factor is
+{synopt:{it:void} F{cmd:.panelsetup()}}compute auxiliary vectors {it:F.info}
+and {it:F.p} (see below); used in panel computations{p_end}
+
+
+{synopthdr:ancilliary methods}
+{synoptline}
+{synopt:{it:real scalar} F{cmd:.equals(}F2{cmd:)}}1
+if {it:F} represents the same data as {it:F2}
+(i.e. if .num_obs .num_levels .levels .keys and .counts are equal)
+{p_end}
+{synopt:{it:real scalar} F{opt .nested_within(vec)}}1
+if the factor {it:F} is
 {browse "http://scorreia.com/software/reghdfe/faq.html#what-does-fixed-effect-nested-within-cluster-means":nested within}
 the column vector {it:vec}
 (i.e. if any two obs. with the same factor level also have the same value of {it:vec}).
 For instance, it is true if the factor {it:F} represents counties and {it:vec} represents states.
 {p_end}
-{synopt:{it:void} F{cmd:.panelsetup()}}compute auxiliary vectors {it:F.info}
-and {it:F.p} (see below); used in panel computations{p_end}
+{synopt:{it:void} F{cmd:.drop_obs(}{it:idx}{cmd:)}}update
+{it:F} to reflect a change in the underlying dataset, where
+the observations listed in the column vector {it:idx} are dropped
+(see example below)
+{p_end}
+{synopt:{it:void} F{cmd:.keep_obs(}{it:idx}{cmd:)}}equivalent
+to keeping only the obs. enumerated by {it:idx} and recreating {it:F};
+uses {cmd:.keep_obs()}
+{p_end}
+{synopt:{it:void} F{cmd:.drop_if(}{it:vec}{cmd:)}}equivalent
+to dropping the obs. where {it:vec==0} and recreating {it:F};
+uses {cmd:.keep_obs()}
+{p_end}
+{synopt:{it:void} F{cmd:.keep_if(}{it:vec}{cmd:)}}equivalent
+to keeping the obs. where {it:vec!=0} and recreating {it:F};
+uses {cmd:.keep_obs()}
+{p_end}
 
 
 {synopthdr:available after F.panelsetup()}
@@ -204,18 +233,21 @@ More complex scenarios would involve some of the following:
     {hline 60}
 {txt}
 
-Finally, the example below shows how to process data for each level of the factor (like {help bysort}). It does so by combining {cmd:F.sort()} with {help mf_panelsetup:panelsubmatrix()}.
-
 
 {marker example}{...}
 {title:Example: operating on levels of each factor}
 
 {pstd}
-This code runs a regression for each category of {it:turn}:
+This example shows how to process data for each level of the factor (like {help bysort}). It does so by combining {cmd:F.sort()} with {help mf_panelsetup:panelsubmatrix()}.
+{p_end}
+
+{pstd}
+In particular, this code runs a regression for each category of {it:turn}:
+{p_end}
 
 {inp}
     {hline 60}
-	clear all
+    clear all
     mata:
     real matrix reg_by_group(string depvar, string indepvars, string byvar)
     {
@@ -279,6 +311,53 @@ You can also compare two factors directly:
         F1 = factor("turn")
         F2 = factor("turn10")
         F1.nested_within(F2.levels) // True
+    end
+    {hline 60}
+{txt}
+
+
+{marker example3}{...}
+{title:Example: Updating a factor after dropping variables}
+
+{pstd}
+If you change the underlying dataset you have to recreate the factor, which is costly. As an alternative, you can use {cmd:.keep_obs()} and related methods:
+{p_end}
+
+{inp}
+    {hline 60}
+    * Benchmark
+    sysuse auto, clear
+    drop if price > 4500
+    mata: F1 = factor("turn")
+    // Quickly inspect results
+    mata: F1.num_obs, F1.num_levels, hash1(F1.levels)
+    
+    * Using F.drop_obs()
+    sysuse auto, clear
+    mata
+        price = st_data(., "price")
+        F2 = factor("turn")
+        idx = selectindex(price :> 4500)
+        mata: F2.num_obs, F2.num_levels, hash1(F2.levels)
+        F2.drop_obs(idx)
+        mata: F2.num_obs, F2.num_levels, hash1(F2.levels)
+        assert(F1.equals(F2))
+    end
+    
+    * Using the other methods
+    mata
+        F2 = factor("turn")
+        idx = selectindex(price :<= 4500)
+        F2.keep_obs(idx)
+        assert(F1.equals(F2))
+    
+        F2 = factor("turn")
+        F2.drop_if(price :> 4500)
+        assert(F1.equals(F2))
+    
+        F2 = factor("turn")
+        F2.keep_if(price :<= 4500)
+        assert(F1.equals(F2))
     end
     {hline 60}
 {txt}
