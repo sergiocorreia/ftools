@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0 29sep2016}{...}
+{* *! version 1.2.0 04oct2016}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fsort" "help fsort"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
@@ -101,6 +101,12 @@ First, create a Factor object:
 the levels back into the dataset (using the same {it:touse}){p_end}
 {synopt:{it:void} F{cmd:.store_keys(}[{it:sort}]{cmd:)}}save
 the original key variables into a reduced dataset, including formatting and labels. If {it:sort} is 1, Stata will report the dataset as sorted{p_end}
+{synopt:{it:void} F{opt .nested_within(vec)}}return 1 if the factor is
+{browse "http://scorreia.com/software/reghdfe/faq.html#what-does-fixed-effect-nested-within-cluster-means":nested within}
+the column vector {it:vec}
+(i.e. if any two obs. with the same factor level also have the same value of {it:vec}).
+For instance, it is true if the factor {it:F} represents counties and {it:vec} represents states.
+{p_end}
 {synopt:{it:void} F{cmd:.panelsetup()}}compute auxiliary vectors {it:F.info}
 and {it:F.p} (see below); used in panel computations{p_end}
 
@@ -125,6 +131,7 @@ faster ({it:O(N)} instead of {it:O(N log N)}{p_end}
 
 {synoptset 3 tabbed}{...}
 {synopt:- }If you just downloaded the package and want to use the Mata functions directly (instead of the Stata commands), run once the {stata ftools} command to create the library.{p_end}
+{synopt:- }To force compilation of the Mata library type {stata ftools compile}{p_end}
 {synopt:- }If you already have your data in Mata, use {cmd:F = _factor(data)} instead of {cmd:F = factor(varlist)}{p_end}
 
 
@@ -161,63 +168,121 @@ and to a lesser degree
 If you only want to create identifiers based on one or more variables,
 run something like:
 
-{inp}sysuse auto, clear
-mata: F = factor("foreign turn")
-mata: F.store_levels("id")
-mata: mata drop F
+{inp}
+    {hline 60}
+    sysuse auto, clear
+    mata: F = factor("foreign turn")
+    mata: F.store_levels("id")
+    mata: mata drop F
+    {hline 60}
 {txt}
 
 {pstd}
 More complex scenarios would involve some of the following:
 
-{inp}sysuse auto, clear
-* Create factors for foreign data only
-mata: F = factor("turn", "foreign")
-* Report number of levels, obs. in sample, and keys
-mata: F.num_levels
-mata: F.num_obs
-mata: F.keys, F.counts
-* View new levels
-mata: F.levels[1::10]
-* Store back new levels (on the same sample)
-mata: F.store_levels("id")
-* Verify that the results are correct
-sort id
-li turn foreign id in 1/10
+{inp}
+    {hline 60}
+    sysuse auto, clear
+
+    * Create factors for foreign data only
+    mata: F = factor("turn", "foreign")
+
+    * Report number of levels, obs. in sample, and keys
+    mata: F.num_levels
+    mata: F.num_obs
+    mata: F.keys, F.counts
+
+    * View new levels
+    mata: F.levels[1::10]
+    
+    * Store back new levels (on the same sample)
+    mata: F.store_levels("id")
+    
+    * Verify that the results are correct
+    sort id
+    li turn foreign id in 1/10
+    {hline 60}
 {txt}
 
 Finally, the example below shows how to process data for each level of the factor (like {help bysort}). It does so by combining {cmd:F.sort()} with {help mf_panelsetup:panelsubmatrix()}.
 
 
 {marker example}{...}
-{title:Example}
+{title:Example: operating on levels of each factor}
 
 {pstd}
 This code runs a regression for each category of {it:turn}:
 
-{inp}clear all
-mata:
-real matrix reg_by_group(string depvar, string indepvars, string byvar) {
-	class Factor scalar			F
-	real scalar				i
-	real matrix				X, Y, x, y, betas
-
-	F = factor(byvar)
-	Y = F.sort(st_data(., depvar))
-	X = F.sort(st_data(., tokens(indepvars)))
-	betas = J(F.num_levels, 1 + cols(X), .)
-	
-	for (i = 1; i <= F.num_levels; i++) {
-		y = panelsubmatrix(Y, i, F.info)
-		x = panelsubmatrix(X, i, F.info) , J(rows(y), 1, 1)
-		betas[i, .] = qrsolve(x, y)'
-	}
-	return(betas)
-}
-end
-sysuse auto
-mata: reg_by_group("price", "weight length", "foreign")
+{inp}
+    {hline 60}
+	clear all
+    mata:
+    real matrix reg_by_group(string depvar, string indepvars, string byvar)
+    {
+    	class Factor scalar			F
+    	real scalar				i
+    	real matrix				X, Y, x, y, betas
+    
+    	F = factor(byvar)
+    	Y = F.sort(st_data(., depvar))
+    	X = F.sort(st_data(., tokens(indepvars)))
+    	betas = J(F.num_levels, 1 + cols(X), .)
+    	
+    	for (i = 1; i <= F.num_levels; i++) {
+    		y = panelsubmatrix(Y, i, F.info)
+    		x = panelsubmatrix(X, i, F.info) , J(rows(y), 1, 1)
+    		betas[i, .] = qrsolve(x, y)'
+    	}
+    	return(betas)
+    }
+    end
+    sysuse auto
+    mata: reg_by_group("price", "weight length", "foreign")
+    {hline 60}
 {text}
+
+
+{marker example2}{...}
+{title:Example: Factors nested within another variable}
+
+{pstd}
+You might be interested in knowing if a categorical variable is nested within another, more coarser, variable.
+For instance, a variable containing months ("Jan2017") is nested within another containing years ("2017")),
+a variable containing counties ("Durham County, NC") is nested within another containing states ("North Carolina"), and so on.
+{p_end}
+
+{pstd}
+To check for this, you can follow this example:
+{p_end}
+
+{inp}
+    {hline 60}
+    sysuse auto
+    gen turn10 = int(turn/10)
+    
+    mata:
+        F = factor("turn")
+        F.nested_within(st_data(., "trunk")) // False
+        F.nested_within(st_data(., "turn")) // Trivially true
+        F.nested_within(st_data(., "turn10")) // True
+    end
+    {hline 60}
+{txt}
+
+{pstd}
+You can also compare two factors directly:
+{p_end}
+
+{inp}
+    {hline 60}
+    mata:
+        F1 = factor("turn")
+        F2 = factor("turn10")
+        F1.nested_within(F2.levels) // True
+    end
+    {hline 60}
+{txt}
+
 
 {marker remarks}{...}
 {title:Remarks}

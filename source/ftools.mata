@@ -23,6 +23,7 @@ mata set mataoptimize on
 mata set matalnum off
 
 // Taken from David Roodman's boottest
+string scalar ftools_version() return("1.2.0 04oct2016")
 string scalar ftools_stata_version() return("`c(stata_version)'")
 
 
@@ -47,8 +48,9 @@ class Factor
 	void					panelsetup()		// aux. vectors
 	void					store_levels()		// Store levels in the dta
 	void					store_keys()		// Store keys & format/lbls
-	`DataFrame'				sort()			// Initialize panel view
-	void					_sort()		// as above but in-place
+	`DataFrame'				sort()				// Initialize panel view
+	void					_sort()				// as above but in-place
+	`Boolean'				nested_within()	// True if nested within a var
 }
 
 void Factor::new()
@@ -163,6 +165,30 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	if (sort_by_keys) {
 		stata(sprintf("sort %s", invtokens(varlist)))
 	}
+}
+
+`Boolean' Factor::nested_within(`DataCol' x)
+{
+	`Integer'				i, j
+	`Real'					val, prev_val
+	`Vector'				y
+
+	y = J(num_levels, 1, .)
+	assert(rows(x) == num_obs)
+	assert(!hasmissing(x))
+
+	for (i = 1; i <= num_obs; i++) {
+		val = x[i]
+		j = levels[i]
+		prev_val = y[j]
+		if (prev_val != val) {
+			if (prev_val != .) {
+				return(0)
+			}
+			y[j] = val
+		}
+	}
+	return(1)
 }
 
 // Main functions -------------------------------------------------------------

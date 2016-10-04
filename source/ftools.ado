@@ -1,23 +1,41 @@
-*! version 1.1.0 29sep2016
+*! version 1.2.0 04oct2016
 * This file is just used to compile ftools.mlib
 
 cap pr drop ftools
 pr ftools
+	loc ftools_version = "1.2.0 04oct2016"
+	loc stata_version = c(stata_version)
+
 	args flavor
 	if ("`flavor'" == "") loc flavor check
 
 	* Check if we need to recompile
 	if ("`flavor'" == "check") {
+		
+		loc mlib_stata_version ???
 		cap mata: mata drop ftools_stata_version()
-		loc compiled_with 0
-		cap mata: st_local("compiled_with", ftools_stata_version())
+		cap mata: st_local("mlib_stata_version", ftools_stata_version())
 		_assert inlist(`c(rc)', 0, 3499), msg("ftools check: unexpected error")
-		if (`compiled_with' == c(stata_version)) exit
+		
+		loc mlib_ftools_version ???
+		cap mata: mata drop ftools_version()
+		cap mata: st_local("mlib_ftools_version", ftools_version())
+		_assert inlist(`c(rc)', 0, 3499), msg("ftools check: unexpected error")
+		
+		loc ok 1
+		if ("`mlib_stata_version'" != "`stata_version'") {
+			di as text "(existing ftools.mlib compiled with Stata `mlib_stata_version'; need to recompile for Stata `stata_version')"
+			loc ok 0
+		}
+		if ((`ok') & ("`mlib_ftools_version'" != "`ftools_version'")) {
+			di as text "(existing ftools.mlib is version `mlib_ftools_version'; need to recompile for `ftools_version')"
+			loc ok 0
+		}
+		if (`ok') exit
 		* If we reach this point, we need to recompile
 		local flavor compile
 	}
 
-	loc version = c(stata_version)
 	clear mata
 
 	* Delete previous versions; based on David Roodman's -boottest-
@@ -28,7 +46,7 @@ pr ftools
 	        cap findfile "`mlib'"
 	}
 
-	di as text "(compiling lftools.mlib for Stata `version')"
+	di as text "(compiling lftools.mlib for Stata `stata_version')"
 	qui findfile "ftools.mata"
 	loc fn "`r(fn)'"
 	run "`fn'"

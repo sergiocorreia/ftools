@@ -1,4 +1,4 @@
-*! version 1.1.0 29sep2016
+*! version 1.2.0 04oct2016
 cap pr drop fegen_group
 pr fegen_group
 	syntax [if] [in] , [by(varlist) type(string)] /// -by- is ignored
