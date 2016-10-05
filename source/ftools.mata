@@ -57,6 +57,9 @@ class Factor
 
 	`Boolean'				nested_within()		// True if nested within a var
 	`Boolean'				equals()			// True if F1 == F2
+
+	void					__inner_drop()		// Adjust to dropping obs.
+	`Vector'				drop_singletons()	// Adjust to dropping obs.
 	void					drop_obs()			// Adjust to dropping obs.
 	void					keep_obs()			// Adjust to dropping obs.
 	void					drop_if()			// Adjust to dropping obs.
@@ -243,8 +246,8 @@ void Factor::keep_obs(`Vector' idx)
 
 void Factor::drop_obs(`Vector' idx)
 {
-	`Integer'				i, j, num_dropped_obs, num_dropped_levels
-	`Vector'				dropped_levels, offset
+	`Integer'				i, j, num_dropped_obs
+	`Vector'				offset
 
 	assert(all(idx :>0))
 	assert(all(idx :<=num_obs))
@@ -254,7 +257,6 @@ void Factor::drop_obs(`Vector' idx)
 	}
 
 	num_dropped_obs = rows(idx)
-	num_obs = num_obs - num_dropped_obs
 
 	// Decrement F.counts to reflect dropped observations
 	offset = levels[idx] // warning: variable will be reused later
@@ -264,6 +266,20 @@ void Factor::drop_obs(`Vector' idx)
 		counts[j] = counts[j] - 1
 	}
 	assert(all(counts :>= 0))
+	
+	// Update contents of F based on just idx and the updated F.counts
+	__inner_drop(idx)
+}
+
+
+// This is an internal method that updates F based on 
+// i) the list of dropped obs, ii) the *already updated* F.counts
+void Factor::__inner_drop(`Vector' idx)
+{
+	`Vector'				dropped_levels, offset
+	`Integer'				num_dropped_obs, num_dropped_levels
+
+	num_dropped_obs = rows(idx)
 
 	// Levels that have a count of 0 are now dropped
 	dropped_levels = selectindex(!counts) // select i where counts[i] == 0
@@ -281,6 +297,7 @@ void Factor::drop_obs(`Vector' idx)
 	levels = select(levels, levels :!= .)
 
 	// Update the remaining properties
+	num_obs = num_obs - num_dropped_obs
 	num_levels = num_levels - num_dropped_levels
 	keys = select(keys, counts)
 	counts = select(counts, counts) // must be at the end!
@@ -288,6 +305,27 @@ void Factor::drop_obs(`Vector' idx)
 	// Clear these out to prevent mistakes
 	p = J(0, 1, .)
 	info = J(0, 2, .)
+}
+
+
+`Vector' Factor::drop_singletons()
+{
+	`Integer'				num_singletons
+	`Vector'				mask, idx
+
+	if (counts == J(0, 1, .)) {
+		_error(123, "drop_obs() requires the -counts- vector")
+	}
+
+	mask = (counts :== 1)
+	num_singletons = sum(mask)
+	if (num_singletons == 0) return(J(0, 1, .))
+	counts = counts - mask
+	idx = selectindex(mask[levels])
+	
+	// Update contents of F based on just idx and the updated F.counts
+	__inner_drop(idx)
+	return(idx)
 }
 
 

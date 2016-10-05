@@ -138,6 +138,11 @@ uses {cmd:.keep_obs()}
 to keeping the obs. where {it:vec!=0} and recreating {it:F};
 uses {cmd:.keep_obs()}
 {p_end}
+{synopt:{it:real colvector} F{cmd:.drop_singletons()}}equivalent
+to dropping the levels that only appear once,
+and their corresponding observations.
+The colvector returned contains the observations that need to be excluded.
+{p_end}
 
 
 {synopthdr:available after F.panelsetup()}
