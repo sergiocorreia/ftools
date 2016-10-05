@@ -1,9 +1,9 @@
 {smcl}
-{* *! version 1.3.0 04oct2016}{...}
+{* *! version 1.4.0 05oct2016}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
-{vieweralsosee "fsort" "help fsort"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
-{vieweralsosee "fmerge" "help fmerge"}{...}
+{vieweralsosee "fisid" "help fisid"}{...}
+{vieweralsosee "fsort" "help fsort"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] egen" "help egen"}{...}
 {vieweralsosee "[R] sort" "help sort"}{...}
@@ -179,6 +179,7 @@ manipulate data without having to sort it beforehand:
 
 {pmore}- {help fcollapse}{p_end}
 {pmore}- {help fegen:fegen group}{p_end}
+{pmore}- {help fisid}{p_end}
 {pmore}- {help fsort} (note: this is O(N) but with a high constant term){p_end}
 {pmore}- fmerge{p_end}
 {pmore}- fcontract{p_end}
@@ -431,11 +432,6 @@ To report bugs, contribute, ask for help, etc. please see the project URL in Git
 
 {marker acknowledgment}{...}
 {title:Acknowledgment}
-
-{pstd}
-This help file was based on StataCorp's own help file
-for {it:collapse}.
-{p_end}
 
 {pstd}
 This project was largely inspired by the works of

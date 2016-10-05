@@ -1,9 +1,9 @@
 {smcl}
-{* *! version 1.3.0 04oct2016}{...}
+{* *! version 1.4.0 05oct2016}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[R] sort" "help sort"}{...}
 {vieweralsosee "[R] gsort" "help gsort"}{...}
-{viewerjumpto "Syntax" "sort##syntax"}{...}
+{viewerjumpto "Syntax" "fsort##syntax"}{...}
 {title:Title}
 
 {p2colset 5 18 20 2}{...}
@@ -64,21 +64,3 @@ Board of Governors of the Federal Reserve System, USA{break}
 To report bugs, contribute, ask for help, etc. please see the project URL in Github:{break}
 {browse "https://github.com/sergiocorreia/ftools"}{break}
 {p_end}
-
-
-{marker acknowledgment}{...}
-{title:Acknowledgment}
-
-{pstd}
-This help file was based on StataCorp's own help file
-for {it:collapse}.
-{p_end}
-
-{pstd}
-This project was largely inspired by the works of
-{browse "http://wesmckinney.com/blog/nycpython-1102012-a-look-inside-pandas-design-and-development/":Wes McKinney}, 
-{browse "http://www.stata.com/meeting/uk15/abstracts/":Andrew Maurer}
-and
-{browse "https://ideas.repec.org/c/boc/bocode/s455001.html":Benn Jann}.
-{p_end}
-

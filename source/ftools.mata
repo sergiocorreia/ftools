@@ -27,7 +27,7 @@ mata set matalnum off
 
 
 // Based on David Roodman's boottest
-string scalar ftools_version() return("1.3.0 04oct2016")
+string scalar ftools_version() return("1.4.0 05oct2016")
 string scalar ftools_stata_version() return("`c(stata_version)'")
 
 

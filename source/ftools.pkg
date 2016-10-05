@@ -41,6 +41,8 @@ f fcollapse.ado
 f fcollapse.sthlp
 f fsort.ado
 f fsort.sthlp
+f fisid.ado
+f fisid.sthlp
 f fegen.ado
 f fegen.sthlp
 f fegen_group.ado

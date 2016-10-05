@@ -2,10 +2,16 @@
 
 **ftools** is two things:
 
-1. A Mata class (*Factor*) that creates identifiers ("factors") from a set of variables or vectors. It is very fast for big datasets because it avoids sorting the data.
-2. A list of Stata commands that exploit the *Factor* class,
-providing alternatives to common commands such as collapse,
-contract, egen group, sort, levelsof, etc.
+1. A list of Stata commands that provide faster alternatives to common commands such as collapse, contract, egen group, sort, levelsof, etc.
+2. A Mata class (*Factor*) with several methods for creating and working with categorical variables (using them as identifiers for groups or individuals). This class is what makes the above commands fast.
+
+Currently the following commands are implemented:
+
+- `fcollapse` replacing `collapse` and `contract`
+- `fegen group` replacing `egen group`
+- `fisid` replacing `isid`
+- `fsort` replacing `sort` (although it is rarely faster than sort)
+
 
 # Usage
 
@@ -107,6 +113,14 @@ We can run a more complex query, also with 20mm obs.:
 *(Note: `sumup` might be better for medium-sized datasets, although some benchmarking is needed)*
 
 And we can see that the results are similar
+
+
+## fisid
+
+Similar to `isid`, but allowing for `if in` and on the other hand not allowing for `using` and `sort`.
+
+In very large datasets, takes roughly a third of the time of `isid`.
+
 
 ## fsort
 
