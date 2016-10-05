@@ -257,8 +257,10 @@ void Factor::drop_obs(`Vector' idx)
 	num_obs = num_obs - num_dropped_obs
 
 	// Decrement F.counts to reflect dropped observations
+	offset = levels[idx] // warning: variable will be reused later
+	assert(rows(offset)==num_dropped_obs)
 	for (i = 1; i <= num_dropped_obs; i++) {
-		j = levels[idx[i]]
+		j = offset[i]
 		counts[j] = counts[j] - 1
 	}
 	assert(all(counts :>= 0))
