@@ -3,7 +3,7 @@ cls
 set more off
 
 * Fake -using- dataset
-set obs 3
+set obs 5
 gen byte foreign = _n - 1
 gsort -foreign
 gen x = rnormal()
