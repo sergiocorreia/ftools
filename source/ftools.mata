@@ -537,7 +537,7 @@ void Factor::__inner_drop(`Vector' idx)
 		hashes = hashes + (data[., i] :- min_val[i]) :* offsets[i]
 	}
 	assert(offsets[1] * (max_val[1] - min_val[1] + 1) == dict_size)
-	data = . // save memory
+	
 	// Build the new keys
 	dict = J(dict_size, 1, 0)
 	// It's faster to do dict[hashes] than dict[hashes, .],
@@ -741,7 +741,7 @@ void Factor::__inner_drop(`Vector' idx)
 		} // end for >>>
 	} // end else >>>
 
-	dict = data = . // save memory
+	dict = . // save memory
 
 	keys = keys[| 1 , 1 \ j , . |]
 	counts = counts[| 1 \ j |]
@@ -867,7 +867,7 @@ void Factor::__inner_drop(`Vector' idx)
 		last_key = key
 	}
 
-	dict = data = . // save memory
+	dict = . // save memory
 
 	keys = keys[| 1 , 1 \ j , . |]
 	counts = counts[| 1 , 1 \ j , . |]
