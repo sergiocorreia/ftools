@@ -75,17 +75,21 @@ Notes:
 
 ## collapse
 
-On a dataset of similar size, we run `collapse (sum) y1-y15`:
+On a dataset of similar size, we ran `collapse (sum) y1-y15, by(x3)` where `x3` takes 100 different values:
 
-| Method             | Avg.  |
-|--------------------|-------|
-| collapse           | 50.01 |
-| fcollapse          | 17.45 |
-| fcollapse, pool(5) | 20.47 |
+| Method                     | Time  | % of Collapse |
+|----------------------------|-------|---------------|
+| collapse … , fast          | 81.87 | 100%          |
+| [sumup](https://github.com/matthieugomez/stata-sumup)                      | 56.18 | 69%           |
+| fcollapse … , fast         | 38.54 | 47%           |
+| fcollapse … , fast pool(5) | 28.32 | 35%           |
+| tab ...                    | 9.39  | 11%           |
 
-We can see that `fcollapse` takes roughly a third of the time of `collapse` (although using more memory when
-moving data from Stata to Mata).
-Alternatively, the `pool(#)` option uses very little memory (similar to `collapse`) at also very good speeds.
+We can see that `fcollapse` takes roughly a third of the time of `collapse`
+(although it uses more memory when moving data from Stata to Mata).
+As a comparison, tabulating the data (one of the most efficient Stata operations) takes 11% of the time of `collapse`.
+
+Alternatively, the `pool(#)` option will use very little memory (similar to `collapse`) at also very good speeds.
 
 Notes:
 
@@ -93,26 +97,25 @@ Notes:
 - The gap is larger if you want to collapse to fewer levels
 - The gap is larger for more complex stats. (such as median)
 - `compress`ing the by() identifiers beforehand might lead to significant improvements in speed (by allowing the use of the internal hash0 function instead of hash1).
+- In a computer with less memory, it seems `pool(#)` might actually be faster.
+
 
 ### collapse: alternative benchmark
 
-We can run a more complex query, also with 20mm obs.:
+We can run a more complex query, collapsing means and medians instead of sums, also with 20mm obs.:
 
-1. ```qui sumup x3 y1-y3, by(`vars') statistics(mean median)```
-2. ```collapse (sum) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3, by(x3) fast```
-3. ```fcollapse (sum) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3, by(x3) fast```
-4. ```fcollapse (sum) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3, by(x3) fast pool(5)```
 
-| Method              | Avg.  | % of collapse |
-|---------------------|-------|------------|
-| [sumup](https://github.com/matthieugomez/stata-sumup)               | 43.77 | 56.0       |
-| collapse            | 78.18 | 100.0      |
-| fcollapse           | 26.66 | 34.1       |
-| fcollapse, pool(15) | 27.25 | 34.9       |
+| Method                     | Time  | % of Collapse |
+|----------------------------|-------|---------------|
+| collapse … , fast          | 81.06 | 100%          |
+| [sumup](https://github.com/matthieugomez/stata-sumup)                      | 67.05 | 83%           |
+| fcollapse … , fast         | 30.93 | 38%           |
+| fcollapse … , fast pool(5) | 33.85 | 42%           |
+| tab                        | 8.06  | 10%           |
 
 *(Note: `sumup` might be better for medium-sized datasets, although some benchmarking is needed)*
 
-And we can see that the results are similar
+And we can see that the results are similar.
 
 
 ## fisid

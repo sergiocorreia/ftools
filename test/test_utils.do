@@ -5,7 +5,6 @@
 cap pr drop crData
 pr crData
 	args n k
-	loc kk = 2^`=`k'-1'
 	clear
 	qui set obs `n'
 	noi di "(obs set)"
@@ -22,7 +21,7 @@ pr crData
 	noi di "(Xs set)"
 
 	forv i=1/`k' {
-		gen double y`i' = 123
+		gen double y`i' = 123.456
 	}
 
 	loc obs_k = ceil(`c(N)' / 1000)

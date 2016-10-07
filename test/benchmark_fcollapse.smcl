@@ -1,0 +1,874 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}collapse
+       {txt}log:  {res}C:\Git\ftools\test\benchmark_fcollapse.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 7 Oct 2016, 14:47:00
+{txt}r; t=0.00 14:47:00
+
+{com}. include "test_utils.do"
+{txt}
+{com}. 
+. // -------------------------
+. // Programs
+. 
+. cap pr drop crData
+{txt}r; t=0.00 14:47:00
+
+{com}. pr crData
+{txt}  1{com}.         args n k
+{txt}  2{com}.         clear
+{txt}  3{com}.         qui set obs `n'
+{txt}  4{com}.         noi di "(obs set)"
+{txt}  5{com}.         loc m = ceil(`n' / 10)
+{txt}  6{com}.         //set seed 234238921
+.         *gen long x1 = ceil(uniform()*`m')
+.         gen long x1 = ceil(uniform()*10000) * 100
+{txt}  7{com}. 
+.         gen int x2 = ceil(uniform()*3000)
+{txt}  8{com}.         gen byte x3 = ceil(uniform()*100)
+{txt}  9{com}.         gen str x4 = "u" + string(ceil(uniform()*100), "%5.0f")
+{txt} 10{com}.         gen long x5 = ceil(uniform()*5000)
+{txt} 11{com}.         // compress
+.         noi di "(Xs set)"
+{txt} 12{com}. 
+.         forv i=1/`k' {c -(}
+{txt} 13{com}.                 gen double y`i' = 123.456
+{txt} 14{com}.         {c )-}
+{txt} 15{com}. 
+.         loc obs_k = ceil(`c(N)' / 1000)
+{txt} 16{com}. end
+{txt}r; t=0.01 14:47:00
+
+{com}. 
+. cap pr drop FactorsAgree
+{txt}r; t=0.00 14:47:00
+
+{com}. pr FactorsAgree, sortpreserve
+{txt}  1{com}.         args id1 id2
+{txt}  2{com}.         tempvar ok
+{txt}  3{com}.         
+.         bys `id1' (`id2'): gen byte `ok' = `id2'[1] == `id2'[_N]
+{txt}  4{com}.         assert `ok' == 1
+{txt}  5{com}.         drop `ok'
+{txt}  6{com}.         
+.         bys `id2' (`id1'): gen byte `ok' = `id1'[1] == `id1'[_N]
+{txt}  7{com}.         assert `ok' == 1
+{txt}  8{com}.         drop `ok'
+{txt}  9{com}. end
+{txt}r; t=0.00 14:47:00
+
+{com}. 
+. cap pr drop ValidateFactor
+{txt}r; t=0.00 14:47:00
+
+{com}. pr ValidateFactor
+{txt}  1{com}.         syntax varlist [in] [if], [factor(string) method(string)]
+{txt}  2{com}.         preserve
+{txt}  3{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OPTIONS]{c )-} {c -(}res{c )-}`0'"
+{txt}  4{com}.         if ("`factor'" == "") {c -(}
+{txt}  5{com}.                 loc factor F
+{txt}  6{com}.         {c )-}
+{txt}  7{com}.         if ("`in'`if'" != "") {c -(}
+{txt}  8{com}.                 marksample touse
+{txt}  9{com}.                 cou if `touse'
+{txt} 10{com}.                 loc num_obs = r(N)
+{txt} 11{com}.         {c )-}
+{txt} 12{com}.         else {c -(}
+{txt} 13{com}.                 loc num_obs = c(N)
+{txt} 14{com}.         {c )-}
+{txt} 15{com}.         // factor(varlist, touse, verbose, method, sort_levels, count_levels, hash_ratio)
+.         loc cmd mata: `factor' = factor("`varlist'", "`touse'", 1, "`method'")
+{txt} 16{com}.         di as res `"          `cmd'"'
+{txt} 17{com}.         `cmd'
+{txt} 18{com}.         loc cmd mata: `factor'.store_levels("new_id")
+{txt} 19{com}.         di as res `"          `cmd'"'
+{txt} 20{com}.         `cmd'
+{txt} 21{com}.         loc cmd mata: `factor'.panelsetup()
+{txt} 22{com}.         di as res `"          `cmd'"'
+{txt} 23{com}.         `cmd'
+{txt} 24{com}. 
+.         di as smcl "{c -(}txt{c )-}{c -(}bf:[TESTING] {c )-}" _c
+{txt} 25{com}. 
+.         // Output:
+.         // num_levels num_obs touse varlist
+.         // levels keys counts info p
+.         di as res "F.num_obs " _c
+{txt} 26{com}.         mata: assert(`factor'.num_obs == `num_obs')
+{txt} 27{com}.         egen long benchmark_id = group(`varlist')
+{txt} 28{com}.         di as res "F.levels " _c
+{txt} 29{com}.         assert benchmark_id == new_id
+{txt} 30{com}.         
+.         gen long i = _n
+{txt} 31{com}.         sort benchmark_id, stable
+{txt} 32{com}.         mata: benchmark_id = st_data(., "benchmark_id")
+{txt} 33{com}.         sort i
+{txt} 34{com}.         drop i
+{txt} 35{com}. 
+.         gen byte counts = 1
+{txt} 36{com}.         collapse (first) `varlist' (count) counts , by(benchmark_id)
+{txt} 37{com}.         di as res "F.num_levels " _c
+{txt} 38{com}.         loc num_levels = c(N)
+{txt} 39{com}.         mata: assert(`factor'.num_levels == `num_levels')
+{txt} 40{com}.         di as res "F.touse " _c
+{txt} 41{com}.         mata: assert(`factor'.touse == "`touse'")
+{txt} 42{com}.         di as res "F.varlist " _c
+{txt} 43{com}.         mata: assert(`factor'.varlist == tokens("`varlist'"))
+{txt} 44{com}.         di as res "F.keys " _c
+{txt} 45{com}.         mata: benchmark_keys = __fload_data("`varlist'")
+{txt} 46{com}.         mata: assert(benchmark_keys == `factor'.keys)
+{txt} 47{com}.         di as res "F.counts " _c
+{txt} 48{com}.         mata: benchmark_counts = st_data(., "counts")
+{txt} 49{com}.         mata: assert(benchmark_counts == `factor'.counts)
+{txt} 50{com}.         di as res "F.offsets "
+{txt} 51{com}.         sort benchmark_id
+{txt} 52{com}.         mata: assert(panelsetup(benchmark_id, 1) == `factor'.info)
+{txt} 53{com}. 
+.         // note: order is not a stable sort so we also sort by _n
+.         mata: assert(`factor'.p == order((`factor'.levels, (1::`factor'.num_obs)), 1..2) )
+{txt} 54{com}. 
+.         // same for offsets, p
+.         mata: mata drop `factor'
+{txt} 55{com}.         di as smcl "{c -(}txt{c )-}{c -(}bf:[OK]{c )-}"
+{txt} 56{com}. end
+{txt}r; t=0.00 14:47:00
+
+{com}. {txt}r; t=0.03 14:47:00
+
+{com}. 
+. cap ado uninstall ftools
+{txt}r; t=0.08 14:47:00
+
+{com}. net install ftools, from("C:/git/ftools/source")
+checking {hilite:ftools} consistency and verifying not already installed...
+installing into c:\ado\plus\...
+installation complete.
+{txt}r; t=0.09 14:47:00
+
+{com}. ftools compile
+{txt}(compiling lftools.mlib for Stata 14.2)
+(library saved in c:\ado\plus/l/lftools.mlib)
+r; t=0.04 14:47:00
+
+{com}. 
+. 
+. // --------------------------------------------------
+. // PROGRAMS
+. // --------------------------------------------------
+. 
+. cap pr drop RunOne
+{txt}r; t=0.00 14:47:00
+
+{com}. pr RunOne
+{txt}  1{com}.         syntax, by(varlist) data(varlist) stats(namelist) method(string)
+{txt}  2{com}.         assert inlist("`method'", "sumup", "collapse", "fcol", "fcolp", "tab")
+{txt}  3{com}.         
+.         foreach s of local stats {c -(}
+{txt}  4{com}.                 loc zip `zip' (`s')
+{txt}  5{com}.                 foreach var of varlist `data' {c -(}
+{txt}  6{com}.                         loc zip `zip' `s'_`var'=`var'
+{txt}  7{com}.                 {c )-}
+{txt}  8{com}.         {c )-}
+{txt}  9{com}.         di as text "clist=<`zip'>"
+{txt} 10{com}. 
+.         if ("`method'"=="sumup") qui sumup `data', by(`by') stat(`stats')
+{txt} 11{com}.         if ("`method'"=="collapse") collapse `zip', by(`by') fast
+{txt} 12{com}.         if ("`method'"=="fcol") fcollapse `zip', by(`by') fast verbose
+{txt} 13{com}.         if ("`method'"=="fcolp") fcollapse `zip', by(`by') fast verbose pool(5)
+{txt} 14{com}.         if ("`method'"=="tab") {c -(}
+{txt} 15{com}.                 tab `by', missing nofreq nolabel matrow(foobar)
+{txt} 16{com}.                 noi di rowsof(foobar)
+{txt} 17{com}.         {c )-}
+{txt} 18{com}. end
+{txt}r; t=0.00 14:47:00
+
+{com}. 
+. 
+. // --------------------------------------------------
+. // TESTING
+. // --------------------------------------------------
+. 
+. // -------------------------
+. // Simple commands
+.         qui sysuse auto, clear
+{txt}r; t=0.01 14:47:00
+
+{com}.         fcollapse (sum) price weight gear, by(turn) fast
+{res}{txt}r; t=0.11 14:47:01
+
+{com}.         qui sysuse auto, clear
+{txt}r; t=0.00 14:47:01
+
+{com}.         fcollapse (sum) price weight, by(turn) pool(1) fast
+{res}{txt}r; t=0.02 14:47:01
+
+{com}.         qui sysuse auto, clear
+{txt}r; t=0.00 14:47:01
+
+{com}.         fcollapse (sum) price weight, by(turn) pool(5)
+{res}{txt}r; t=0.02 14:47:01
+
+{com}.         qui sysuse auto, clear
+{txt}r; t=0.00 14:47:01
+
+{com}.         fcollapse (sum) price weight (first) make (mean) gear, by(turn) pool(2) fast
+{res}{txt}r; t=0.02 14:47:01
+
+{com}.         qui sysuse auto, clear
+{txt}r; t=0.00 14:47:01
+
+{com}.         fcollapse (sum) price weight (first) make (mean) gear, by(turn) pool(.)
+{res}{txt}r; t=0.02 14:47:01
+
+{com}.         qui sysuse auto, clear
+{txt}r; t=0.00 14:47:01
+
+{com}.         replace trunk = . if trunk == 5
+{txt}(1 real change made, 1 to missing)
+r; t=0.00 14:47:01
+
+{com}.         fcollapse (sum) price weight (first) make p=price (last) q=price m=make (count) foreign trunk, by(turn) fast
+{res}{txt}r; t=0.02 14:47:01
+
+{com}.         
+. // -------------------------
+. // With missing Values
+.         qui sysuse auto, clear
+{txt}r; t=0.00 14:47:01
+
+{com}.         replace price = . if foreign
+{txt}(22 real changes made, 22 to missing)
+r; t=0.00 14:47:01
+
+{com}.         replace gear = . if turn == 31
+{txt}(1 real change made, 1 to missing)
+r; t=0.00 14:47:01
+
+{com}.         gen z = 1 in 1
+{txt}(73 missing values generated)
+r; t=0.00 14:47:01
+
+{com}.         local stats mean median p1 p2 p4 p50 p99 sum count percent max min iqr first last firstnm lastnm
+{txt}r; t=0.00 14:47:01
+
+{com}.         loc i 0
+{txt}r; t=0.00 14:47:01
+
+{com}.         foreach stat of local stats {c -(}
+{txt}  2{com}.                 loc ++i
+{txt}  3{com}.                 loc clist `clist' (`stat') x_price_`stat'=price x_gear_`stat'=gear x_z_`stat'=z
+{txt}  4{com}.         {c )-}
+{txt}r; t=0.00 14:47:01
+
+{com}.         preserve
+{txt}r; t=0.00 14:47:01
+
+{com}.         
+.         collapse `clist', by(foreign)
+{txt}r; t=0.06 14:47:01
+
+{com}.         reshape long x_ , i(foreign) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+x_gear_percent:  {res}2{txt} values would be changed; not changed
+x_gear_sum:  {res}2{txt} values would be changed; not changed
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       2   {txt}->{res}     102
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+r; t=0.15 14:47:01
+
+{com}.         rename x_ collapse
+{res}{txt}r; t=0.03 14:47:01
+
+{com}.         tempfile benchmark
+{txt}r; t=0.00 14:47:01
+
+{com}.         save "`benchmark'", replace
+{txt}(note: file C:\Users\Sergio\AppData\Local\Temp\ST_00000002.tmp not found)
+file C:\Users\Sergio\AppData\Local\Temp\ST_00000002.tmp saved
+r; t=0.00 14:47:01
+
+{com}.         restore, preserve
+{txt}r; t=0.00 14:47:01
+
+{com}.         
+.         fcollapse `clist', by(foreign)
+{res}{txt}r; t=0.10 14:47:01
+
+{com}.         reshape long x_ , i(foreign) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       2   {txt}->{res}     102
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+r; t=0.14 14:47:01
+
+{com}.         rename x_ fcollapse
+{res}{txt}r; t=0.00 14:47:01
+
+{com}.         merge 1:1 foreign cat using "`benchmark'", assert(match) nogen
+{res}{txt}(label origin already defined)
+
+{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}               0
+{txt}{col 5}matched{col 30}{res}             102{txt}  
+{col 5}{hline 41}
+r; t=0.01 14:47:01
+
+{com}.         gen double diff = reldif(fcollapse, collapse)
+{txt}r; t=0.00 14:47:01
+
+{com}.         su diff
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 8}diff {c |}{res}        102    9.55e-10    5.17e-09          0   3.71e-08
+{txt}r; t=0.00 14:47:01
+
+{com}.         assert diff < 1e-6
+{txt}r; t=0.00 14:47:01
+
+{com}.         restore, preserve
+{txt}r; t=0.00 14:47:01
+
+{com}.         
+.         * repeat for a different by()
+.         
+.         collapse `clist', by(turn)
+{txt}r; t=0.06 14:47:01
+
+{com}.         reshape long x_ , i(turn) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+x_gear_percent:  {res}17{txt} values would be changed; not changed
+x_gear_sum:  {res}9{txt} values would be changed; not changed
+x_price_percent:  {res}17{txt} values would be changed; not changed
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}      18   {txt}->{res}     918
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+r; t=0.15 14:47:01
+
+{com}.         rename x_ collapse
+{res}{txt}r; t=0.00 14:47:01
+
+{com}.         tempfile benchmark
+{txt}r; t=0.00 14:47:01
+
+{com}.         save "`benchmark'", replace
+{txt}(note: file C:\Users\Sergio\AppData\Local\Temp\ST_00000003.tmp not found)
+file C:\Users\Sergio\AppData\Local\Temp\ST_00000003.tmp saved
+r; t=0.00 14:47:01
+
+{com}.         restore, preserve
+{txt}r; t=0.00 14:47:01
+
+{com}.         
+.         fcollapse `clist', by(turn)
+{res}{txt}r; t=0.06 14:47:01
+
+{com}.         reshape long x_ , i(turn) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}      18   {txt}->{res}     918
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+r; t=0.12 14:47:02
+
+{com}.         rename x_ fcollapse
+{res}{txt}r; t=0.00 14:47:02
+
+{com}.         merge 1:1 turn cat using "`benchmark'", assert(match) nogen
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}               0
+{txt}{col 5}matched{col 30}{res}             918{txt}  
+{col 5}{hline 41}
+r; t=0.00 14:47:02
+
+{com}.         gen double diff = reldif(fcollapse, collapse)
+{txt}r; t=0.00 14:47:02
+
+{com}.         su diff
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 8}diff {c |}{res}        918    9.34e-10    5.88e-09          0   1.04e-07
+{txt}r; t=0.00 14:47:02
+
+{com}.         assert diff < 1e-6
+{txt}r; t=0.00 14:47:02
+
+{com}.         restore, preserve
+{txt}r; t=0.00 14:47:02
+
+{com}. 
+.         * repeat with no by()
+.         
+.         collapse `clist'
+{txt}r; t=0.05 14:47:02
+
+{com}.         assert _N == 1
+{txt}r; t=0.00 14:47:02
+
+{com}.         gen byte i = 1
+{txt}r; t=0.00 14:47:02
+
+{com}.         reshape long x_ , i(i) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+x_gear_sum:  {res}1{txt} value would be changed; not changed
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       1   {txt}->{res}      51
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+r; t=0.12 14:47:02
+
+{com}.         rename x_ collapse
+{res}{txt}r; t=0.00 14:47:02
+
+{com}.         tempfile benchmark
+{txt}r; t=0.00 14:47:02
+
+{com}.         save "`benchmark'", replace
+{txt}(note: file C:\Users\Sergio\AppData\Local\Temp\ST_00000004.tmp not found)
+file C:\Users\Sergio\AppData\Local\Temp\ST_00000004.tmp saved
+r; t=0.00 14:47:02
+
+{com}.         restore, preserve
+{txt}r; t=0.00 14:47:02
+
+{com}.         
+.         fcollapse `clist'
+{res}{txt}r; t=0.05 14:47:02
+
+{com}.         assert _N == 1
+{txt}r; t=0.00 14:47:02
+
+{com}.         gen byte i = 1
+{txt}r; t=0.00 14:47:02
+
+{com}.         reshape long x_ , i(i) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       1   {txt}->{res}      51
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+r; t=0.12 14:47:02
+
+{com}.         rename x_ fcollapse
+{res}{txt}r; t=0.00 14:47:02
+
+{com}.         merge 1:1 cat using "`benchmark'", assert(match) nogen
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}               0
+{txt}{col 5}matched{col 30}{res}              51{txt}  
+{col 5}{hline 41}
+r; t=0.00 14:47:02
+
+{com}.         gen double diff = reldif(fcollapse, collapse)
+{txt}r; t=0.00 14:47:02
+
+{com}.         su diff
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 8}diff {c |}{res}         51    7.59e-10    5.20e-09          0   3.71e-08
+{txt}r; t=0.00 14:47:02
+
+{com}.         assert diff < 1e-6
+{txt}r; t=0.00 14:47:02
+
+{com}.         restore, preserve
+{txt}r; t=0.00 14:47:02
+
+{com}. 
+.         * repeat with no by() and one obs
+.         
+.         collapse `clist' in 1
+{txt}r; t=0.04 14:47:02
+
+{com}.         assert _N == 1
+{txt}r; t=0.00 14:47:02
+
+{com}.         gen byte i = 1
+{txt}r; t=0.00 14:47:02
+
+{com}.         reshape long x_ , i(i) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       1   {txt}->{res}      51
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+r; t=0.12 14:47:02
+
+{com}.         rename x_ collapse
+{res}{txt}r; t=0.01 14:47:02
+
+{com}.         tempfile benchmark
+{txt}r; t=0.00 14:47:02
+
+{com}.         save "`benchmark'", replace
+{txt}(note: file C:\Users\Sergio\AppData\Local\Temp\ST_00000005.tmp not found)
+file C:\Users\Sergio\AppData\Local\Temp\ST_00000005.tmp saved
+r; t=0.00 14:47:02
+
+{com}.         restore, preserve
+{txt}r; t=0.00 14:47:02
+
+{com}.         
+.         fcollapse `clist' in 1
+{res}{txt}(73 observations deleted)
+{res}{txt}r; t=0.06 14:47:02
+
+{com}.         assert _N == 1
+{txt}r; t=0.00 14:47:02
+
+{com}.         gen byte i = 1
+{txt}r; t=0.00 14:47:02
+
+{com}.         reshape long x_ , i(i) j(cat) string
+{txt}(note: j = gear_count gear_first gear_firstnm gear_iqr gear_last gear_lastnm gear_max gear_mean gear_median gear_min gear_p1 gear_p2 gear_p4 gear_p50 gear_p99 gear_percent gear_sum price_count price_first price_firstnm price_iqr price_last price_lastnm price_max price_mean price_median price_min price_p1 price_p2 price_p4 price_p50 price_p99 price_percent price_sum z_count z_first z_firstnm z_iqr z_last z_lastnm z_max z_mean z_median z_min z_p1 z_p2 z_p4 z_p50 z_p99 z_percent z_sum)
+
+Data{col 36}wide{col 43}->{col 48}long
+{hline 77}
+Number of obs.                 {res}       1   {txt}->{res}      51
+{txt}Number of variables            {res}      52   {txt}->{res}       3
+{txt}j variable (51 values)                    ->   {res}cat
+{txt}xij variables:
+  {res}x_gear_count x_gear_first ... x_z_sum   {txt}->   {res}x_
+{txt}{hline 77}
+r; t=0.25 14:47:02
+
+{com}.         rename x_ fcollapse
+{res}{txt}r; t=0.00 14:47:02
+
+{com}.         merge 1:1 cat using "`benchmark'", assert(match) nogen
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}               0
+{txt}{col 5}matched{col 30}{res}              51{txt}  
+{col 5}{hline 41}
+r; t=0.02 14:47:02
+
+{com}.         gen double diff = reldif(fcollapse, collapse)
+{txt}r; t=0.00 14:47:02
+
+{com}.         su diff
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 8}diff {c |}{res}         51           0           0          0          0
+{txt}r; t=0.00 14:47:02
+
+{com}.         assert diff < 1e-6
+{txt}r; t=0.00 14:47:02
+
+{com}.         //restore, preserve
+.         restore, not
+{txt}r; t=0.00 14:47:02
+
+{com}.         
+. // --------------------------------------------------
+. // BENCHMARK - LARGE DATASETS
+. // --------------------------------------------------
+. 
+. // -------------------------
+. // Setup
+.         cls
+{txt}r; t=0.00 14:47:02
+
+{com}.         set segmentsize 128m // default 32m
+{txt}r; t=0.02 14:47:02
+
+{com}.         set niceness 10, permanently // default 5
+{txt}({cmd:set niceness} preference recorded)
+r; t=0.01 14:47:02
+
+{com}. 
+.         clear
+{txt}r; t=0.00 14:47:02
+
+{com}.         adopath + "./comparison"
+{txt}  [1]  (BASE)      "{res}C:\Bin\Stata14\ado\base/{txt}"
+  [2]  (SITE)      "{res}C:\Bin\Stata14\ado\site/{txt}"
+  [3]              "{res}.{txt}"
+  [4]  (PERSONAL)  "{res}c:\ado\personal/{txt}"
+  [5]  (PLUS)      "{res}c:\ado\plus/{txt}"
+  [6]  (OLDPLACE)  "{res}c:\ado/{txt}"
+  [7]              "{res}./comparison{txt}"
+r; t=0.01 14:47:02
+
+{com}.         timer clear
+{txt}r; t=0.00 14:47:02
+
+{com}.         loc n = 20 * 1000 * 1000
+{txt}r; t=0.00 14:47:02
+
+{com}.         //loc n = 1 * 1000 * 1000
+.         crData `n' 15 // x1 ... x5; y1..
+(obs set)
+(Xs set)
+{txt}r; t=57.36 14:48:00
+
+{com}. 
+.         // loc clist (mean) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3 // (median) x5 (max) z=x5
+. 
+.         * prevent this bug:
+.         * http://www.statalist.org/forums/forum/general-stata-discussion/general/1312288-stata-mp-slows-the-sort
+.         set processors 3
+{txt}{p 4 4 2}
+The maximum number of processors or cores being used is changed from {res:4} to {res:3}.
+It can be set to any number between {res:1} and {res:4}
+{p_end}
+r; t=0.00 14:48:00
+
+{com}. 
+.         //sort `all_vars'
+.         de
+
+{txt}Contains data
+  obs:{res}    20,000,000                          
+{txt} vars:{res}            20                          
+{txt} size:{res} 2,700,000,000                          
+{txt}{hline}
+              storage   display    value
+variable name   type    format     label      variable label
+{hline}
+{p 0 48}{res}{bind:x1             }{txt}{bind: long    }{bind:{txt}%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:x2             }{txt}{bind: int     }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:x3             }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:x4             }{txt}{bind: str4    }{bind:{txt}%9s       }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:x5             }{txt}{bind: long    }{bind:{txt}%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y1             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y2             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y3             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y4             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y5             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y6             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y7             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y8             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y9             }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y10            }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y11            }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y12            }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y13            }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y14            }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:y15            }{txt}{bind: double  }{bind:{txt}%10.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{txt}{hline}
+Sorted by: 
+{res}     Note: Dataset has changed since last saved.
+{txt}r; t=0.00 14:48:00
+
+{com}. 
+. // -------------------------
+. // Run Simple
+.         preserve
+{txt}r; t=5.88 14:48:06
+
+{com}.         timer clear
+{txt}r; t=0.00 14:48:06
+
+{com}. 
+.         loc by x3 // `" x1 "x2 x3" x4 x5 "'
+{txt}r; t=0.00 14:48:06
+
+{com}.         loc stats sum
+{txt}r; t=0.00 14:48:06
+
+{com}.         loc vars y1-y15
+{txt}r; t=0.00 14:48:06
+
+{com}. 
+.         di as text "{c -(}bf:by=`by'{c )-}"
+{res}{txt}{bf:by=x3}
+r; t=0.00 14:48:06
+
+{com}.         di as text "{c -(}bf:stats=`stats'{c )-}"
+{res}{txt}{bf:stats=sum}
+r; t=0.00 14:48:06
+
+{com}.         di as text "{c -(}bf:vars=`vars'{c )-}"
+{res}{txt}{bf:vars=y1-y15}
+r; t=0.00 14:48:06
+
+{com}. 
+.         loc i 0
+{txt}r; t=0.00 14:48:06
+
+{com}.         loc msg
+{txt}r; t=0.00 14:48:06
+
+{com}. 
+.         loc methods sumup collapse fcol fcolp tab
+{txt}r; t=0.00 14:48:06
+
+{com}. 
+.         foreach method of local methods {c -(}
+{txt}  2{com}.                 loc ++i
+{txt}  3{com}.                 di as text "{c -(}bf:[`i'] `method'{c )-}"
+{txt}  4{com}.                 restore, preserve
+{txt}  5{com}.                 timer on `i'
+{txt}  6{com}.                 RunOne, by(`by') data(`vars') stats(`stats') method(`method')
+{txt}  7{com}.                 timer off `i'
+{txt}  8{com}.                 loc msg "`msg' `i'=`method'"
+{txt}  9{com}.         {c )-}
+{txt}{bf:[1] sumup}
+clist=<(sum) sum_y1=y1 sum_y2=y2 sum_y3=y3 sum_y4=y4 sum_y5=y5 sum_y6=y6 sum_y7=y7 sum_y8=y8 sum_y9=y9 sum_y10=y10 sum_y11=y11 sum_y12=y12 sum_y13=y13 sum_y14=y14 sum_y15=y15>
+{bf:[2] collapse}
+clist=<(sum) sum_y1=y1 sum_y2=y2 sum_y3=y3 sum_y4=y4 sum_y5=y5 sum_y6=y6 sum_y7=y7 sum_y8=y8 sum_y9=y9 sum_y10=y10 sum_y11=y11 sum_y12=y12 sum_y13=y13 sum_y14=y14 sum_y15=y15>
+{bf:[3] fcol}
+clist=<(sum) sum_y1=y1 sum_y2=y2 sum_y3=y3 sum_y4=y4 sum_y5=y5 sum_y6=y6 sum_y7=y7 sum_y8=y8 sum_y9=y9 sum_y10=y10 sum_y11=y11 sum_y12=y12 sum_y13=y13 sum_y14=y14 sum_y15=y15>
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}100{txt};{txt} method: {res}hash0{txt}; dict size: {res}100{txt})
+{res}{txt}{bf:[4] fcolp}
+clist=<(sum) sum_y1=y1 sum_y2=y2 sum_y3=y3 sum_y4=y4 sum_y5=y5 sum_y6=y6 sum_y7=y7 sum_y8=y8 sum_y9=y9 sum_y10=y10 sum_y11=y11 sum_y12=y12 sum_y13=y13 sum_y14=y14 sum_y15=y15>
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}100{txt};{txt} method: {res}hash0{txt}; dict size: {res}100{txt})
+{res}{txt}{bf:[5] tab}
+clist=<(sum) sum_y1=y1 sum_y2=y2 sum_y3=y3 sum_y4=y4 sum_y5=y5 sum_y6=y6 sum_y7=y7 sum_y8=y8 sum_y9=y9 sum_y10=y10 sum_y11=y11 sum_y12=y12 sum_y13=y13 sum_y14=y14 sum_y15=y15>
+100
+r; t=236.94 14:52:03
+
+{com}. 
+.         di as text "`msg'"
+{res}{txt} 1=sumup 2=collapse 3=fcol 4=fcolp 5=tab
+r; t=0.00 14:52:03
+
+{com}.         timer list
+{res}   1:     56.84 /        1 =      56.8360
+   2:     80.97 /        1 =      80.9730
+   3:     35.68 /        1 =      35.6770
+   4:     30.69 /        1 =      30.6920
+   5:      7.81 /        1 =       7.8120
+{txt}r; t=0.00 14:52:03
+
+{com}. 
+. // -------------------------
+. // Run Complex
+.         //preserve
+.         timer clear
+{txt}r; t=0.00 14:52:03
+
+{com}. 
+.         loc by x3 // `" x1 "x2 x3" x4 x5 "'
+{txt}r; t=0.00 14:52:03
+
+{com}.         loc stats mean median
+{txt}r; t=0.00 14:52:03
+
+{com}.         loc vars y1-y3
+{txt}r; t=0.00 14:52:03
+
+{com}. 
+.         di as text "{c -(}bf:by=`by'{c )-}"
+{res}{txt}{bf:by=x3}
+r; t=0.00 14:52:03
+
+{com}.         di as text "{c -(}bf:stats=`stats'{c )-}"
+{res}{txt}{bf:stats=mean median}
+r; t=0.00 14:52:03
+
+{com}.         di as text "{c -(}bf:vars=`vars'{c )-}"
+{res}{txt}{bf:vars=y1-y3}
+r; t=0.00 14:52:03
+
+{com}. 
+.         loc i 0
+{txt}r; t=0.00 14:52:03
+
+{com}.         loc msg
+{txt}r; t=0.00 14:52:03
+
+{com}. 
+.         // loc methods sumup collapse fcol fcolp tab
+.         
+.         foreach method of local methods {c -(}
+{txt}  2{com}.                 loc ++i
+{txt}  3{com}.                 di as text "{c -(}bf:[`i'] `method'{c )-}"
+{txt}  4{com}.                 restore, preserve
+{txt}  5{com}.                 timer on `i'
+{txt}  6{com}.                 RunOne, by(`by') data(`vars') stats(`stats') method(`method')
+{txt}  7{com}.                 timer off `i'
+{txt}  8{com}.                 loc msg "`msg' `i'=`method'"
+{txt}  9{com}.         {c )-}
+{txt}{bf:[1] sumup}
+clist=<(mean) mean_y1=y1 mean_y2=y2 mean_y3=y3 (median) median_y1=y1 median_y2=y2 median_y3=y3>
+{bf:[2] collapse}
+clist=<(mean) mean_y1=y1 mean_y2=y2 mean_y3=y3 (median) median_y1=y1 median_y2=y2 median_y3=y3>
+{bf:[3] fcol}
+clist=<(mean) mean_y1=y1 mean_y2=y2 mean_y3=y3 (median) median_y1=y1 median_y2=y2 median_y3=y3>
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}100{txt};{txt} method: {res}hash0{txt}; dict size: {res}100{txt})
+{res}{txt}{bf:[4] fcolp}
+clist=<(mean) mean_y1=y1 mean_y2=y2 mean_y3=y3 (median) median_y1=y1 median_y2=y2 median_y3=y3>
+{res}{txt}(obs: {res}20000000{txt}; levels: {res}100{txt};{txt} method: {res}hash0{txt}; dict size: {res}100{txt})
+{res}{txt}{bf:[5] tab}
+clist=<(mean) mean_y1=y1 mean_y2=y2 mean_y3=y3 (median) median_y1=y1 median_y2=y2 median_y3=y3>
+100
+r; t=228.98 14:55:52
+
+{com}. 
+.         di as text "`msg'"
+{res}{txt} 1=sumup 2=collapse 3=fcol 4=fcolp 5=tab
+r; t=0.00 14:55:52
+
+{com}.         timer list
+{res}   1:     61.61 /        1 =      61.6070
+   2:     79.80 /        1 =      79.7990
+   3:     34.71 /        1 =      34.7100
+   4:     29.04 /        1 =      29.0370
+   5:      7.11 /        1 =       7.1090
+{txt}r; t=0.00 14:55:52
+
+{com}. set processors 4
+{txt}{p 4 4 2}
+The maximum number of processors or cores being used is changed from {res:3} to {res:4}.
+It can be set to any number between {res:1} and {res:4}
+{p_end}
+r; t=0.00 14:55:52
+
+{com}. 
+. log close collapse
+      {txt}name:  {res}collapse
+       {txt}log:  {res}C:\Git\ftools\test\benchmark_fcollapse.smcl
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res} 7 Oct 2016, 14:55:52
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}

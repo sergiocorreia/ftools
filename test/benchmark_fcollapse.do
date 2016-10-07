@@ -1,13 +1,52 @@
+
 pr drop _all
 clear all
 set more off
 set matadebug off
-include "test_utils.do"
 cls
+cap log close collapse
+log using benchmark_fcollapse, replace name(collapse)
+include "test_utils.do"
+
+cap ado uninstall ftools
+net install ftools, from("C:/git/ftools/source")
+ftools compile
+
+
+// --------------------------------------------------
+// PROGRAMS
+// --------------------------------------------------
+
+cap pr drop RunOne
+pr RunOne
+	syntax, by(varlist) data(varlist) stats(namelist) method(string)
+	assert inlist("`method'", "sumup", "collapse", "fcol", "fcolp", "tab")
+	
+	foreach s of local stats {
+		loc zip `zip' (`s')
+		foreach var of varlist `data' {
+			loc zip `zip' `s'_`var'=`var'
+		}
+	}
+	di as text "clist=<`zip'>"
+
+	if ("`method'"=="sumup") qui sumup `data', by(`by') stat(`stats')
+	if ("`method'"=="collapse") collapse `zip', by(`by') fast
+	if ("`method'"=="fcol") fcollapse `zip', by(`by') fast verbose
+	if ("`method'"=="fcolp") fcollapse `zip', by(`by') fast verbose pool(5)
+	if ("`method'"=="tab") {
+		tab `by', missing nofreq nolabel matrow(foobar)
+		noi di rowsof(foobar)
+	}
+end
+
+
+// --------------------------------------------------
+// TESTING
+// --------------------------------------------------
 
 // -------------------------
 // Simple commands
-
 	qui sysuse auto, clear
 	fcollapse (sum) price weight gear, by(turn) fast
 	qui sysuse auto, clear
@@ -115,92 +154,96 @@ cls
 	//restore, preserve
 	restore, not
 	
+// --------------------------------------------------
+// BENCHMARK - LARGE DATASETS
+// --------------------------------------------------
 
 // -------------------------
-// Larger random datasets
-set segmentsize 128m // default 32m
-set niceness 10, permanently // default 5
+// Setup
+	cls
+	set segmentsize 128m // default 32m
+	set niceness 10, permanently // default 5
+
 	clear
 	adopath + "./comparison"
 	timer clear
-	loc n = 20 * 1000 // * 1000
-	crData `n' 10 // x1 ... x5; y1..
-	loc all_vars `" x1 "x2 x3" x4 x5 "'
+	loc n = 20 * 1000 * 1000
+	//loc n = 1 * 1000 * 1000
+	crData `n' 15 // x1 ... x5; y1..
 
-	loc all_vars x3 // `" "x2 x3" "' // x1
-	loc clist (mean) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3 // (median) x5 (max) z=x5
-	
+	// loc clist (mean) x1 y1-y3 (median) X1=x1 Y1=y1 Y2=y2 Y3=y3 // (median) x5 (max) z=x5
+
 	* prevent this bug:
 	* http://www.statalist.org/forums/forum/general-stata-discussion/general/1312288-stata-mp-slows-the-sort
 	set processors 3
-	
+
 	//sort `all_vars'
 	de
 
-	foreach vars of local all_vars {
-		preserve
-		timer clear
-		di as text "{bf:`vars'}"
-		
-		timer on 1
-		qui sumup x3 y1-y3, by(`vars') statistics(mean median)
-		timer off 1
+// -------------------------
+// Run Simple
+	preserve
+	timer clear
 
-		timer on 2
-		collapse `clist', by(`vars') fast
-		timer off 2
-		li in 1/5
-		li in -5/-1
-		
+	loc by x3 // `" x1 "x2 x3" x4 x5 "'
+	loc stats sum
+	loc vars y1-y15
+
+	di as text "{bf:by=`by'}"
+	di as text "{bf:stats=`stats'}"
+	di as text "{bf:vars=`vars'}"
+
+	loc i 0
+	loc msg
+
+	loc methods sumup collapse fcol fcolp tab
+
+	foreach method of local methods {
+		loc ++i
+		di as text "{bf:[`i'] `method'}"
 		restore, preserve
-
-		di "(starting fcollapse)"
-		timer on 3
-		fcollapse `clist', by(`vars') verbose fast
-		timer off 3
-		li in 1/5
-		li in -5/-1
-		//timer list
-		//timer clear
-		restore
-		
-		timer on 4
-		fcollapse `clist', by(`vars') verbose pool(5) fast
-		timer off 4
-		li in 1/5
-		li in -5/-1
-
-		di as text "1 other 2 default 3 me"
-		di as text "20 mark 21 factor() 22 fcollapse() 23 sort"
-		di as text "30 F.panelsetup() 31 st_data() 32 F.paneldata() 33 J() "
-		di as text "34 results= 35 store-keys 36 store-res 37 compress"
-		di as text "60 st_data 61 _factor(data)"
-		di as text "70 minmax 71 hash"
-		di as text "80 hash0 81 selectindex 82 dict[] 83 keys="
-		di as text "84 levels= 85 counts="
-		timer list
+		timer on `i'
+		RunOne, by(`by') data(`vars') stats(`stats') method(`method')
+		timer off `i'
+		loc msg "`msg' `i'=`method'"
 	}
 
+	di as text "`msg'"
+	timer list
+
+// -------------------------
+// Run Complex
+	//preserve
+	timer clear
+
+	loc by x3 // `" x1 "x2 x3" x4 x5 "'
+	loc stats mean median
+	loc vars y1-y3
+
+	di as text "{bf:by=`by'}"
+	di as text "{bf:stats=`stats'}"
+	di as text "{bf:vars=`vars'}"
+
+	loc i 0
+	loc msg
+
+	// loc methods sumup collapse fcol fcolp tab
+	
+	foreach method of local methods {
+		loc ++i
+		di as text "{bf:[`i'] `method'}"
+		restore, preserve
+		timer on `i'
+		RunOne, by(`by') data(`vars') stats(`stats') method(`method')
+		timer off `i'
+		loc msg "`msg' `i'=`method'"
+	}
+
+	di as text "`msg'"
+	timer list
 set processors 4
+
+log close collapse
 exit
 
-
-
-	* Initialize with random sort
-	loc sortvars `" "turn" "trunk turn" "foreign turn" "foreign turn trunk" one "'
-	foreach vars of local sortvars {
-		di as text "{bf:`vars'}"
-		qui sysuse auto, clear
-		gen u = uniform()
-		gen byte one = 1
-		keep `vars' u
-		
-		sort u
-		sort `vars', stable
-		gen long index_bench = _n
-		egen long id_bench = group(`vars'), missing
-		
-		sort u
-		fsort `vars'
-		CheckOrder, vars(`vars') idx(index_bench) id(id_bench) stable
-	}
+exit

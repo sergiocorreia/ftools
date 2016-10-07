@@ -14,41 +14,6 @@ set trace off
 	crData `n' 0 // x1 ... x5
 	loc vars x5 // x2 x3 // x1 or x5
 
-	timer clear
-	timer on 1
-	// store_levels(varnames, newvar,| touse, verbose, method, sortit, ratio)
-	mata: store_levels("`vars'", "id", "", 0, "hash0", ., .)
-	timer off 1
-	timer list
-	drop id
-
-	timer clear
-	timer on 1
-	mata: store_levels("`vars'", "id", "", 0, "hash1", 1, .)
-	timer off 1
-	timer list
-	drop id
-
-	timer clear
-	timer on 1
-	mata: store_levels("`vars'", "id", "", 0, "hash1", 0, .)
-	timer off 1
-	timer list
-	drop id
-
-	timer clear
-	timer on 1
-	mata: store_levels("`vars'", "id", "", 0, "hash2", 1, .)
-	timer off 1
-	timer list
-	drop id
-
-	timer clear
-	timer on 1
-	mata: store_levels("`vars'", "id", "", 0, "hash2", 0, .)
-	timer off 1
-	timer list
-	drop id
 
 // -------------------------
 // Corner cases

@@ -5,7 +5,7 @@ do test_mata
 do test_stata
 do benchmark
 
-do test_fcollapse
+do benchmark_fcollapse
 do test_fsort
 
 log off
