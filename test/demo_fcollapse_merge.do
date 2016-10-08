@@ -53,7 +53,7 @@ gen double x = rnormal()
 gen int y = ceil(runiform() * 10)
 
 // sort year
-loc by firm
+loc by year // firm
 
 
 
