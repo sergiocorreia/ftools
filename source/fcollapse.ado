@@ -1,4 +1,4 @@
-*! version 1.4.0 05oct2016
+*! version 1.5.0 08oct2016
 cap pr drop fcollapse
 pr fcollapse
 	cap noi Inner `0'
@@ -18,6 +18,7 @@ pr Inner
 		[FREQ FREQvar(name)] /// -contract- feature for free
 		[REGister(namelist local)] /// additional aggregation functions
 		[pool(numlist integer missingok max=1 >0 min=1)] /// memory-related
+		[MERGE] /// adds back collapsed vars into dataset; replaces egen
 		[Verbose] // debug info
 	
 	// Parse
@@ -30,6 +31,7 @@ pr Inner
 		loc by `byvar'
 	}
 	_assert "`exp'" == "", msg("weights not currently supported")
+	loc merge = ("`merge'" != "")
 	loc verbose = ("`verbose'" != "")
 	
 	if ("`anything'" == "") {
@@ -39,7 +41,7 @@ pr Inner
 		}
 	}
 	else {
-		ParseList `anything' // modify `targets' `keepvars'
+		ParseList `anything', merge(`merge') // modify `targets' `keepvars'
 	}
 
 	loc valid_stats mean median sum count percent max min ///
@@ -74,23 +76,29 @@ pr Inner
 	}
 
 	// Trim data
-	if ("`if'`in'" != "") {
-		keep `if' `in'
-	}
+	marksample touse, strok novarlist
 	if ("`cw'" != "") {
-		tempvar touse
-		mark `touse'
-		markout `touse' `keepvars'
+		markout `touse' `keepvars', strok
+	}
+
+	if (!`merge' | ("`if'`in'"=="" & "`cw'"=="")) {
 		keep if `touse'
 		drop `touse'
+		loc touse
 	}
 
 	// Create factor structure
-	mata: F = factor("`by'", "", `verbose')
+timer clear 50
+timer on 50
+	mata: F = factor("`by'", "`touse'", `verbose')
+	if (`merge') mata: F.touse = " " // hack to fill touse but leave it empty
+timer off 50
+timer list 50
+timer clear 50
 
 	// Trim again
 	// (saves memory but is slow for big datasets)
-	if (`pool' < .) keep `keepvars' `exp'
+	if (!`merge' & `pool' < .) keep `keepvars' `exp'
 
 	// Get list of aggregating functions
 	mata: fun_dict = get_funs()
@@ -115,17 +123,23 @@ pr Inner
 		loc freqtype long
 		if (`maxfreq' <= 32740) loc freqtype int
 		if (`maxfreq' <= 100) loc freqtype byte
-		mata: st_store(., st_addvar("`freqtype'", "`freqvar'", 1), F.counts)
+		if (`merge') {
+			mata: st_store(., st_addvar("`freqtype'", "`freqvar'", 1), F.counts[F.levels])
+		}
+		else {
+			mata: st_store(., st_addvar("`freqtype'", "`freqvar'", 1), F.counts)
+		}
 		la var `freqvar' "Frequency"
 	}
 
-	order `by' `targets'
+	if (!`merge') order `by' `targets'
 	if ("`fast'" == "") restore, not
 end
 
 cap pr drop ParseList
 pr ParseList
-	TrimSpaces 0 : `0'
+	syntax [anything(equalok)] , MERGE(integer)
+	TrimSpaces 0 : `anything'
 
 	loc stat mean // default
 	mata: query = asarray_create("string") // query[var] -> [stat, target]
@@ -137,7 +151,14 @@ pr ParseList
 		gettoken vars 0 : 0
 		unab vars : `vars'
 		foreach var of local vars {
-			if ("`target'" == "") loc target `var'
+			if ("`target'" == "") {
+				if (`merge') {
+					loc target `stat'_`var'
+				}
+				else {
+					loc target `var'
+				}
+			}
 			loc targets `targets' `target'
 			loc keepvars `keepvars' `var'
 			loc stats `stats' `stat'

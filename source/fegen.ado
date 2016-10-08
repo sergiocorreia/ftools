@@ -1,4 +1,4 @@
-*! version 1.4.0 05oct2016
+*! version 1.5.0 08oct2016
 * This is just a modified version of Statacorp's -egen-
 cap pr drop fegen
 pr fegen, byable(onecall) // sortpreserve

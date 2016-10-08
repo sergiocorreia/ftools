@@ -7,8 +7,9 @@
 
 Currently the following commands are implemented:
 
-- `fcollapse` replacing `collapse` and `contract`
 - `fegen group` replacing `egen group`
+- `fcollapse` replacing `collapse`, `contract` and most of `egen` (through the `, merge` option)
+- `join` (and its wrapper `fmerge`) replacing `merge`
 - `fisid` replacing `isid`
 - `fsort` replacing `sort` (although it is rarely faster than sort)
 

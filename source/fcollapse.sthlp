@@ -69,6 +69,10 @@ If {it:stat} is not specified, {opt mean} is assumed.
 {syntab :Options}
 {synopt :{opth by(varlist)}}groups over which {it:stat} is to be calculated
 {p_end}
+{synopt :{opt merge}}merge collapsed dataset back into the original one;
+if the dataset is unsorted or sorted by something different than {opt by()},
+it is much more efficient than {cmd:egen} and that combining {cmd:collapse} with {cmd:merge}
+{p_end}
 {synopt :{opt cw}}casewise deletion instead of all possible observations
 {p_end}
 {synopt :{opt fast}}do not preserve and restore the original dataset;
@@ -122,6 +126,11 @@ You can implement your own Mata functions to easily extend the fcollapse command
 calculated.  If this option is not specified, the resulting dataset will
 contain 1 observation.  If it is specified, {it:varlist} may refer to either
 string or numeric variables.
+
+{phang}
+{opt merge} works similarly to {cmd:egen}.
+It will collapse the data in Mata and then add it back to the original dataset.
+If the dataset is not sorted by the groups set in {opt by()}, this is much faster than {cmd:egen} and {cmd:collapse} followed by {cmd:merge}.
 
 {phang}
 {opt cw} specifies casewise deletion.  If {opt cw} is not specified, all

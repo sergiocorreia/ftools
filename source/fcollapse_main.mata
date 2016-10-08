@@ -25,6 +25,7 @@ void f_collapse(`Factor' F,
 	`StringMatrix'		target_stat
 	`String'			target, stat
 	`DataCol'			data
+	`Boolean'			merge
 	pointer(`DataCol')	scalar fp
 
 	// Variable information
@@ -44,7 +45,10 @@ void f_collapse(`Factor' F,
 
 	// Compute permutation vector so we can sort the data
 	F.panelsetup()
-	F.levels = . // save memory
+	merge = (F.touse != "")
+	if (!merge) {
+		F.levels = . // save memory
+	}
 
 	// Weights (not really implemented!)
 	if (wvar != "") {
@@ -77,18 +81,20 @@ void f_collapse(`Factor' F,
 		
 		// Load data
 		if (var_is_str[i]) {
-			asarray(data_cstore, i_cstore, st_sdata(., vars[i..i_next]))
+			asarray(data_cstore, i_cstore, st_sdata(., vars[i..i_next], F.touse))
 		}
 		else {
-			asarray(data_cstore, i_cstore, st_data(., vars[i..i_next]))
+			asarray(data_cstore, i_cstore, st_data(., vars[i..i_next], F.touse))
 		}
 
 		// Keep pending vars
-		if (i_next == num_vars) {
-			stata("clear")
-		}
-		else {
-			st_keepvar(vars[i_next+1..num_vars])
+		if (!merge) {
+			if (i_next == num_vars) {
+				stata("clear")
+			}
+			else {
+				st_keepvar(vars[i_next+1..num_vars])
+			}
 		}
 
 		// Store collated and vectorized data
@@ -122,7 +128,7 @@ void f_collapse(`Factor' F,
 			fp = asarray(fun_dict, stat)
 			targets[i_target] =  target
 			target_labels[i_target] = sprintf("(%s) %s", stat, var)
-			target_types[i_target] = var_is_str[i] ? var_types[i] : "double"
+			target_types[i_target] = infer_type(var_types[i], var_is_str[i], stat)
 			target_formats[i_target] = stat=="count" ? "%8.0g" : var_formats[i]
 			target_is_str[i_target] = var_is_str[i]
 			
@@ -150,16 +156,22 @@ void f_collapse(`Factor' F,
 	}
 
 	// Store results
-	F.store_keys(1) // sort=1 will 'sort' by keys (faster now than later)
+	if (!merge) {
+		F.store_keys(1) // sort=1 will 'sort' by keys (faster now than later)
+	}
+
 	for (i = 1; i <= length(targets); i++) {
 		target = targets[i]
+		data = asarray(results_cstore, target)
+		if (merge) {
+			data = rows(data) == 1 ? data[F.levels, .] : data[F.levels]
+		}
+
 		if (target_is_str[i]) {
-			st_sstore(., st_addvar(target_types[i], target, 1),
-			         asarray(results_cstore, target))
+			st_sstore(., st_addvar(target_types[i], target, 1), F.touse, data)
 		}
 		else {
-			st_store(., st_addvar(target_types[i], target, 1),
-			         asarray(results_cstore, target))
+			st_store(., st_addvar(target_types[i], target, 1), F.touse, data)
 		}
 		asarray(results_cstore, target, .)
 	}
@@ -171,4 +183,26 @@ void f_collapse(`Factor' F,
 	}
 	stata(sprintf("cap set niceness %s", strofreal(niceness)))
 }
+
+
+// Infer type required for new variables after collapse
+`String' infer_type(`String' var_type, `Boolean' var_is_str, `String' stat)
+{
+	`String' 					ans
+	`StringRowVector' 			fixed_stats
+
+	fixed_stats = ("min", "max", "first", "last", "firstnm", "lastnm")
+
+	if ( var_is_str | any(fixed_stats :== stat) ) {
+		ans = var_type
+	}
+	else if (stat == "count") {
+		ans = "long"
+	}
+	else {
+		ans = "double"
+	}
+	return(ans)
+}
+
 end

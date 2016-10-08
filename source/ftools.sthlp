@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.0 05oct2016}{...}
+{* *! version 1.5.0 08oct2016}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
 {vieweralsosee "fisid" "help fisid"}{...}

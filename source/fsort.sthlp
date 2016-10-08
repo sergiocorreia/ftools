@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.0 05oct2016}{...}
+{* *! version 1.5.0 08oct2016}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[R] sort" "help sort"}{...}
 {vieweralsosee "[R] gsort" "help gsort"}{...}
