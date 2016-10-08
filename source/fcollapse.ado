@@ -82,7 +82,7 @@ pr Inner
 	}
 
 	if (!`merge' | ("`if'`in'"=="" & "`cw'"=="")) {
-		keep if `touse'
+		qui keep if `touse'
 		drop `touse'
 		loc touse
 	}
