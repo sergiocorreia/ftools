@@ -8,8 +8,7 @@ program define fcollapse
 	exit `rc'
 end
 
-cap pr drop Inner
-pr Inner
+program define Inner
 	syntax [anything(equalok)] [if] [in] [fw aw pw iw/] , ///
 		[by(varlist)] ///
 		[FAST] ///
@@ -135,8 +134,7 @@ timer clear 50
 	if ("`fast'" == "") restore, not
 end
 
-cap pr drop ParseList
-pr ParseList
+program define ParseList
 	syntax [anything(equalok)] , MERGE(integer)
 	TrimSpaces 0 : `anything'
 
@@ -181,8 +179,7 @@ pr ParseList
 	c_local keepvars `keepvars'
 end
 
-cap pr drop TrimSpaces
-pr TrimSpaces
+program define TrimSpaces
 	_on_colon_parse `0'
 	loc lhs `s(before)'
 	loc rest `s(after)'
@@ -200,8 +197,7 @@ pr TrimSpaces
 	c_local `lhs' `rest'
 end
 
-cap pr drop GetStat
-pr GetStat
+program define GetStat
 	_on_colon_parse `0'
 	loc before `s(before)'
 	gettoken lhs rhs : before
@@ -214,8 +210,7 @@ pr GetStat
 	}
 end
 
-cap pr drop GetTarget
-pr GetTarget
+program define GetTarget
 	_on_colon_parse `0'
 	loc before `s(before)'
 	gettoken lhs rhs : before

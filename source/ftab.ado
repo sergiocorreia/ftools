@@ -8,8 +8,7 @@ program define ftab
 	timer off 10
 end
 
-cap pr drop Display
-pr Display
+program define Display
 	syntax, variable(name) table(name)
 	tempname mytab
 

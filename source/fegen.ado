@@ -19,7 +19,6 @@ version 10
 	* syntax [if] [in], type(string) name(string) args(string) [by(varlist)]
 end
 
-cap pr drop Parse
 program define Parse
 	* SYNTAX: fegen [type] newvar = fcn(args) [if] [in] [, options]
 

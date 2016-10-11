@@ -1,6 +1,5 @@
 *! version 1.5.0 08oct2016
-cap pr drop fegen_group
-pr fegen_group
+program define fegen_group
 	syntax [if] [in] , [by(varlist) type(string)] /// -by- is ignored
 		name(string) args(string) ///
 		[Missing Label LName(name) Truncate(numlist max=1 int >= 1) ///
@@ -94,8 +93,7 @@ pr fegen_group
 end
 
 
-cap pr drop Group_FirstPrinciples
-pr Group_FirstPrinciples, sortpreserve
+program define Group_FirstPrinciples, sortpreserve
 	syntax varlist, id(name) [touse(string) Verbose(integer 0)]
 	if (`verbose') {
 		di as smcl "{txt}(method: {res}stata{txt})"
