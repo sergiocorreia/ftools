@@ -123,7 +123,7 @@ And we can see that the results are similar.
 
 Similar to `isid`, but allowing for `if in` and on the other hand not allowing for `using` and `sort`.
 
-In very large datasets, takes roughly a third of the time of `isid`.
+In very large datasets, it takes roughly a third of the time of `isid`.
 
 
 ## fsort

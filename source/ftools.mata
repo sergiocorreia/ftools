@@ -46,6 +46,7 @@ class Factor
 	`Vector'				counts				// Count of the levels/keys
 	`Matrix'				info
 	`Vector'				p
+	`String'				method				// Hash fn used
 	//`Vector'				sorted_levels
 
 	void					new()
@@ -64,6 +65,7 @@ class Factor
 	void					keep_obs()			// Adjust to dropping obs.
 	void					drop_if()			// Adjust to dropping obs.
 	void					keep_if()			// Adjust to dropping obs.
+	`Boolean'				is_id()				// 1 if all(F.counts:==1)
 }
 
 
@@ -329,6 +331,15 @@ void Factor::__inner_drop(`Vector' idx)
 }
 
 
+`Boolean' Factor::is_id()
+{
+	if (counts == J(0, 1, .)) {
+		_error(123, "is_id() requires the -counts- vector")
+	}
+	return(allof(counts, 1))
+}
+
+
 // Main functions -------------------------------------------------------------
 
 `Factor' factor(`Varlist' varnames,
@@ -483,6 +494,7 @@ void Factor::__inner_drop(`Vector' idx)
 	else {
 		F = __factor_hash2(data, verbose, dict_size, sort_levels, max_numkeys1)
 	}
+	F.method = method
 
 	F.num_obs = num_obs
 	assert_msg(rows(F.levels) == F.num_obs & cols(F.levels) == 1, "levels")

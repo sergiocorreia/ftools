@@ -143,6 +143,10 @@ to dropping the levels that only appear once,
 and their corresponding observations.
 The colvector returned contains the observations that need to be excluded.
 {p_end}
+{synopt:{it:real scalar} F{opt .is_id()}}1
+if {it:F.counts} is always 1
+(i.e. if {it:F.levels} has no duplicates)
+{p_end}
 
 
 {synopthdr:available after F.panelsetup()}
@@ -177,12 +181,11 @@ faster ({it:O(N)} instead of {it:O(N log N)}{p_end}
 The {it:Factor} object is a key component of several commands that
 manipulate data without having to sort it beforehand:
 
-{pmore}- {help fcollapse}{p_end}
+{pmore}- {help fcollapse} (alternative to collapse, contract, collapse+merge and some egen functions{p_end}
 {pmore}- {help fegen:fegen group}{p_end}
 {pmore}- {help fisid}{p_end}
+{pmore}- {help join} and {help fmerge} (alternative to m:1 and 1:1 merges)
 {pmore}- {help fsort} (note: this is O(N) but with a high constant term){p_end}
-{pmore}- fmerge{p_end}
-{pmore}- fcontract{p_end}
 {pmore}- freshape{p_end}
 
 {pstd}

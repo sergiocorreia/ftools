@@ -41,7 +41,7 @@ void fisid(string rowvector varnames,
 	real scalar				ok
 
 	F = factor(varnames, touse, 0, "", 0, 1)
-	ok = (max(F.counts) == 1)
+	ok = F.is_id()
 	st_local("ok", strofreal(ok))
 }
 end
