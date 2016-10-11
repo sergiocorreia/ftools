@@ -1,6 +1,5 @@
 *! version 1.5.0 08oct2016
-cap pr drop fisid
-pr fisid
+program define fisid
 	syntax varlist [if] [in], [Missok Show]
 	loc show = ("`show'" != "")
 	loc missok = ("`missok'" != "")

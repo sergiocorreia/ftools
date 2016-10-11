@@ -1,5 +1,4 @@
-cap pr drop ftab
-pr ftab
+program define ftab
 	timer on 10
 	syntax varname
 	tempname table

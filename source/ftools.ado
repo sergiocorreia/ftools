@@ -1,8 +1,7 @@
 *! version 1.5.0 08oct2016
 * This file is just used to compile ftools.mlib
 
-cap pr drop ftools
-pr ftools
+program define ftools
 	loc ftools_version = "1.5.0 08oct2016"
 	loc stata_version = c(stata_version)
 

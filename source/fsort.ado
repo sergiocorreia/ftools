@@ -1,6 +1,5 @@
 *! version 1.5.0 08oct2016
-cap pr drop fsort
-pr fsort
+program define fsort
 	syntax varlist [if] [in] , [Generate(name)]
 	
 	* Apply Andrew Maurer's trick:

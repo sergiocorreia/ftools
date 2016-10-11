@@ -1,6 +1,5 @@
 *! version 1.5.0 08oct2016
-cap pr drop fcollapse
-pr fcollapse
+program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
 	cap mata: mata drop query
