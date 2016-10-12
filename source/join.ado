@@ -1,5 +1,8 @@
 cap pr drop join
 program define join
+
+// Parse --------------------------------------------------------------------
+
 	syntax ///
 		[namelist]  /// Variables that will be added (default is _all)
 		, ///
@@ -11,16 +14,15 @@ program define join
 		[UNIQuemaster] /// Assert that -by- is an id in the master dataset
 		[NOLabel] ///
 		[NONOTES] ///
-		[NOREPort]
-set trace on
-timer on 20
-	* Parse other dataset
+		[NOREPort] ///
+		[Verbose]
+
+	* Parse details of using dataset
 	_assert (`"`from'"' != "") + (`"`into'"' != "") == 1, ///
 		msg("specify either from() or into()")
-	loc is_from = (`"`from'"' != "")
 	ParseUsing `from' `into' // Return -filename- and -if-
 	
-	* Parse _merge
+	* Parse _merge indicator
 	_assert ("`generate'" != "") + ("`nogenerate'" != "") < 2, ///
 		msg("generate() and nogenerate are mutually exclusive")
 	if ("`nogenerate'" == "") {
@@ -30,33 +32,41 @@ timer on 20
 	else {
 		tempvar generate
 	}
-timer off 20
-timer on 21
 	
+	* Parse booleans
+	loc is_from = (`"`from'"' != "")
 	loc uniquemaster = ("`uniquemaster'" != "")
 	loc nolabel = ("`nolabel'" != "")
 	loc nonotes = ("`nonotes'" != "")
+	loc noreport = ("`noreport'" != "")
+	loc verbose = ("`verbose'" != "")
 
+	* Parse keep() and assert() requirements
 	ParseMerge, keep(`keep') assert(`assert')
+	/* Return locals
+		keep_using: 1 if we will keep using-only obs
+		assert_not_using: 1 to check that there are no using-only obs.
+		keep_nums: {1, 3, 1 3} depending on whether we keep master/match
+		assert_nums: as above but to assert only these exist (besides using)
+		keep_words assert_words: as above but with words instead of nums
+	*/ 
 
-	* Parse key variables
+	* Parse -key- variables
 	ParseBy `by' /// Return -master_keys- and -using_keys-
 
-timer off 21
-	timer on 22
 
-		* Load -using- dataset
-		if (`is_from') {
-			preserve
-			use "`filename'", clear
-			if ("`if'" != "") qui keep `if'
-			loc cmd restore
-		}
-		else {
-			loc cmd `"use `if' using "`filename'", clear"'
-		}
-	timer off 22
-timer on 23
+// Load using  dataset -------------------------------------------------------
+
+	* Load -using- dataset
+	if (`is_from') {
+		preserve
+		use "`filename'", clear
+		if ("`if'" != "") qui keep `if'
+		loc cmd restore
+	}
+	else {
+		loc cmd `"use `if' using "`filename'", clear"'
+	}
 
 	if ("`namelist'" != "") {
 		keep `using_keys' `namelist'
@@ -65,54 +75,37 @@ timer on 23
 		qui ds `using_keys', not
 		loc namelist `r(varlist)'
 	}
-	unab namelist : `namelist', name(keepusing)
+	unab namelist : `namelist', name(keepusing) min(0)
 	unab using_keys : `using_keys'
 	confirm variable `using_keys', exact
 
-	* uniquemaster assert keep
-	* nolabel nonotes
-	* generate
-timer off 23
-timer on 24
+
+// Join ---------------------------------------------------------------------
 
 	mata: join("`using_keys'", "`master_keys'", "`namelist'", ///
 	    `"`cmd'"', "`generate'", `uniquemaster', ///
-	    `keep_using', `assert_not_using')
-timer off 24
-timer on 25
-	
+	    `keep_using', `assert_not_using', `verbose')
+
+
+// Apply requirements on _merge variable ------------------------------------
+
 	la def _merge ///
 		1 "master only (1)" 2 "using only (2)" 3 "matched (3)" /// Used
 		4 "missing updated (4)" 5 "nonmissing conflict (5)" // Unused
 	la val `generate' _merge
-timer off 25
-timer on 26
+
 	loc msg "merge:  after merge, not all observations from `assert_words'"
 	if ("`assert_nums'" == "") _assert !inlist(`generate', 1, 3), msg("`msg'")
 	if ("`assert_nums'" == "1") _assert !inlist(`generate', 3), msg("`msg'")
 	if ("`assert_nums'" == "3") _assert !inlist(`generate', 1), msg("`msg'")
 
-	if ("`keep_nums'" == "") drop if inlist(`generate', 1, 3)
-	if ("`keep_nums'" == "1") drop if inlist(`generate', 3)
-	if ("`keep_nums'" == "3") drop if inlist(`generate', 1)
-timer off 26
-timer on 27
+	if ("`keep_nums'" == "") qui drop if inlist(`generate', 1, 3)
+	if ("`keep_nums'" == "1") qui drop if inlist(`generate', 3)
+	if ("`keep_nums'" == "3") qui drop if inlist(`generate', 1)
 
-* HACK: merge==2 always goes at the end so we can do -in-
-* BETTER HACK: do a more complex but smarter check for assert+merge
-	if ("`keep_assert'" != "1, 2, 3") {
-		qui keep if inlist(`generate', `keep_nums')
-	}
-timer off 27
-
-	if ("`noreport'" == "") {
+	if (`noreport') {
 		Table `generate'
 	}
-
-
-	// it should be _all EXCEPT by
-	// if ("`namelist'" == "") loc namelist "_all"
-
 end
 
 
@@ -133,6 +126,8 @@ program define ParseMerge
 	loc keep_using 0
 	loc assert_not_using 1
 
+	loc match_valid `""3", "match", "mat", "matc", "matches", "matched""'
+
 	foreach cat in keep assert {
 		foreach word of local `cat' {
 			if ("`word'"=="1" | substr("`word'", 1, 3) == "mas") {
@@ -143,7 +138,7 @@ program define ParseMerge
 				if ("`cat'" == "keep") loc keep_using 1
 				if ("`cat'" == "assert") loc assert_not_using 0
 			}
-			else if (inlist("`word'", "3", "match", "mat", "matc", "matches", "matched")) {
+			else if (inlist("`word'", `match_valid')) {
 				loc nums `nums' 3
 				loc words `words' "match"
 			}
@@ -157,6 +152,8 @@ program define ParseMerge
 		c_local `cat'_words `words'
 		c_local `cat'_nums `nums'
 	}
+	c_local keep_using `keep_using'
+	c_local assert_not_using `assert_not_using'	
 end
 
 
@@ -177,22 +174,31 @@ program define ParseBy
 		loc master_keys `master_keys' `left'
 		loc using_keys `using_keys' `right'
 	}
+	* Mata functions such as st_vartype() don't play well with abbreviations
+	unab master_keys : `master_keys'
+	unab using_keys : `using_keys'
 	c_local master_keys `master_keys'
 	c_local using_keys `using_keys'
 end
 
+
 cap pr drop Table
 program define Table
 	syntax varname
-	tempname freqs values
-	tab `varlist', nolabel nofreq matcell(`freqs') matrow(`values')
 
-	loc N = rowsof(`freqs')
-	loc is_temp = substr("`varlist'", 1, 2) == "__"
 	* Initialize defaults
+	loc N 0
 	forval i = 1/3 {
 		loc m`i' 0
 	}
+	
+	if (c(N)) {
+		tempname freqs values
+		tab `varlist', nolabel nofreq matcell(`freqs') matrow(`values')
+		loc N = rowsof(`freqs')
+		loc is_temp = substr("`varlist'", 1, 2) == "__"
+	}
+
 	* Fill actual values
 	forval i = 1/`N' {
 		loc j = `values'[`i', 1]
@@ -216,12 +222,13 @@ program define Table
     di as smcl as txt _col(5) "matched" ///
     _col(30) as res %16.0fc `m3' as txt "  `v3'"
 	di as smcl as txt _col(5) "{hline 41}"
-
 end
+
 
 ftools check
 findfile "ftools_type_aliases.mata"
 include "`r(fn)'"
+
 
 mata:
 mata set matastrict on
@@ -233,7 +240,8 @@ void join(`String' using_keys,
           `Varname' generate,
           `Boolean' uniquemaster,
           `Boolean' keep_using,
-          `Boolean' assert_not_using)
+          `Boolean' assert_not_using,
+          `Boolean' verbose)
 {
 	`Varlist'				pk_names, fk_names, varnames, vartypes
 	`Variables'				pk
@@ -244,71 +252,88 @@ void join(`String' using_keys,
 	
 	`Boolean'				integers_only
 	`Boolean'				has_using
+	`Varname'				var
+	`String'				msg, charlist
 
-timer_on(50)
 	// Using
 	pk_names = tokens(using_keys)
 	fk_names = tokens(master_keys)
 	pk = st_data(., pk_names)
 	N = rows(pk)
-	timer_on(60)
 	// Assert keys are unique IDs in using
 
 	integers_only = is_integers_only(pk_names)
-	F = _factor(pk, integers_only, 1, "", 0)
+	F = _factor(pk, integers_only, verbose, "", 0)
 	assert_is_id(F, using_keys, "using")
 
-	timer_off(60)
-timer_on(61)
 	varnames = tokens(varlist)
 	vartypes = J(1, cols(varnames), "")
+
+	msg = "{err}merge:  string variables are not allowed (%s)\n"
 	for (i=1; i<=cols(varnames); i++) {
-		vartypes[i] = st_vartype(varnames[i])
+		var = varnames[i]
+		stata("loc charlist : char foreign[]")
+		charlist = st_local("charlist")
+		// Unless nolabel/nonotes are on:
+		// TODO: copy every char; update note* accordingly; copy to master
+		//		 no need for an asarray(), just create a big 2-col matrix
+		//		 dont copy note0 if it already exists, just update it
+		// TODO: update labels based on st_varlabel() st_varvaluelabel()
+		//		 st_vlload() st_vlmodify()
+		//		 st_vlexists() (don't update existing!)
+		// TODO: update var formats based on st_varformat()
+		if (st_isstrvar(var)) {
+			printf(msg, var)
+			exit(110)
+		}
+		vartypes[i] = st_vartype(var)
 	}
-timer_off(61)
-timer_on( 62)
-	data = st_data(., varnames) , J(st_nobs(), 1, 3) // _merge==3
-timer_off(62)
+
+	if (cols(varnames) > 0) {
+		data = st_data(., varnames) , J(st_nobs(), 1, 3) // _merge==3
+	}
+	else {
+		data = J(st_nobs(), 1, 3) // _merge==3
+	}
+
 	// Master
-	timer_on(63)
 	stata(cmd) // load (either -restore- or -use-)
-	timer_off(63)
-	timer_on(64)
+
+	msg = "{err}merge:  variable %s already exists in master dataset\n"
+	for (i=1; i<=cols(varnames); i++) {
+		var = varnames[i]
+		if (_st_varindex(var) != .) {
+			printf(msg, var)
+			exit(108)
+		}
+	}
 	
 	integers_only = integers_only & is_integers_only(fk_names)
-	integers_only, integers_only, integers_only
-	F = _factor(pk \ st_data(., fk_names), integers_only, 1, "", 0)
+	if (verbose) {
+		printf("{txt}(integers only? {res}%s{txt})\n", verbose ? "true" : "false")
+	}
+	F = _factor(pk \ st_data(., fk_names), integers_only, verbose, "", 0)
 
-	timer_off(64)
-	timer_on(65)
 	index = F.levels[| 1 \ N |]
 	reshaped = J(F.num_levels, cols(data)-1, .) , J(F.num_levels, 1, 1) // _merge==1
 	reshaped[index, .] = data
-	timer_off(65)
-	timer_on(66)
 	index = F.levels[| N+1 \ . |]
-	timer_off(66)
-	timer_on(67)
 	reshaped = reshaped[index , .]
-timer_off(67)
-timer_on(68)
 	index = . // conserve memory
 	assert(st_nobs() == rows(reshaped))
-timer_off(68)
-timer_on(69)
 	vartypes = vartypes, "byte"
 	varnames = varnames, generate
 	val = setbreakintr(0)
 	st_store(., st_addvar(vartypes, varnames, 1), reshaped)
 	reshaped = . // conserve memory
 	(void) setbreakintr(val)
-timer_off(69)
+
 	// Ensure that the keys are unique in master
 	if (uniquemaster) {
 		F.keep_obs(N + 1 :: st_nobs())
 		assert_is_id(F, master_keys, "master")
 	}
-timer_on(70)
+
 	// Add using-only data
 	// status_using = 1 (assert not) 2 (drop it) 3 (keep it)
 	if (keep_using | assert_not_using) {
@@ -329,13 +354,10 @@ timer_on(70)
 		}
 		
 	}
-
-	timer_off(70)
-timer_off(50)
 }
 
 
-`Boolean' is_integers_only(`String' vars)
+`Boolean' is_integers_only(`Varlist' vars)
 {
 	`Boolean'				integers_only
 	`Integer'				i
@@ -354,7 +376,8 @@ timer_off(50)
 void assert_is_id(`Factor' F, `String' keys, `String' dta)
 {
 	`String'				msg
-	msg = sprintf("<%s> do not uniquely identify observations in the %s data ", keys, dta)
+	msg = sprintf("<%s> do not uniquely identify obs. in the %s data",
+	              keys, dta)
 	if (!F.is_id()) {
 		_error(msg)
 	}

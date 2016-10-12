@@ -601,7 +601,7 @@ void Factor::__inner_drop(`Vector' idx)
 }
 
 
-// Open addressing hash function (linear probing) =----------------------------
+// Open addressing hash function (linear probing) ----------------------------
 // Use this for non-integers (2.5, "Bank A") and big ints (e.g. 2014124233573)
 
 `Factor' __factor_hash1(`DataFrame' data,
@@ -781,7 +781,7 @@ void Factor::__inner_drop(`Vector' idx)
 }
 
 
-// Open addressing hash function (quadratic probing) =-------------------------
+// Open addressing hash function (quadratic probing) -------------------------
 // Note: this function needs to be optimized (run a diff against factor_hash1)
 
 `Factor' __factor_hash2(`DataFrame' data,
