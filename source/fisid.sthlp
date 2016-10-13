@@ -5,7 +5,7 @@
 {viewerjumpto "Syntax" "fisid##syntax"}{...}
 {title:Title}
 
-{p2colset 5 18 20 2}{...}
+{p2colset 5 14 20 2}{...}
 {p2col :{cmd:fisid} {hline 2}}Check for unique identifiers{p_end}
 {p2colreset}{...}
 

@@ -47,7 +47,9 @@ f fegen.ado
 f fegen.sthlp
 f fegen_group.ado
 f join.ado
+f fmerge.ado
 f join.sthlp
+f fmerge.sthlp
 
 f ftools_type_aliases.mata
 f ftools.mata

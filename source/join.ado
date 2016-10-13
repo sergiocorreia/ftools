@@ -12,9 +12,9 @@ program define join
 		[ASSERT(string)] /// 1 master 2 using 3 match
 		[GENerate(name) NOGENerate] /// _merge variable
 		[UNIQuemaster] /// Assert that -by- is an id in the master dataset
-		[NOLabel] ///
-		[NONOTES] ///
-		[NOREPort] ///
+		[noLabel] ///
+		[noNOTES] ///
+		[noREPort] ///
 		[Verbose]
 
 	* Parse details of using dataset
@@ -36,9 +36,9 @@ program define join
 	* Parse booleans
 	loc is_from = (`"`from'"' != "")
 	loc uniquemaster = ("`uniquemaster'" != "")
-	loc nolabel = ("`nolabel'" != "")
-	loc nonotes = ("`nonotes'" != "")
-	loc noreport = ("`noreport'" != "")
+	loc nolabel = ("`label'" != "")
+	loc nonotes = ("`notes'" != "")
+	loc noreport = ("`report'" != "")
 	loc verbose = ("`verbose'" != "")
 
 	* Parse keep() and assert() requirements
@@ -84,7 +84,9 @@ program define join
 
 	mata: join("`using_keys'", "`master_keys'", "`namelist'", ///
 	    `"`cmd'"', "`generate'", `uniquemaster', ///
-	    `keep_using', `assert_not_using', `verbose')
+	    `keep_using', `assert_not_using', ///
+	    `nolabel', `nonotes', ///
+	    `verbose')
 
 
 // Apply requirements on _merge variable ------------------------------------
@@ -241,11 +243,13 @@ void join(`String' using_keys,
           `Boolean' uniquemaster,
           `Boolean' keep_using,
           `Boolean' assert_not_using,
+          `Boolean' nolabel,
+          `Boolean' nonotes,
           `Boolean' verbose)
 {
 	`Varlist'				pk_names, fk_names, varnames, vartypes
 	`Variables'				pk
-	`Integer'				N, i, val
+	`Integer'				N, i, val, j, k
 	`Factor'				F
 	`DataFrame'				data, reshaped
 	`Vector'				index, range, mask
@@ -254,6 +258,18 @@ void join(`String' using_keys,
 	`Boolean'				has_using
 	`Varname'				var
 	`String'				msg, charlist
+
+	`StringVector'			varlabels, varvaluelabels
+	`Dict'					label_values, label_text
+	`Vector'				values
+	`StringVector'			text
+	`String'				label
+
+	`Integer'				num_chars
+	`StringMatrix'			chars
+	`StringVector'			charnames
+	`String'				char_name, char_val
+
 
 	// Using
 	pk_names = tokens(using_keys)
@@ -268,26 +284,57 @@ void join(`String' using_keys,
 
 	varnames = tokens(varlist)
 	vartypes = J(1, cols(varnames), "")
+	varlabels = J(1, cols(varnames), "")
+	varvaluelabels = J(1, cols(varnames), "")
+	label_values = asarray_create("string", 1)
+	label_text = asarray_create("string", 1)
+	text = ""
+	values = .
+
+	num_chars = rows(st_dir("char", "_dta", "*"))
 
 	msg = "{err}merge:  string variables are not allowed (%s)\n"
 	for (i=1; i<=cols(varnames); i++) {
 		var = varnames[i]
 		stata("loc charlist : char foreign[]")
 		charlist = st_local("charlist")
-		// Unless nolabel/nonotes are on:
-		// TODO: copy every char; update note* accordingly; copy to master
-		//		 no need for an asarray(), just create a big 2-col matrix
-		//		 dont copy note0 if it already exists, just update it
-		// TODO: update labels based on st_varlabel() st_varvaluelabel()
-		//		 st_vlload() st_vlmodify()
-		//		 st_vlexists() (don't update existing!)
-		// TODO: update var formats based on st_varformat()
+
+		// Assert vars are not strings (could allow for it, but not useful)
 		if (st_isstrvar(var)) {
 			printf(msg, var)
 			exit(110)
 		}
+
 		vartypes[i] = st_vartype(var)
+
+		// Add variable labels, value labels, and assignments
+		varlabels[i] = st_varlabel(var)
+		varvaluelabels[i] = label = st_varvaluelabel(var)
+
+		if (label != "" ? st_vlexists(label) : 0) {
+			st_vlload(label, values, text)
+			asarray(label_values, label, values)
+			asarray(label_text, label, text)
+		}
+
+		num_chars = num_chars + rows(st_dir("char", var, "*"))
 	}
+
+	// Save chars
+	// Note: we are NOT saving chars (or labels) from the by() variables!
+	chars = J(num_chars, 3, "")
+	j = 0
+	for (k=0; k<=cols(varnames); k++) {
+		var = k ? varnames[k] : "_dta"
+		charnames = st_dir("char", var, "*")
+		for (i=1 ; i<=rows(charnames); i++) {
+			++j
+			chars[j, 1] = var
+			chars[j, 2] = charnames[i]
+			chars[j, 3] = st_global(sprintf("%s[%s]", var, charnames[i]))
+		}
+	}
+
 
 	if (cols(varnames) > 0) {
 		data = st_data(., varnames) , J(st_nobs(), 1, 3) // _merge==3
@@ -299,6 +346,7 @@ void join(`String' using_keys,
 	// Master
 	stata(cmd) // load (either -restore- or -use-)
 
+	// Check that variables don't exist yet
 	msg = "{err}merge:  variable %s already exists in master dataset\n"
 	for (i=1; i<=cols(varnames); i++) {
 		var = varnames[i]
@@ -334,6 +382,48 @@ void join(`String' using_keys,
 		assert_is_id(F, master_keys, "master")
 	}
 
+	// Add labels
+	msg = "{err}(warning: value label %s already exists; values overwritten)"
+	for (i=cols(fk_names)+1; i<=cols(varnames)-1; i++) {
+		var = varnames[i]
+
+		// label variable <var> <text>
+		if (varlabels[i] != "") {
+			st_varlabel(var, varlabels[i])
+		}
+
+		label = varvaluelabels[i]
+		if (label != "") {
+
+			// Warn if value label gets overwritten
+			if (st_vlexists(label)) {
+				printf(msg, label)
+			}
+			// label define <label> <#> <text> <...>
+			st_vlmodify(label, 
+			            asarray(label_values, label),
+			            asarray(label_text, label))
+			// label values <varlist> <label>
+			st_varvaluelabel(var, label)
+		}
+	}
+
+	// Add chars and notes
+	for (i=1; i<=num_chars; i++) {
+		var = chars[i, 1]
+		char_name = chars[i, 2]
+		char_val = chars[i, 3]
+		if (char_name == "note0") {
+			continue
+		}
+		else if (strpos(char_name, "note")==1) {
+			stata(sprintf("note %s: %s", var, char_val))
+		}
+		else {
+			st_global(sprintf("%s[%s]", var, char_name), char_val)
+		}
+	}
+
 	// Add using-only data
 	// status_using = 1 (assert not) 2 (drop it) 3 (keep it)
 	if (keep_using | assert_not_using) {
@@ -352,7 +442,6 @@ void join(`String' using_keys,
 			varnames = fk_names, varnames
 			st_store(range, varnames, data)
 		}
-		
 	}
 }
 

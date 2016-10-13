@@ -6,7 +6,7 @@
 {viewerjumpto "Syntax" "fsort##syntax"}{...}
 {title:Title}
 
-{p2colset 5 18 20 2}{...}
+{p2colset 5 14 20 2}{...}
 {p2col :{cmd:fsort} {hline 2}}Sort by categorical variables{p_end}
 {p2colreset}{...}
 

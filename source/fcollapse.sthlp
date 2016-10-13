@@ -8,7 +8,7 @@
 {viewerjumpto "Options" "fcollapse##options"}{...}
 {title:Title}
 
-{p2colset 5 21 23 2}{...}
+{p2colset 5 18 23 2}{...}
 {p2col :{cmd:fcollapse} {hline 2}}Efficiently
 make dataset of summary statistics{p_end}
 {p2colreset}{...}

@@ -7,7 +7,7 @@
 {viewerjumpto "Syntax" "sort##syntax"}{...}
 {title:Title}
 
-{p2colset 5 18 20 2}{...}
+{p2colset 5 13 20 2}{...}
 {p2col :{cmd:fegen} {hline 2}}Alternative to egen that optimizes speed{p_end}
 {p2colreset}{...}
 

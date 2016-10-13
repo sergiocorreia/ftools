@@ -184,7 +184,7 @@ manipulate data without having to sort it beforehand:
 {pmore}- {help fcollapse} (alternative to collapse, contract, collapse+merge and some egen functions{p_end}
 {pmore}- {help fegen:fegen group}{p_end}
 {pmore}- {help fisid}{p_end}
-{pmore}- {help join} and {help fmerge} (alternative to m:1 and 1:1 merges)
+{pmore}- {help join} and {help fmerge} (alternative to m:1 and 1:1 merges){p_end}
 {pmore}- {help fsort} (note: this is O(N) but with a high constant term){p_end}
 {pmore}- freshape{p_end}
 
