@@ -86,13 +86,8 @@ program define Inner
 	}
 
 	// Create factor structure
-timer clear 50
-timer on 50
 	mata: F = factor("`by'", "`touse'", `verbose')
 	if (`merge') mata: F.touse = " " // hack to fill touse but leave it empty
-timer off 50
-timer list 50
-timer clear 50
 
 	// Trim again
 	// (saves memory but is slow for big datasets)

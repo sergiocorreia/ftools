@@ -179,7 +179,9 @@ void Factor::store_keys(| `Integer' sort_by_keys)
 	for (i = 1; i <= length(varlist); i++) {
 		st_varformat(varlist[i], varformats[i])
 		st_varlabel(varlist[i], varlabels[i])
-		st_varvaluelabel(varlist[i], varvaluelabels[i])
+		if (st_isnumvar(varlist[i])) {
+			st_varvaluelabel(varlist[i], varvaluelabels[i])
+		}
 	}
 
 	// Sort

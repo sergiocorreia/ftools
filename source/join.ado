@@ -65,7 +65,7 @@ program define join
 		loc cmd restore
 	}
 	else {
-		loc cmd `"use `if' using "`filename'", clear"'
+		loc cmd `"qui use `if' using "`filename'", clear"'
 	}
 
 	if ("`namelist'" != "") {
@@ -247,7 +247,7 @@ void join(`String' using_keys,
           `Boolean' nonotes,
           `Boolean' verbose)
 {
-	`Varlist'				pk_names, fk_names, varnames, vartypes
+	`Varlist'				pk_names, fk_names, varnames, vartypes, varformats
 	`Variables'				pk
 	`Integer'				N, i, val, j, k
 	`Factor'				F
@@ -257,7 +257,7 @@ void join(`String' using_keys,
 	`Boolean'				integers_only
 	`Boolean'				has_using
 	`Varname'				var
-	`String'				msg, charlist
+	`String'				msg
 
 	`StringVector'			varlabels, varvaluelabels
 	`Dict'					label_values, label_text
@@ -296,8 +296,6 @@ void join(`String' using_keys,
 	msg = "{err}merge:  string variables are not allowed (%s)\n"
 	for (i=1; i<=cols(varnames); i++) {
 		var = varnames[i]
-		stata("loc charlist : char foreign[]")
-		charlist = st_local("charlist")
 
 		// Assert vars are not strings (could allow for it, but not useful)
 		if (st_isstrvar(var)) {
@@ -306,6 +304,7 @@ void join(`String' using_keys,
 		}
 
 		vartypes[i] = st_vartype(var)
+		varformats[i] = st_varformat(var)
 
 		// Add variable labels, value labels, and assignments
 		varlabels[i] = st_varlabel(var)
@@ -391,6 +390,8 @@ void join(`String' using_keys,
 		if (varlabels[i] != "") {
 			st_varlabel(var, varlabels[i])
 		}
+		varformats[i]
+		//st_varformat(var, varformats[i])
 
 		label = varvaluelabels[i]
 		if (label != "") {
