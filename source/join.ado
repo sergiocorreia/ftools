@@ -13,7 +13,7 @@ program define join
 		[GENerate(name) NOGENerate] /// _merge variable
 		[UNIQuemaster] /// Assert that -by- is an id in the master dataset
 		[noLabel] ///
-		[noNOTES] ///
+		[noNOTEs] ///
 		[noREPort] ///
 		[Verbose]
 
@@ -36,9 +36,9 @@ program define join
 	* Parse booleans
 	loc is_from = (`"`from'"' != "")
 	loc uniquemaster = ("`uniquemaster'" != "")
-	loc nolabel = ("`label'" != "")
-	loc nonotes = ("`notes'" != "")
-	loc noreport = ("`report'" != "")
+	loc label = ("`label'" == "")
+	loc notes = ("`notes'" == "")
+	loc report = ("`report'" == "")
 	loc verbose = ("`verbose'" != "")
 
 	* Parse keep() and assert() requirements
@@ -85,7 +85,7 @@ program define join
 	mata: join("`using_keys'", "`master_keys'", "`namelist'", ///
 	    `"`cmd'"', "`generate'", `uniquemaster', ///
 	    `keep_using', `assert_not_using', ///
-	    `nolabel', `nonotes', ///
+	    `label', `notes', ///
 	    `verbose')
 
 
@@ -96,7 +96,7 @@ program define join
 		4 "missing updated (4)" 5 "nonmissing conflict (5)" // Unused
 	la val `generate' _merge
 
-	loc msg "merge:  after merge, not all observations from `assert_words'"
+	loc msg "merge:  after merge, not all observations from <`assert_words'>"
 	if ("`assert_nums'" == "") _assert !inlist(`generate', 1, 3), msg("`msg'")
 	if ("`assert_nums'" == "1") _assert !inlist(`generate', 3), msg("`msg'")
 	if ("`assert_nums'" == "3") _assert !inlist(`generate', 1), msg("`msg'")
@@ -105,7 +105,7 @@ program define join
 	if ("`keep_nums'" == "1") qui drop if inlist(`generate', 3)
 	if ("`keep_nums'" == "3") qui drop if inlist(`generate', 1)
 
-	if (`noreport') {
+	if (`report') {
 		Table `generate'
 	}
 end
@@ -131,10 +131,12 @@ program define ParseMerge
 	loc match_valid `""3", "match", "mat", "matc", "matches", "matched""'
 
 	foreach cat in keep assert {
+		loc nums
+		loc words
 		foreach word of local `cat' {
 			if ("`word'"=="1" | substr("`word'", 1, 3) == "mas") {
 				loc nums `nums' 1
-				loc words `words' "master"
+				loc words `words' master
 			}
 			else if ("`word'"=="2" | substr("`word'", 1, 2) == "us") {
 				if ("`cat'" == "keep") loc keep_using 1
@@ -142,7 +144,7 @@ program define ParseMerge
 			}
 			else if (inlist("`word'", `match_valid')) {
 				loc nums `nums' 3
-				loc words `words' "match"
+				loc words `words' match
 			}
 			else {
 				di as error "invalid category: <`word'>"
@@ -151,6 +153,9 @@ program define ParseMerge
 		}
 		loc words : list sort words
 		loc nums : list sort nums
+
+		if ("`cat'"=="assert" & !`assert_not_using') loc words `words' using
+
 		c_local `cat'_words `words'
 		c_local `cat'_nums `nums'
 	}
@@ -243,8 +248,8 @@ void join(`String' using_keys,
           `Boolean' uniquemaster,
           `Boolean' keep_using,
           `Boolean' assert_not_using,
-          `Boolean' nolabel,
-          `Boolean' nonotes,
+          `Boolean' join_labels,
+          `Boolean' join_chars,
           `Boolean' verbose)
 {
 	`Varlist'				pk_names, fk_names, varnames, vartypes, varformats
@@ -284,6 +289,7 @@ void join(`String' using_keys,
 
 	varnames = tokens(varlist)
 	vartypes = J(1, cols(varnames), "")
+	varformats = J(1, cols(varnames), "")
 	varlabels = J(1, cols(varnames), "")
 	varvaluelabels = J(1, cols(varnames), "")
 	label_values = asarray_create("string", 1)
@@ -291,7 +297,9 @@ void join(`String' using_keys,
 	text = ""
 	values = .
 
-	num_chars = rows(st_dir("char", "_dta", "*"))
+	if (join_chars) {
+		num_chars = rows(st_dir("char", "_dta", "*"))
+	}
 
 	msg = "{err}merge:  string variables are not allowed (%s)\n"
 	for (i=1; i<=cols(varnames); i++) {
@@ -309,28 +317,33 @@ void join(`String' using_keys,
 		// Add variable labels, value labels, and assignments
 		varlabels[i] = st_varlabel(var)
 		varvaluelabels[i] = label = st_varvaluelabel(var)
-
-		if (label != "" ? st_vlexists(label) : 0) {
-			st_vlload(label, values, text)
-			asarray(label_values, label, values)
-			asarray(label_text, label, text)
+		if (join_labels) {
+			if (label != "" ? st_vlexists(label) : 0) {
+				st_vlload(label, values, text)
+				asarray(label_values, label, values)
+				asarray(label_text, label, text)
+			}
 		}
 
-		num_chars = num_chars + rows(st_dir("char", var, "*"))
+		if (join_chars) {
+			num_chars = num_chars + rows(st_dir("char", var, "*"))
+		}
 	}
 
 	// Save chars
 	// Note: we are NOT saving chars (or labels) from the by() variables!
-	chars = J(num_chars, 3, "")
-	j = 0
-	for (k=0; k<=cols(varnames); k++) {
-		var = k ? varnames[k] : "_dta"
-		charnames = st_dir("char", var, "*")
-		for (i=1 ; i<=rows(charnames); i++) {
-			++j
-			chars[j, 1] = var
-			chars[j, 2] = charnames[i]
-			chars[j, 3] = st_global(sprintf("%s[%s]", var, charnames[i]))
+	if (join_chars) {
+		chars = J(num_chars, 3, "")
+		j = 0
+		for (k=0; k<=cols(varnames); k++) {
+			var = k ? varnames[k] : "_dta"
+			charnames = st_dir("char", var, "*")
+			for (i=1 ; i<=rows(charnames); i++) {
+				++j
+				chars[j, 1] = var
+				chars[j, 2] = charnames[i]
+				chars[j, 3] = st_global(sprintf("%s[%s]", var, charnames[i]))
+			}
 		}
 	}
 
@@ -375,12 +388,6 @@ void join(`String' using_keys,
 	reshaped = . // conserve memory
 	(void) setbreakintr(val)
 
-	// Ensure that the keys are unique in master
-	if (uniquemaster) {
-		F.keep_obs(N + 1 :: st_nobs())
-		assert_is_id(F, master_keys, "master")
-	}
-
 	// Add labels
 	msg = "{err}(warning: value label %s already exists; values overwritten)"
 	for (i=cols(fk_names)+1; i<=cols(varnames)-1; i++) {
@@ -390,38 +397,43 @@ void join(`String' using_keys,
 		if (varlabels[i] != "") {
 			st_varlabel(var, varlabels[i])
 		}
-		varformats[i]
-		//st_varformat(var, varformats[i])
+		
+		st_varformat(var, varformats[i])
 
 		label = varvaluelabels[i]
+		
 		if (label != "") {
-
-			// Warn if value label gets overwritten
-			if (st_vlexists(label)) {
-				printf(msg, label)
-			}
-			// label define <label> <#> <text> <...>
-			st_vlmodify(label, 
-			            asarray(label_values, label),
-			            asarray(label_text, label))
 			// label values <varlist> <label>
 			st_varvaluelabel(var, label)
+
+			if (join_labels) {
+				// Warn if value label gets overwritten
+				if (st_vlexists(label)) {
+					printf(msg, label)
+				}
+				// label define <label> <#> <text> <...>
+				st_vlmodify(label, 
+				            asarray(label_values, label),
+				            asarray(label_text, label))
+			}
 		}
 	}
 
 	// Add chars and notes
-	for (i=1; i<=num_chars; i++) {
-		var = chars[i, 1]
-		char_name = chars[i, 2]
-		char_val = chars[i, 3]
-		if (char_name == "note0") {
-			continue
-		}
-		else if (strpos(char_name, "note")==1) {
-			stata(sprintf("note %s: %s", var, char_val))
-		}
-		else {
-			st_global(sprintf("%s[%s]", var, char_name), char_val)
+	if (join_chars) {
+		for (i=1; i<=num_chars; i++) {
+			var = chars[i, 1]
+			char_name = chars[i, 2]
+			char_val = chars[i, 3]
+			if (char_name == "note0") {
+				continue
+			}
+			else if (strpos(char_name, "note")==1) {
+				stata(sprintf("note %s: %s", var, char_val))
+			}
+			else {
+				st_global(sprintf("%s[%s]", var, char_name), char_val)
+			}
 		}
 	}
 
@@ -443,6 +455,13 @@ void join(`String' using_keys,
 			varnames = fk_names, varnames
 			st_store(range, varnames, data)
 		}
+	}
+
+	// Ensure that the keys are unique in master
+	// (This changes F so must be run at the end)
+	if (uniquemaster) {
+		F.keep_obs(N + 1 :: st_nobs())
+		assert_is_id(F, master_keys, "master")
 	}
 }
 
