@@ -1,4 +1,4 @@
-*! version 1.5.0 08oct2016
+*! version 1.6.0 17oct2016
 program define fsort
 	syntax varlist [if] [in] , [Generate(name)]
 	

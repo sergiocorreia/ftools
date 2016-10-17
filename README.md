@@ -1,9 +1,14 @@
-# FTOOLS: Fast Stata commands for large datasets
+# FTOOLS: A faster Stata for large datasets
+
+- Current version: `1.6.0 17oct2016`
+- Jump to: [`usage`](#usage) [`benchmarks`](#benchmarks) [`install`](#installation)
+
+-----------
 
 **ftools** is two things:
 
-1. A list of Stata commands that provide faster alternatives to common commands such as collapse, contract, egen group, sort, levelsof, etc.
-2. A Mata class (*Factor*) with several methods for creating and working with categorical variables (using them as identifiers for groups or individuals). This class is what makes the above commands fast.
+1. A list of Stata commands optimized for large datasets, replacing commands such as: collapse, contract, merge, egen, sort, levelsof, etc.
+2. A Mata class (*Factor*) that focuses on working with categorical variables. This class is what makes the above commands fast.
 
 Currently the following commands are implemented:
 
@@ -11,7 +16,7 @@ Currently the following commands are implemented:
 - `fcollapse` replacing `collapse`, `contract` and most of `egen` (through the `, merge` option)
 - `join` (and its wrapper `fmerge`) replacing `merge`
 - `fisid` replacing `isid`
-- `fsort` replacing `sort` (although it is rarely faster than sort)
+- `fsort` replacing `sort` (although it is [rarely](https://github.com/sergiocorreia/ftools/blob/master/test/bench_sort.do) faster than sort)
 
 
 # Usage

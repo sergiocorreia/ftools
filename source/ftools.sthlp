@@ -1,7 +1,9 @@
 {smcl}
-{* *! version 1.5.0 08oct2016}{...}
+{* *! version 1.6.0 17oct2016}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
+{vieweralsosee "join" "help join"}{...}
+{vieweralsosee "fmerge" "help fmerge"}{...}
 {vieweralsosee "fisid" "help fisid"}{...}
 {vieweralsosee "fsort" "help fsort"}{...}
 {vieweralsosee "" "--"}{...}

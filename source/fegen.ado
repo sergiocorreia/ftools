@@ -1,4 +1,4 @@
-*! version 1.5.0 08oct2016
+*! version 1.6.0 17oct2016
 * This is just a modified version of Statacorp's -egen-
 program define fegen, byable(onecall) // sortpreserve
 version 10

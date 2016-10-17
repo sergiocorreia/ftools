@@ -1,4 +1,4 @@
-cap pr drop join
+*! version 1.6.0 17oct2016
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -111,7 +111,6 @@ program define join
 end
 
 
-cap pr drop ParseUsing
 program define ParseUsing
 	* SAMPLE INPUT: somefile.dta if foreign==true
 	gettoken filename if : 0,
@@ -120,7 +119,6 @@ program define ParseUsing
 end
 
 
-cap pr drop ParseMerge
 program define ParseMerge
 	syntax, [keep(string) assert(string)]
 	if ("`keep'" == "") loc keep "master match using"
@@ -164,7 +162,6 @@ program define ParseMerge
 end
 
 
-cap pr drop ParseBy
 program define ParseBy
 	* SAMPLE INPUT: turn trunk
 	* SAMPLE INPUT: year=time country=cou
@@ -189,7 +186,6 @@ program define ParseBy
 end
 
 
-cap pr drop Table
 program define Table
 	syntax varname
 

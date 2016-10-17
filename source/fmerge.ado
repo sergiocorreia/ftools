@@ -1,6 +1,6 @@
-
+*! version 1.6.0 17oct2016
 * wrapper for join.ado, parsing code based on merge.ado
-cap pr drop fmerge
+
 program define fmerge 
     gettoken mtype 0 : 0, parse(" ,")
 
