@@ -17,6 +17,7 @@ gen xrate = runiform()
 gen rand = runiform()
 gen spam = "eggs"
 tempfile aggregate
+drop spam // -join- doesnt support string vars
 save "`aggregate'"
 
 clear
@@ -30,13 +31,20 @@ timer clear
 
 preserve
 timer on 1
-merge m:1 year using "`aggregate'", keepusing(gdp xrate spam) ///
+merge m:1 year using "`aggregate'", keepusing(gdp xrate) ///
 	gen(_MERGE) nol nonotes keep(master match)
 timer off 1
 restore, preserve
 
 timer on 2
-join gdp xrate spam, from("`aggregate'") by(year) gen(_MERGE) keep(master match)
+join gdp xrate, from("`aggregate'") by(year) gen(_MERGE) keep(master match)
 timer off 2
+restore, preserve
+
+timer on 3
+fmerge m:1 year using "`aggregate'", keepusing(gdp xrate) ///
+	gen(_MERGE) nol nonotes keep(master match)
+timer off 3
 
 timer list
+exit

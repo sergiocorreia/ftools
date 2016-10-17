@@ -119,6 +119,21 @@ We can run a more complex query, collapsing means and medians instead of sums, a
 And we can see that the results are similar.
 
 
+## join (and fmerge)
+
+
+Similar to `merge` but avoids sorting the datasets. It is faster than `merge`
+for datasets larger than ~ 100,000 obs., and for datasets above 1mm obs. it
+takes a third of the time.
+
+[Benchmark:](https://github.com/sergiocorreia/ftools/blob/master/test/bench_merge.do)
+
+| Method      | Time  | % of merge |
+|-------------|-------|------------|
+| merge       | 28.89 | 100%       |
+| join/fmerge | 8.69  | 30%        |
+
+
 ## fisid
 
 Similar to `isid`, but allowing for `if in` and on the other hand not allowing for `using` and `sort`.
