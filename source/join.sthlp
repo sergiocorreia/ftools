@@ -28,7 +28,7 @@ Many-to-one join/merge on specified key variables
 [{it:options}]
 
 {pstd}
-As above, but with the "using" dataset currently open instead of the "master".
+As above, but with the "using" dataset currently open instead of the "master"
 
 {p 8 13 2}
 {cmd:join}
@@ -36,6 +36,10 @@ As above, but with the "using" dataset currently open instead of the "master".
 {opth into(filename)}
 {opth by(varlist)}
 [{it:options}]
+
+{pstd}
+(Note: if {it:varlist} is specified, only a subset of the variables will be added)
+
 
 
 {synoptset 24 tabbed}{...}
@@ -83,6 +87,14 @@ As above, but with the "using" dataset currently open instead of the "master".
 supporting {it:m:1} and {it:1:1} joins.
 {p_end}
 
+{pstd}{bf:Advantages:}
+
+{pmore}- Increasingly faster above 100,000 obs (it is O(N) instead of O(N log N)){p_end}
+{pmore}- Does not sort the data by the keys{p_end}
+{pmore}- Keys can have different names in master and using{p_end}
+
+{pstd}{bf:Technical notes:}
+
 {pstd}
 {cmd:join} works by hashing the keys, instead of sorting the data like {cmd:merge} does
 (see 
@@ -105,18 +117,47 @@ in large datasets is not really recommended so this is not a priority.
 {dlgtab:Options}
 
 {phang}
-{opth keepusing(varlist)}
-    specifies the variables from the using dataset that are kept
-    in the merged dataset. By default, all variables are kept. 
-    For example, if your using dataset contains 2,000
-    demographic characteristics but you want only
-    {cmd:sex} and {cmd:age}, then type {cmd:merge} ...{cmd:,}
-    {cmd:keepusing(sex} {cmd:age)} ....
+{opth from(filename)}
+    specifies the {it:using} filename.
+    This dataset is typically smaller than the master dataset
+    (the one currently active)
+    and the key variables set with {cmd:by()} must uniquely
+    identify the dataset (see {cmd:isid} and {cmd:fisid}).
+
+{pmore}
+    If {cmd:by()} does not identify the {it:using} dataset
+    but a subset of it, you can add use {if} within {cmd:from}
+
+{pmore}
+    EG: Suppose master has country-level data for a the year 2016,
+    and {xyz} has country-year GDP data, then you can do
+    {it:using(xyz if year==2016)}
 
 {phang}
-{opth generate(newvar)} specifies that the variable containing match
-      {help merge##results:results} information should be named {it:newvar}
-      rather than {cmd:_merge}.
+    {opth into(filename)} is useful if you are currently in the
+    {it:using} dataset. This is faster than the alternative of
+    saving, loading the master dataset, and then calling {it:join}
+    (which would then have to open the using dataset again)
+
+{phang}
+{opth by(varlist)}
+    specifies the key variables 
+    that will be used to join both datasets.
+    If the names of the variables differ, you can use
+    {it:master_var=using_var} (e.g. {cmd:by(year=yr)})
+
+{phang}
+{opt uniquemaster}
+    ensures that the match is 1:1 instead of m:1.
+    Since a 1:m merge can be replicated with the {opt into()} option,
+    this means that all merges except m:m (not recommended),
+    and update/replace merges (less useful) are supported.
+
+{phang}
+{opth generate(newvar)}
+    specifies that the variable containing match
+    {help merge##results:results} information should be named {it:newvar}
+    rather than {cmd:_merge}.
 
 {phang}
 {cmd:nogenerate} specifies that {cmd:_merge} not be created.  This
@@ -135,42 +176,9 @@ in large datasets is not really recommended so this is not a priority.
     merged dataset; see {manhelp notes D:notes}.
 
 {phang}
-{cmd:update} and {cmd:replace}
-    both perform an update merge rather than a standard merge.
-    In a standard merge, the data in the master are
-    the authority and inviolable.  For example, if the master
-    and using datasets both contain a variable {cmd:age}, then
-    matched observations will contain values from the master
-    dataset, while unmatched observations will contain values
-    from their respective datasets.
-
-{pmore}
-    If {cmd:update} is specified, then matched observations will update missing
-    values from the master dataset with values from the using dataset.
-    Nonmissing values in the master dataset will be unchanged.
-
-{pmore}
-    If {cmd:replace} is specified, then matched observations will contain
-    values from the using dataset, unless the value in the using dataset
-    is missing. 
-
-{pmore}
-    Specifying either {cmd:update} or {cmd:replace} affects the meanings of the
-    match codes. See
-    {mansection D mergeRemarksandexamplesTreatmentofoverlappingvariables:{it:Treatment of overlapping variables}}
-    in {bf:[D] merge} for details.
-
-{phang}
 {cmd:noreport}
-    specifies that {cmd:merge} not present its summary table of
+    specifies that {cmd:join} not present its summary table of
     match results.
-
-{phang}
-{opt force} allows string/numeric variable type mismatches, resulting in
-missing values from the using dataset.  If omitted, {cmd:merge} issues an
-error; if specified, {cmd:merge} issues a warning.
-
-{dlgtab:Results}
 
 {phang}
 {cmd:assert(}{it:results}{cmd:)}
@@ -184,15 +192,6 @@ error; if specified, {cmd:merge} issues a warning.
               {cmd:1}       {cmdab:mas:ter}             observation appeared in master only
               {cmd:2}       {cmdab:us:ing}              observation appeared in using only
               {cmd:3}       {cmdab:mat:ch}              observation appeared in both
-
-              {cmd:4}       {cmdab:match_up:date}       observation appeared in both,
-{col 44}missing values updated
-              {cmd:5}       {cmdab:match_con:flict}     observation appeared in both,
-{col 44}conflicting nonmissing values
-           {hline 67}
-           Codes 4 and 5 can arise only if the {cmd:update} option is specified.
-           If codes of both 4 and 5 could pertain to an observation, then 5 is
-           used.
 
 {pmore}
 Numeric codes and words are equivalent when used in the {cmd:assert()}
@@ -212,7 +211,7 @@ and
     required to include only matched master or using 
     observations and unmatched master observations, and may not 
     include unmatched using observations.  Specifying {cmd:assert()}
-    results in {cmd:merge} issuing an error if there are match results
+    results in {cmd:join} issuing an error if there are match results
     among those observations you allowed.
 
 {pmore}
@@ -225,25 +224,54 @@ The order of the words or codes is not important, so all the following
 {pmore2}
 {cmd:assert(master matches)}
 
+{pmore2}
+{cmd:assert(1 3)}
+
+{pmore}
+    When the match results contain codes other than those allowed,
+    return code 9 is returned, and the 
+    merged dataset with the unanticipated results is left in memory
+    to allow you to investigate.
+
+{phang}
+{cmd:keep(}{help join##results:{it:results}}{cmd:)}
+    specifies which observations are to be kept from the merged dataset.
+    Using {cmd:keep(match master)} specifies keeping only
+    matched observations and unmatched master observations after merging.
+
+{pmore}
+    {cmd:keep()} differs from {cmd:assert()} because it selects
+    observations from the merged dataset rather than enforcing requirements.
+    {cmd:keep()}
+    is used to pare the merged dataset to a given set of observations when
+    you do not care if there are other observations in the merged dataset.
+    {cmd:assert()} is used to verify that only a given set of observations
+    is in the merged dataset.
+
+{pmore}
+   You can specify both {cmd:assert()} and {cmd:keep()}.  If you require 
+   matched observations and unmatched master observations
+   but you want only the matched observations, then you could specify
+   {cmd:assert(match master)} {cmd:keep(match)}.
+
+
+{phang}
+{cmd:verbose}
+    is a programmer command that will report Mata debug information
+
 
 {marker examples}{...}
 {title:Examples}
 
-{pstd}Perform m:1 merge with {cmd:sforce} in memory{p_end}
+{pstd}Perform m:1 merge{p_end}
 
 {inp}
     {hline 60}
-    webuse sforce
-    join, by(region) from(http://www.stata-press.com/data/r14/dollars)
+    webuse nlswork
+    replace year = 1900 + year
+    join xrate, by(year) from(http://www.stata-press.com/data/r14/pennxrate.dta if country=="JPN")
     {hline 60}
 {txt}
-
-
-
-
-
-
-
 
 
 {marker about}{...}
