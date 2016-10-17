@@ -4,7 +4,7 @@ program define join
 // Parse --------------------------------------------------------------------
 
 	syntax ///
-		[namelist]  /// Variables that will be added (default is _all)
+		[anything]  /// Variables that will be added (default is _all)
 		, ///
 		[from(string asis) into(string asis)] /// -using- dataset
 		[by(string)] /// Primary and foreign keys
@@ -68,21 +68,21 @@ program define join
 		loc cmd `"qui use `if' using "`filename'", clear"'
 	}
 
-	if ("`namelist'" != "") {
-		keep `using_keys' `namelist'
+	if ("`anything'" != "") {
+		keep `using_keys' `anything'
 	}
 	else {
 		qui ds `using_keys', not
-		loc namelist `r(varlist)'
+		loc anything `r(varlist)'
 	}
-	unab namelist : `namelist', name(keepusing) min(0)
+	unab anything : `anything', min(0)
 	unab using_keys : `using_keys'
 	confirm variable `using_keys', exact
 
 
 // Join ---------------------------------------------------------------------
 
-	mata: join("`using_keys'", "`master_keys'", "`namelist'", ///
+	mata: join("`using_keys'", "`master_keys'", "`anything'", ///
 	    `"`cmd'"', "`generate'", `uniquemaster', ///
 	    `keep_using', `assert_not_using', ///
 	    `label', `notes', ///
@@ -281,8 +281,8 @@ void join(`String' using_keys,
 	fk_names = tokens(master_keys)
 	pk = st_data(., pk_names)
 	N = rows(pk)
-	// Assert keys are unique IDs in using
 
+	// Assert keys are unique IDs in using
 	integers_only = is_integers_only(pk_names)
 	F = _factor(pk, integers_only, verbose, "", 0)
 	assert_is_id(F, using_keys, "using")
