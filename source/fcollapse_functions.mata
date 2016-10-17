@@ -34,6 +34,7 @@ mata set matastrict on
 	asarray(funs, "percent", &aggregate_percent())
 	asarray(funs, "quantile", &aggregate_quantile())
 	asarray(funs, "iqr", &aggregate_iqr())
+	asarray(funs, "sd", &aggregate_sd())
 	// ...
 	return(funs)
 }
@@ -190,6 +191,17 @@ mata set matastrict on
 		if (rows(tmp1) <=1 ) continue
     	tmp2 = _mm_quantile(tmp1, 1, (0.25\0.75), 0)
         results[i] = tmp2[2] - tmp2[1]
+	}
+	return(results)
+}
+
+`Vector' aggregate_sd(`Factor' F, `Vector' data, `Vector' weights)
+{
+	`Integer'	            i
+	`Vector'	            results
+	results = J(F.num_levels, 1, .)
+	for (i = 1; i <= F.num_levels; i++) {
+        results[i] = sqrt(quadvariance(panelsubmatrix(data, i, F.info)))
 	}
 	return(results)
 }
