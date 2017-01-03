@@ -105,9 +105,6 @@ for a comparison of the hash+join and sort+merge algorithms).
 As a result, {cmd:join} performs better if the datasets are not
 already sorted by the {it:by()} variables, and for datasets
 above 100,000 observations (due to Mata's overhead).
-One limitation of {cmd:join} is that it doesn't support merging string variables.
-Even though this limitation can be lifted in future updates, using strings
-in large datasets is not really recommended so this is not a priority.
 {p_end}
 
 

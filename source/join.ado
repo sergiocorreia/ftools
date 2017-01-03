@@ -237,6 +237,7 @@ include "`r(fn)'"
 
 mata:
 mata set matastrict on
+mata set matalnum on
 
 void join(`String' using_keys,
           `String' master_keys,
@@ -250,11 +251,13 @@ void join(`String' using_keys,
           `Boolean' join_chars,
           `Boolean' verbose)
 {
-	`Varlist'				pk_names, fk_names, varnames, vartypes, varformats
+	`Varlist'				pk_names, fk_names, varformats
+	`Varlist'				varnames_num, varnames_str, deck
+	`Varlist'				vartypes_num, vartypes_str
 	`Variables'				pk
 	`Integer'				N, i, val, j, k
 	`Factor'				F
-	`DataFrame'				data, reshaped
+	`DataFrame'				data_num, reshaped_num, data_str, reshaped_str
 	`Vector'				index, range, mask
 	
 	`Boolean'				integers_only
@@ -284,11 +287,12 @@ void join(`String' using_keys,
 	F = _factor(pk, integers_only, verbose, "", 0)
 	assert_is_id(F, using_keys, "using")
 
-	varnames = tokens(varlist)
-	vartypes = J(1, cols(varnames), "")
-	varformats = J(1, cols(varnames), "")
-	varlabels = J(1, cols(varnames), "")
-	varvaluelabels = J(1, cols(varnames), "")
+	varnames_num = varnames_str = deck = tokens(varlist)
+	vartypes_num = vartypes_str = J(1, cols(deck), "")
+
+	varformats = J(1, cols(deck), "")
+	varlabels = J(1, cols(deck), "")
+	varvaluelabels = J(1, cols(deck), "")
 	label_values = asarray_create("string", 1)
 	label_text = asarray_create("string", 1)
 	text = ""
@@ -298,20 +302,23 @@ void join(`String' using_keys,
 		num_chars = rows(st_dir("char", "_dta", "*"))
 	}
 
-	msg = "{err}merge:  string variables are not allowed (%s)\n"
-	for (i=1; i<=cols(varnames); i++) {
-		var = varnames[i]
+
+	for (i=1; i<=cols(deck); i++) {
+		var = deck[i]
 
 		// Assert vars are not strings (could allow for it, but not useful)
 		if (st_isstrvar(var)) {
-			printf(msg, var)
-			exit(110)
+			varnames_num[i] = ""
+			vartypes_str[i] = st_vartype(var)
+		}
+		else {
+			varnames_str[i] = ""
+			vartypes_num[i] = st_vartype(var)
 		}
 
-		vartypes[i] = st_vartype(var)
-		varformats[i] = st_varformat(var)
 
 		// Add variable labels, value labels, and assignments
+		varformats[i] = st_varformat(var)
 		varlabels[i] = st_varlabel(var)
 		varvaluelabels[i] = label = st_varvaluelabel(var)
 		if (join_labels) {
@@ -332,8 +339,8 @@ void join(`String' using_keys,
 	if (join_chars) {
 		chars = J(num_chars, 3, "")
 		j = 0
-		for (k=0; k<=cols(varnames); k++) {
-			var = k ? varnames[k] : "_dta"
+		for (k=0; k<=cols(deck); k++) {
+			var = k ? deck[k] : "_dta"
 			charnames = st_dir("char", var, "*")
 			for (i=1 ; i<=rows(charnames); i++) {
 				++j
@@ -344,12 +351,20 @@ void join(`String' using_keys,
 		}
 	}
 
+	varnames_num = tokens(invtokens(varnames_num))
+	varnames_str = tokens(invtokens(varnames_str))
+	vartypes_num = tokens(invtokens(vartypes_num))
+	vartypes_str = tokens(invtokens(vartypes_str))
 
-	if (cols(varnames) > 0) {
-		data = st_data(., varnames) , J(st_nobs(), 1, 3) // _merge==3
+	if (cols(varnames_num) > 0) {
+		data_num = st_data(., varnames_num) , J(st_nobs(), 1, 3) // _merge==3
 	}
 	else {
-		data = J(st_nobs(), 1, 3) // _merge==3
+		data_num = J(st_nobs(), 1, 3) // _merge==3
+	}
+
+	if (cols(varnames_str) > 0)  {
+		data_str = st_sdata(., varnames_str)
 	}
 
 	// Master
@@ -361,14 +376,14 @@ void join(`String' using_keys,
 
 	// Check that variables don't exist yet
 	msg = "{err}merge:  variable %s already exists in master dataset\n"
-	for (i=1; i<=cols(varnames); i++) {
-		var = varnames[i]
+	for (i=1; i<=cols(deck); i++) {
+		var = deck[i]
 		if (_st_varindex(var) != .) {
 			printf(msg, var)
 			exit(108)
 		}
 	}
-	if (verbose) printf("{txt}variables added: {res}%s{txt}\n", invtokens(varnames))
+	if (verbose) printf("{txt}variables added: {res}%s{txt}\n", invtokens(deck))
 	
 	fk_names = tokens(master_keys)
 	integers_only = integers_only & is_integers_only(fk_names)
@@ -378,23 +393,36 @@ void join(`String' using_keys,
 	F = _factor(pk \ st_data(., fk_names), integers_only, verbose, "", 0)
 
 	index = F.levels[| 1 \ N |]
-	reshaped = J(F.num_levels, cols(data)-1, .) , J(F.num_levels, 1, 1) // _merge==1
-	reshaped[index, .] = data
+	reshaped_num = J(F.num_levels, cols(data_num)-1, .) , J(F.num_levels, 1, 1) // _merge==1
+	reshaped_num[index, .] = data_num
+	if (cols(varnames_str) > 0) {
+		reshaped_str = J(F.num_levels, cols(data_str), "")
+		reshaped_str[index, .] = data_str
+	}
 	index = F.levels[| N+1 \ . |]
-	reshaped = reshaped[index , .]
+	reshaped_num = reshaped_num[index , .]
+	if (cols(varnames_str) > 0) {
+		reshaped_str = reshaped_str[index , .]
+	}
+
 	index = . // conserve memory
-	assert(st_nobs() == rows(reshaped))
-	vartypes = vartypes, "byte"
-	varnames = varnames, generate
+	assert(st_nobs() == rows(reshaped_num))
+	vartypes_num = vartypes_num, "byte"
+	varnames_num = varnames_num, generate
 	val = setbreakintr(0)
-	st_store(., st_addvar(vartypes, varnames, 1), reshaped)
-	reshaped = . // conserve memory
+
+	st_store(., st_addvar(vartypes_num, varnames_num, 1), reshaped_num)
+	if (cols(varnames_str) > 0) {
+		st_sstore(., st_addvar(vartypes_str, varnames_str, 1), reshaped_str)
+	}
+	
+	reshaped_num = reshaped_str = . // conserve memory
 	(void) setbreakintr(val)
 
 	// Add labels
 	msg = "{err}(warning: value label %s already exists; values overwritten)"
-	for (i=cols(fk_names)+1; i<=cols(varnames)-1; i++) {
-		var = varnames[i]
+	for (i=cols(fk_names)+1; i<=cols(deck)-1; i++) {
+		var = deck[i]
 
 		// label variable <var> <text>
 		if (varlabels[i] != "") {
@@ -451,12 +479,21 @@ void join(`String' using_keys,
 		}
 
 		if (keep_using & has_using) {
-			data = select( (pk, data) , mask)
-			data[., cols(data)] = J(rows(data), 1, 2) // _merge==1
-			range = st_nobs() + 1 :: st_nobs() + rows(data)
-			st_addobs(rows(data))
-			varnames = fk_names, varnames
-			st_store(range, varnames, data)
+			data_num = select( (pk, data_num) , mask)
+			data_num[., cols(data_num)] = J(rows(data_num), 1, 2) // _merge==1
+			
+			range = st_nobs() + 1 :: st_nobs() + rows(data_num)
+
+			st_addobs(rows(data_num))
+			varnames_num = fk_names, varnames_num
+			st_store(range, varnames_num, data_num)
+
+			if (cols(varnames_str) > 0) {
+				data_str = select(data_str, mask)
+				varnames_str = varnames_str
+				st_sstore(range, varnames_str, data_str)
+				stata("order " + generate + ", last")
+			}
 		}
 	}
 
@@ -466,6 +503,7 @@ void join(`String' using_keys,
 		F.keep_obs(N + 1 :: st_nobs())
 		assert_is_id(F, master_keys, "master")
 	}
+
 }
 
 
