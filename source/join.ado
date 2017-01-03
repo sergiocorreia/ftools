@@ -52,7 +52,7 @@ program define join
 	*/ 
 
 	* Parse -key- variables
-	ParseBy `by' /// Return -master_keys- and -using_keys-
+	ParseBy `is_from' `by' /// Return -master_keys- and -using_keys-
 
 
 // Load using  dataset -------------------------------------------------------
@@ -61,7 +61,9 @@ program define join
 	if (`is_from') {
 		preserve
 		use "`filename'", clear
+		unab using_keys : `using_keys' // continuation of ParseBy
 		if ("`if'" != "") qui keep `if'
+
 		loc cmd restore
 	}
 	else {
@@ -76,8 +78,6 @@ program define join
 		loc anything `r(varlist)'
 	}
 	unab anything : `anything', min(0)
-	unab using_keys : `using_keys'
-	confirm variable `using_keys', exact
 
 
 // Join ---------------------------------------------------------------------
@@ -91,7 +91,7 @@ program define join
 
 // Apply requirements on _merge variable ------------------------------------
 
-	la def _merge ///
+	cap la def _merge ///
 		1 "master only (1)" 2 "using only (2)" 3 "matched (3)" /// Used
 		4 "missing updated (4)" 5 "nonmissing conflict (5)" // Unused
 	la val `generate' _merge
@@ -163,8 +163,10 @@ end
 
 
 program define ParseBy
-	* SAMPLE INPUT: turn trunk
-	* SAMPLE INPUT: year=time country=cou
+	* SAMPLE INPUT: 1 turn trunk
+	* SAMPLE INPUT: 0 year=time country=cou
+	gettoken is_from 0 : 0 // 1 if used from() , 0 if used into()
+	assert inlist(`is_from', 0, 1)
 	while ("`0'" != "") {
 		gettoken right 0 : 0
 		gettoken left right : right, parse("=")
@@ -179,8 +181,8 @@ program define ParseBy
 		loc using_keys `using_keys' `right'
 	}
 	* Mata functions such as st_vartype() don't play well with abbreviations
-	unab master_keys : `master_keys'
-	unab using_keys : `using_keys'
+	if (`is_from') unab master_keys : `master_keys'
+	if (!`is_from') unab using_keys : `using_keys'
 	c_local master_keys `master_keys'
 	c_local using_keys `using_keys'
 end
@@ -274,7 +276,6 @@ void join(`String' using_keys,
 
 	// Using
 	pk_names = tokens(using_keys)
-	fk_names = tokens(master_keys)
 	pk = st_data(., pk_names)
 	N = rows(pk)
 
@@ -353,6 +354,10 @@ void join(`String' using_keys,
 
 	// Master
 	stata(cmd) // load (either -restore- or -use-)
+	if (cmd != "restore") {
+		stata("unab master_keys : " + master_keys) // continuation of ParseBy
+		master_keys = st_local("master_keys")
+	}
 
 	// Check that variables don't exist yet
 	msg = "{err}merge:  variable %s already exists in master dataset\n"
@@ -363,7 +368,9 @@ void join(`String' using_keys,
 			exit(108)
 		}
 	}
+	if (verbose) printf("{txt}variables added: {res}%s{txt}\n", invtokens(varnames))
 	
+	fk_names = tokens(master_keys)
 	integers_only = integers_only & is_integers_only(fk_names)
 	if (verbose) {
 		printf("{txt}(integers only? {res}%s{txt})\n", verbose ? "true" : "false")
