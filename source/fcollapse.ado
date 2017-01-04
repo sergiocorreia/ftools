@@ -1,4 +1,4 @@
-*! version 1.6.0 17oct2016
+*! version 1.7.0 04jan2017
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)

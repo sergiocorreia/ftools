@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.6.0 17oct2016}{...}
+{* *! version 1.7.0 04jan2017}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
 {vieweralsosee "join" "help join"}{...}
@@ -98,6 +98,7 @@ We first need to create a Factor object:
 {synopt:{it:string rowvector} F{cmd:.vartypes}}types of the input variables{p_end}
 {synopt:{it:string rowvector} F{cmd:.vl}}value label definitions used by the input variables{p_end}
 {synopt:{it:string} F{cmd:.touse}}name of touse variable{p_end}
+{synopt:{it:string} F{cmd:.is_sorted}}1 if the dataset is sorted by F{cmd:.varlist}{p_end}
 
 
 {synopthdr:main methods}
@@ -161,11 +162,12 @@ but calls {cmd:F.panelsetup()} if required; {it:data} is a {it:transmorphic matr
 slower but uses less memory, as it's based on {cmd:_collate()}{p_end}
 {synopt:{it:real vector} F{cmd:.info}}equivalent to {help mf_panelsetup:panelsetup()}
 (returns a {it:(num_levels X 2)} matrix with start and end positions of each level/panel).{p_end}
-{p2coldent:}{bf:Note:} instead of using {cmd:F.info} directly, call panelsubmatrix():
-{cmd:x = panelsubmatrix(X, i, F.info)} (see the example at the end){p_end}
+{p2coldent:}{bf:Note:} instead of using {cmd:F.info} directly, use panelsubmatrix():
+{cmd:x = panelsubmatrix(X, i, F.info)} and {cmd:panelsum()}(see example at the end){p_end}
 {synopt:{it:real vector} F{cmd:.p}}equivalent to {cmd:order(F.levels)}
 but implemented with a counting sort that is asymptotically
-faster ({it:O(N)} instead of {it:O(N log N)}{p_end}
+faster ({it:O(N)} instead of {it:O(N log N)}.{p_end}
+{p2coldent:}{bf:Note:} do not use {cmd:F.p} directly, as it will be missing if the data is already sorted by the varnames.
 {p2colreset}{...}
 
 

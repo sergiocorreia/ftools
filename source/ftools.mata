@@ -48,6 +48,7 @@ class Factor
 	`Vector'				p
 	`String'				method				// Hash fn used
 	//`Vector'				sorted_levels
+	`Boolean'				is_sorted			// Is varlist==sorted(varlist)?
 
 	void					new()
 	void					panelsetup()		// aux. vectors
@@ -104,23 +105,27 @@ void Factor::panelsetup()
 	assert_msg(rows(info) == num_levels & cols(info) == 2, "invalid dim")
 	assert_msg(rows(index) == num_levels & cols(index) == 1, "invalid dim")
 
-	// Compute permutations. Notes:
-	// - Uses a counting sort to achieve O(N) instead of O(N log N)
-	//   See https://www.wikiwand.com/en/Counting_sort
-	// - A better implementation can make this parallel for num_levels small
+	if (!is_sorted) {
+		// Compute permutations. Notes:
+		// - Uses a counting sort to achieve O(N) instead of O(N log N)
+		//   See https://www.wikiwand.com/en/Counting_sort
+		// - A better implementation can make this parallel for num_levels small
 
-	p = J(num_obs, 1, .)
-	for (obs = 1; obs <= num_obs; obs++) {
-		level = levels[obs]
-		p[index[level] = index[level] + 1] = obs
+		p = J(num_obs, 1, .)
+		for (obs = 1; obs <= num_obs; obs++) {
+			level = levels[obs]
+			p[index[level] = index[level] + 1] = obs
+		}
 	}
 }
 
 
 `DataFrame' Factor::sort(`DataFrame' data)
 {
+	if (is_sorted) return(data)
 	if (p == J(0, 1, .)) panelsetup()
 	assert_msg(rows(data) ==  num_obs, "invalid data rows")
+
 	// For some reason, this is much faster that doing it in-place with collate
 	return(cols(data)==1 ? data[p] : data[p, .])
 }
@@ -128,6 +133,7 @@ void Factor::panelsetup()
 
 void Factor::_sort(`DataFrame' data)
 {
+	if (is_sorted) return(data)
 	if (p == J(0, 1, .)) panelsetup()
 	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 	_collate(data, p)
@@ -380,6 +386,7 @@ void Factor::__inner_drop(`Vector' idx)
 	
 	F = _factor(data, integers_only, verbose, method,
 	            sort_levels, count_levels, hash_ratio)
+	F.is_sorted = strpos(st_macroexpand("`" + ": sortedby" + "'"), invtokens(vars))==1
 	F.varlist = vars
 	F.touse = touse
 	F.varformats = F.varlabels = F.varvaluelabels = F.vartypes = J(1, cols(vars), "")
@@ -510,6 +517,7 @@ void Factor::__inner_drop(`Vector' idx)
 		msg = "{txt} method: {res}%s{txt}; dict size: {res}%s{txt})\n"
 		printf(msg, method, strofreal(dict_size, "%12.0g"))
 	}
+	F.is_sorted = 0
 	return(F)
 }
 

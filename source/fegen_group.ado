@@ -1,4 +1,4 @@
-*! version 1.6.0 17oct2016
+*! version 1.7.0 04jan2017
 program define fegen_group
 	syntax [if] [in] , [by(varlist) type(string)] /// -by- is ignored
 		name(string) args(string) ///
