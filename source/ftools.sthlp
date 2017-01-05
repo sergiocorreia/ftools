@@ -59,6 +59,7 @@
 {synoptline}
 {p2coldent:* {it:string} varnames}names of variables that identify the factors{p_end}
 {synopt:{it:string} touse}name of dummy {help mark:touse} variable{p_end}
+{p2coldent:}{bf:note:} you can also pass a vector with the obs. index (i.e. the first argument of {cmd:st_data()}){p_end}
 {synopt:{it:real} verbose}1 to display debug information{p_end}
 {synopt:{it:string} method}hashing method: mata, hash0, hash1, hash2; default is {it:mata} (auto-choose){p_end}
 {synopt:{it:real} sort_levels}set to 0 under {it:hash1} to increase speed, but the new levels will not match the order of the varlist{p_end}
@@ -162,12 +163,12 @@ but calls {cmd:F.panelsetup()} if required; {it:data} is a {it:transmorphic matr
 slower but uses less memory, as it's based on {cmd:_collate()}{p_end}
 {synopt:{it:real vector} F{cmd:.info}}equivalent to {help mf_panelsetup:panelsetup()}
 (returns a {it:(num_levels X 2)} matrix with start and end positions of each level/panel).{p_end}
-{p2coldent:}{bf:Note:} instead of using {cmd:F.info} directly, use panelsubmatrix():
+{p2coldent:}{bf:note:} instead of using {cmd:F.info} directly, use panelsubmatrix():
 {cmd:x = panelsubmatrix(X, i, F.info)} and {cmd:panelsum()}(see example at the end){p_end}
 {synopt:{it:real vector} F{cmd:.p}}equivalent to {cmd:order(F.levels)}
 but implemented with a counting sort that is asymptotically
 faster ({it:O(N)} instead of {it:O(N log N)}.{p_end}
-{p2coldent:}{bf:Note:} do not use {cmd:F.p} directly, as it will be missing if the data is already sorted by the varnames.
+{p2coldent:}{bf:note:} do not use {cmd:F.p} directly, as it will be missing if the data is already sorted by the varnames.{p_end}
 {p2colreset}{...}
 
 

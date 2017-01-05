@@ -351,7 +351,7 @@ void Factor::__inner_drop(`Vector' idx)
 // Main functions -------------------------------------------------------------
 
 `Factor' factor(`Varlist' varnames,
-              | `String' touse,
+              | `DataCol' touse, // either string varname or a numeric index
                 `Boolean' verbose,
                 `String' method,
                 `Boolean' sort_levels,
@@ -363,17 +363,33 @@ void Factor::__inner_drop(`Vector' idx)
 	`DataFrame'				data
 	`Integer'				i
 	`Boolean'				integers_only
+	`Boolean'				touse_is_mask
 	`String'				type, var, lbl
 	`Dict'					map
 	`Vector'				keys
 	`StringVector'			values
 
+	if (args()<2) touse = .
+
 	if (strlen(invtokens(varnames))==0) {
 		printf("{err}factor() requires a variable name: %s")
 		exit(102)
 	}
+
 	vars = tokens(invtokens(varnames))
-	data = __fload_data(vars, touse)
+
+	// touse is a string with the -touse- variable, unless
+	// we use an undocumented feature where it is an observation index
+	if (eltype(touse) == "string") {
+		assert_msg(orgtype(touse) == "scalar", "touse must be a scalar string")
+		assert_msg(st_isnumvar(touse), "touse " + touse + " must be a numeric variable")
+		touse_is_mask = 0
+	}
+	else {
+		touse_is_mask = 1
+	}
+	data = __fload_data(vars, touse, touse_is_mask)
+
 
 	// Are the variables integers (so maybe we can use the fast hash)?
 	for (i = integers_only = 1; i <= cols(vars); i++) {
@@ -388,7 +404,7 @@ void Factor::__inner_drop(`Vector' idx)
 	            sort_levels, count_levels, hash_ratio)
 	F.is_sorted = strpos(st_macroexpand("`" + ": sortedby" + "'"), invtokens(vars))==1
 	F.varlist = vars
-	F.touse = touse
+	if (touse_is_mask) F.touse = touse
 	F.varformats = F.varlabels = F.varvaluelabels = F.vartypes = J(1, cols(vars), "")
 	F.vl = asarray_create("string", 1)
 	
@@ -925,27 +941,32 @@ void assert_msg(real scalar t, | string scalar msg)
 }
 
 `DataFrame' __fload_data(`Varlist' varlist,
-                       | `String' touse)
+                       | `DataCol' touse,
+                         `Boolean' touse_is_mask)
 {
-	`DataFrame'				data
+	`Integer'				num_vars
 	`Boolean'				is_num
-	`Integer'				i, num_vars
+	`Integer'				i
+	`DataFrame'				data
+
+	if (args()<2) touse = .
+	if (args()<3) touse_is_mask = 1
 
 	varlist = tokens(invtokens(varlist)) // accept both types
 	num_vars = cols(varlist)
 	is_num = st_isnumvar(varlist[1])
-
 	for (i = 2; i <= num_vars; i++) {
 		if (is_num != st_isnumvar(varlist[i])) {
 			_error(999, "variables must be all numeric or all strings")
 		}
 	}
-
+	//   mask    = touse_is_mask ? touse :   .
+	// selectvar = touse_is_mask ?   .   : touse
 	if (is_num) {
-		data = (touse=="") ? st_data(., varlist) : st_data(., varlist, touse)
+		data =  st_data(touse_is_mask ? touse : . , varlist, touse_is_mask ? . : touse)
 	}
 	else {
-		data = (touse=="") ? st_sdata(., varlist) : st_sdata(., varlist, touse)
+		data = st_sdata(touse_is_mask ? touse : . , varlist, touse_is_mask ? . : touse)
 	}
 	return(data)
 }
