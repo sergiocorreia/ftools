@@ -8,7 +8,7 @@ timer clear
 discard
 cap ado uninstall ftools
 net install ftools, from("C:/git/ftools/source")
-ftools compile
+ftools, compile
 
 use "C:\dropbox\projects\HDFE\datasets\quadros\QP_Sergio.dta" 
 loc vars firm worker year

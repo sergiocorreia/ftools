@@ -8,7 +8,7 @@
 	discard
 	cap ado uninstall ftools
 	net install ftools, from("C:/git/ftools/source")
-	ftools compile
+	ftools, compile
 
 
 * Create -using- dataset

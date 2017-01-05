@@ -30,7 +30,7 @@ fegen id = group(turn trunk)
 fcollapse (sum) price (mean) gear, by(turn foreign) freq
 
 * Advanced: creating the .mlib library:
-ftools compile
+ftools, compile
 
 * Mata usage:
 sysuse auto, clear

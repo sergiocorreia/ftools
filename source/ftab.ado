@@ -34,7 +34,7 @@ program define Display
 
 end
 
-ftools check
+ftools, check
 findfile "ftools_type_aliases.mata"
 include "`r(fn)'"
 

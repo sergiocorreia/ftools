@@ -44,5 +44,5 @@ program define fsort
 	sort `varlist'
 end
 
-ftools check
+ftools, check
 exit

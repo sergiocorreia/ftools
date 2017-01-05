@@ -8,7 +8,7 @@ timer clear
 discard
 cap ado uninstall ftools
 net install ftools, from("C:/git/ftools/source")
-ftools compile
+ftools, compile
 
 set obs 100
 gen int year = _n

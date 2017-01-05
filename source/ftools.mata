@@ -9,27 +9,29 @@
 	include "`r(fn)'"
 	set matadebug off
 
+	mata: mata clear
+	mata: mata set matastrict on
+	mata: mata set mataoptimize on
+	mata: mata set matalnum off
 
-// selectindex() appeared on Stata 13
-// For lower versions, we'll use a slower alternative
-// (how much slower?!)
-loc selectindex "selectindex(dict)"
-if (c(stata_version) < 13) {
-	loc selectindex "select(1::rows(dict), dict)"
-}
+	// selectindex() appeared on Stata 13
+	// For lower versions, we'll use a slower alternative
+	// (how much slower?!)
+	if (c(stata_version) < 13) {
+		loc selectindex "select(1::rows(dict), dict)"
+	}
+	else {
+		loc selectindex "selectindex(dict)"
+	}
+
+// Versioning ---------------------------------------------------------------
+	pt_get_version ftools // parsetools package
+	assert("`package_version'" != "")
+    mata: string scalar ftools_version() return("`package_version'")
+    mata: string scalar ftools_stata_version() return("`c(stata_version)'")
 
 
 mata:
-mata clear
-mata set matastrict on
-mata set mataoptimize on
-mata set matalnum off
-
-
-// Based on David Roodman's boottest
-string scalar ftools_version() return("1.5.0 08oct2016")
-string scalar ftools_stata_version() return("`c(stata_version)'")
-
 
 // Main class ----------------------------------------------------------------
 
@@ -369,7 +371,7 @@ void Factor::__inner_drop(`Vector' idx)
 	`Vector'				keys
 	`StringVector'			values
 
-	if (args()<2) touse = .
+	if (args()<2 | touse == "") touse = .
 
 	if (strlen(invtokens(varnames))==0) {
 		printf("{err}factor() requires a variable name: %s")

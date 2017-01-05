@@ -14,7 +14,7 @@ timer clear
 cap ado uninstall ftools
 net install ftools, from("c:\git\ftools\source")
 
-ftools compile
+ftools, compile
 
 mata:
 mata set matastrict on

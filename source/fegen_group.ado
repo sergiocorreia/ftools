@@ -111,5 +111,5 @@ program define Group_FirstPrinciples, sortpreserve
 	qui compress `id'
 end
 
-ftools check
+ftools, check
 exit

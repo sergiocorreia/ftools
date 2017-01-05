@@ -175,8 +175,8 @@ faster ({it:O(N)} instead of {it:O(N log N)}.{p_end}
 {pstd}Notes:
 
 {synoptset 3 tabbed}{...}
-{synopt:- }If you just downloaded the package and want to use the Mata functions directly (instead of the Stata commands), run once the {stata ftools} command to create the library.{p_end}
-{synopt:- }To force compilation of the Mata library type {stata ftools compile}{p_end}
+{synopt:- }If you just downloaded the package and want to use the Mata functions directly (instead of the Stata commands), run {stata ftools} once to, which creates the Mata library if needed.{p_end}
+{synopt:- }To force compilation of the Mata library, type {stata ftools, compile}{p_end}
 {synopt:- }If you already have your data in Mata, use {cmd:F = _factor(data)} instead of {cmd:F = factor(varlist)}{p_end}
 
 

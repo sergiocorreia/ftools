@@ -6,13 +6,14 @@ clear all
 cap cls
 set more off
 timer clear
+set trace off
 
 * Prepare data
 
 discard
 cap ado uninstall ftools
 net install ftools, from("C:/git/ftools/source")
-ftools compile
+ftools, compile
 
 
 cap pr drop crData

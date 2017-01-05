@@ -46,5 +46,5 @@ void fisid(string rowvector varnames,
 }
 end
 
-ftools check
+ftools, check
 exit

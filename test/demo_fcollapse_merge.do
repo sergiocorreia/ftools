@@ -1,6 +1,6 @@
 cap ado uninstall ftools
 net install ftools, from("C:/git/ftools/source")
-ftools compile
+ftools, compile
 discard
 
 clear all

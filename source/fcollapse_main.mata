@@ -45,7 +45,7 @@ void f_collapse(`Factor' F,
 
 	// Compute permutation vector so we can sort the data
 	F.panelsetup()
-	merge = (F.touse != "")
+	merge = (F.touse != .)
 	if (!merge) {
 		F.levels = . // save memory
 	}
