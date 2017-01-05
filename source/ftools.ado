@@ -11,7 +11,7 @@ program define ftools
 		pt_get_version ftools // from parsetools package; save local package_version
 		loc functions "Factor*() factor*() _factor*() __fload_data() __fstore_data() ftools*() __factor*() assert_msg()" // 
 		// loc functions "*()"
-		pt_compile_mata, package(ftools) version(`package_version') `force' fun("`functions'") verbose debug
+		pt_compile_mata, package(ftools) version(`package_version') `force' fun("`functions'") verbose // debug
 	}
 	else {
 		di as error "Wrong option for ftools: `options'"
