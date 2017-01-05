@@ -326,7 +326,7 @@ void Factor::__inner_drop(`Vector' idx)
 	`Vector'				mask, idx
 
 	if (counts == J(0, 1, .)) {
-		_error(123, "drop_obs() requires the -counts- vector")
+		_error(123, "drop_singletons() requires the -counts- vector")
 	}
 
 	mask = (counts :== 1)

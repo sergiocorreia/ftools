@@ -132,15 +132,15 @@ the observations listed in the column vector {it:idx} are dropped
 {p_end}
 {synopt:{it:void} F{cmd:.keep_obs(}{it:idx}{cmd:)}}equivalent
 to keeping only the obs. enumerated by {it:idx} and recreating {it:F};
-uses {cmd:.keep_obs()}
+uses {cmd:.drop_obs()}
 {p_end}
 {synopt:{it:void} F{cmd:.drop_if(}{it:vec}{cmd:)}}equivalent
 to dropping the obs. where {it:vec==0} and recreating {it:F};
-uses {cmd:.keep_obs()}
+uses {cmd:.drop_obs()}
 {p_end}
 {synopt:{it:void} F{cmd:.keep_if(}{it:vec}{cmd:)}}equivalent
 to keeping the obs. where {it:vec!=0} and recreating {it:F};
-uses {cmd:.keep_obs()}
+uses {cmd:.drop_obs()}
 {p_end}
 {synopt:{it:real colvector} F{cmd:.drop_singletons()}}equivalent
 to dropping the levels that only appear once,
