@@ -1,4 +1,4 @@
-*! version 1.7.0 04jan2017
+*! version 1.9.0 10jan2017
 program define fisid
 	syntax varlist [if] [in], [Missok Show]
 	loc show = ("`show'" != "")

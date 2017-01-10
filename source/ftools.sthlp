@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.7.0 04jan2017}{...}
+{* *! version 1.9.0 10jan2017}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
 {vieweralsosee "join" "help join"}{...}
@@ -156,11 +156,14 @@ if {it:F.counts} is always 1
 {synopthdr:available after F.panelsetup()}
 {synoptline}
 {synopt:{it:transmorphic matrix} F{cmd:.sort(}{it:data}{cmd:)}}equivalent to
-{cmd:data = data[F.p, .]}
+{cmd:data[F.p, .]}
 but calls {cmd:F.panelsetup()} if required; {it:data} is a {it:transmorphic matrix}{p_end}
 {synopt:{it:void} F{cmd:._sort(}{it:data}{cmd:)}}in-place version of
 {cmd:.sort()};
 slower but uses less memory, as it's based on {cmd:_collate()}{p_end}
+{synopt:{it:void} F{cmd:.invsort(}{it:data}{cmd:)}}equivalent to
+{cmd:data[invorder(F.p), .]}, so it undoes a previous sort operation. Note that {cmd:F.invsort(F.sort(x))==x}. Also, after used it fills the vector {cmd:F.inv_p = invorder(F.p)} so the operation can be repeated easily.
+{p_end}
 {synopt:{it:real vector} F{cmd:.info}}equivalent to {help mf_panelsetup:panelsetup()}
 (returns a {it:(num_levels X 2)} matrix with start and end positions of each level/panel).{p_end}
 {p2coldent:}{bf:note:} instead of using {cmd:F.info} directly, use panelsubmatrix():
@@ -178,6 +181,9 @@ faster ({it:O(N)} instead of {it:O(N log N)}.{p_end}
 {synopt:- }If you just downloaded the package and want to use the Mata functions directly (instead of the Stata commands), run {stata ftools} once to, which creates the Mata library if needed.{p_end}
 {synopt:- }To force compilation of the Mata library, type {stata ftools, compile}{p_end}
 {synopt:- }If you already have your data in Mata, use {cmd:F = _factor(data)} instead of {cmd:F = factor(varlist)}{p_end}
+{synopt:- }{cmd:F.extra} is an undocumented {help mf_asarray:asarray}
+that can be used to store additional information: {cmd:asarray(f.extra, "lorem", "ipsum")};
+and retrieve it: {cmd:ipsum = asarray(f.extra, "lorem")}{p_end}
 
 
 

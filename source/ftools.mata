@@ -48,6 +48,7 @@ class Factor
 	`Vector'				counts				// Count of the levels/keys
 	`Matrix'				info
 	`Vector'				p
+	`Vector'				inv_p				// inv_p = invorder(p)
 	`String'				method				// Hash fn used
 	//`Vector'				sorted_levels
 	`Boolean'				is_sorted			// Is varlist==sorted(varlist)?
@@ -58,6 +59,7 @@ class Factor
 	void					store_keys()		// Store keys & format/lbls
 	`DataFrame'				sort()				// Initialize panel view
 	void					_sort()				// as above but in-place
+	`DataFrame'				invsort()			// F.invsort(F.sort(x))==x
 
 	`Boolean'				nested_within()		// True if nested within a var
 	`Boolean'				equals()			// True if F1 == F2
@@ -69,6 +71,8 @@ class Factor
 	void					drop_if()			// Adjust to dropping obs.
 	void					keep_if()			// Adjust to dropping obs.
 	`Boolean'				is_id()				// 1 if all(F.counts:==1)
+
+	`Dict'					extra				// extra information
 }
 
 
@@ -78,7 +82,9 @@ void Factor::new()
 	info = J(0, 2, .)
 	counts = J(0, 1, .)
 	p = J(0, 1, .)
+	inv_p = J(0, 1, .)
 	touse = ""
+	extra = asarray_create("string", 1, 20)
 }
 
 
@@ -139,6 +145,18 @@ void Factor::_sort(`DataFrame' data)
 	if (p == J(0, 1, .)) panelsetup()
 	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 	_collate(data, p)
+}
+
+
+`DataFrame' Factor::invsort(`DataFrame' data)
+{
+	if (is_sorted) return(data)
+	if (p == J(0, 1, .)) panelsetup()
+	if (inv_p == J(0, 1, .)) inv_p = invorder(p)
+	assert_msg(rows(data) ==  num_obs, "invalid data rows")
+
+	// For some reason, this is much faster that doing it in-place with collate
+	return(cols(data)==1 ? data[inv_p] : data[inv_p, .])
 }
 
 
@@ -316,6 +334,7 @@ void Factor::__inner_drop(`Vector' idx)
 
 	// Clear these out to prevent mistakes
 	p = J(0, 1, .)
+	inv_p = J(0, 1, .)
 	info = J(0, 2, .)
 }
 

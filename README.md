@@ -185,7 +185,7 @@ net install ftools, from(https://github.com/sergiocorreia/ftools/raw/master/sour
 For older versions, first download and extract the [zip file](https://github.com/sergiocorreia/ftools/archive/master.zip), and then run
 
 ```
-ado uninstall ftools
+cap ado uninstall ftools
 net install ftools, from(SOME_FOLDER)
 ```
 

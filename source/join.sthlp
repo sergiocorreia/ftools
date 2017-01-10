@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.7.0 04jan2017}{...}
+{* *! version 1.9.0 10jan2017}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "fmerge" "help fmerge"}{...}
 {vieweralsosee "[R] merge" "help merge"}{...}
