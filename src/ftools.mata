@@ -29,6 +29,7 @@
 	assert("`package_version'" != "")
     mata: string scalar ftools_version() return("`package_version'")
     mata: string scalar ftools_stata_version() return("`c(stata_version)'")
+    mata: string scalar ftools_joint_version() return("`package_version'|`c(stata_version)'")
 
 
 mata:
