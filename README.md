@@ -202,6 +202,7 @@ To install from a git fork, type something like:
 ```
 cap ado uninstall ftools
 net install ftools, from("C:/git/ftools/source")
+ftools, compile
 ```
 
 (Changing "C:/git/" to your own folder)
