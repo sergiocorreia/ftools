@@ -9,7 +9,7 @@ log using benchmark_fcollapse, replace name(collapse)
 include "test_utils.do"
 
 cap ado uninstall ftools
-net install ftools, from("C:/git/ftools/source")
+net install ftools, from("C:/git/ftools/src")
 ftools, compile
 
 

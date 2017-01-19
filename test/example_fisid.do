@@ -4,7 +4,7 @@ set more off
 set trace off
 
 cap ado uninstall ftools
-net install ftools, from("C:/git/ftools/source")
+net install ftools, from("C:/git/ftools/src")
 ftools, compile
 
 sysuse auto

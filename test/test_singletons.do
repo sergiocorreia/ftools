@@ -1,7 +1,7 @@
 * TODO: create a proper test
 
 cap ado uninstall ftools
-net install ftools, from("C:/git/ftools/source")
+net install ftools, from("C:/git/ftools/src")
 ftools, compile
 
 pr drop _all

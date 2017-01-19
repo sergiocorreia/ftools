@@ -12,7 +12,7 @@ forv i=1/5	 {
 timer clear
 
 cap ado uninstall ftools
-net install ftools, from("c:\git\ftools\source")
+net install ftools, from("c:\git\ftools\src")
 
 ftools, compile
 

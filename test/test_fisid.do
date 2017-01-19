@@ -7,7 +7,7 @@ timer clear
 
 discard
 cap ado uninstall ftools
-net install ftools, from("C:/git/ftools/source")
+net install ftools, from("C:/git/ftools/src")
 ftools, compile
 
 use "C:\dropbox\projects\HDFE\datasets\quadros\QP_Sergio.dta" 

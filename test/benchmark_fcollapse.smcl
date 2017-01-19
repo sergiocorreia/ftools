@@ -130,7 +130,7 @@
 {com}. 
 . cap ado uninstall ftools
 {txt}
-{com}. net install ftools, from("C:/git/ftools/source")
+{com}. net install ftools, from("C:/git/ftools/src")
 checking {hilite:ftools} consistency and verifying not already installed...
 installing into c:\ado\plus\...
 installation complete.
@@ -612,7 +612,7 @@ end of do-file
 {txt}
 {com}. cap ado uninstall ftools
 {txt}
-{com}. net install ftools, from("C:/git/ftools/source")
+{com}. net install ftools, from("C:/git/ftools/src")
 checking {hilite:ftools} consistency and verifying not already installed...
 installing into c:\ado\plus\...
 installation complete.

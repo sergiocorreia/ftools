@@ -19,7 +19,7 @@
 {viewerjumpto "Description" "ftools##description"}{...}
 {viewerjumpto "Example" "ftools##example"}{...}
 {viewerjumpto "Remarks" "ftools##remarks"}{...}
-{viewerjumpto "Source code" "ftools_source"}{...}
+{viewerjumpto "Source code" "ftools##source"}{...}
 {viewerjumpto "Author" "ftools##contact"}{...}
 
 {title:Title}
@@ -415,17 +415,16 @@ Alternatively, {it:hash1} is used, which adds {browse "https://www.wikiwand.com/
 {help mf_hash1:hash1} function to create a form of open addressing (that is more efficient than Mata's {help mf_asarray:asarray}).
 
 
-{marker source_code}{...}
+{marker source}{...}
 {title:Source code}
 
 {pstd}
-You have two options:
+{view ftools_type_aliases.mata, adopath asis:ftools_type_aliases.mata};
+{view ftools.mata, adopath asis:ftools.mata}
+{p_end}
 
-{pmore}
-a) check online here: {browse "https://github.com/sergiocorreia/ftools/source"}
-
-{pmore}
-b) Type {stata findfile ftools_type_aliases.mata} and {stata findfile ftools.mata}, and then open those files with {stata doedit "`r(fn)'"}
+{pstd}
+Also, the latest version is available online: {browse "https://github.com/sergiocorreia/ftools/source"}
 
 
 {marker author}{...}

@@ -179,7 +179,7 @@ With Stata 13+, type:
 
 ```
 cap ado uninstall ftools
-net install ftools, from(https://github.com/sergiocorreia/ftools/raw/master/source/)
+net install ftools, from(https://github.com/sergiocorreia/ftools/raw/master/src/)
 ```
 
 For older versions, first download and extract the [zip file](https://github.com/sergiocorreia/ftools/archive/master.zip), and then run
@@ -201,7 +201,7 @@ To install from a git fork, type something like:
 
 ```
 cap ado uninstall ftools
-net install ftools, from("C:/git/ftools/source")
+net install ftools, from("C:/git/ftools/src")
 ftools, compile
 ```
 
@@ -209,7 +209,18 @@ ftools, compile
 
 ## Dependencies
 
-The `fcollapse` function requires the `moremata` package from SSC.
+`ftools` requires the `moresyntax` package from Github:
+
+```
+cap ado uninstall moresyntax
+net install moresyntax, from(https://github.com/sergiocorreia/moresyntax/raw/master/src/)
+```
+
+Also, the `fcollapse` function requires the `moremata` package from SSC:
+
+```
+ssc install moremata
+```
 
 
 # FAQ:

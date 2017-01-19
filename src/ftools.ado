@@ -8,10 +8,10 @@ program define ftools
 
 	if inlist("`options'", "check", "compile") {
 		if ("`options'"=="compile") loc force "force"
-		pt_get_version ftools // from parsetools package; save local package_version
+		ms_get_version ftools // from moresyntax package; save local package_version
 		loc functions "Factor*() factor*() _factor*() __fload_data() __fstore_data() ftools*() __factor*() assert_msg()" // 
 		// loc functions "*()"
-		pt_compile_mata, package(ftools) version(`package_version') `force' fun("`functions'") verbose // debug
+		ms_compile_mata, package(ftools) version(`package_version') `force' fun("`functions'") verbose // debug
 	}
 	else {
 		di as error "Wrong option for ftools: `options'"

@@ -5,7 +5,7 @@
 cap ado uninstall xmiss
 ssc install xmiss
 cap ado uninstall ftools
-net install ftools, from(https://github.com/sergiocorreia/ftools/raw/master/source/)
+net install ftools, from(https://github.com/sergiocorreia/ftools/raw/master/src/)
 ftools, compile
 
 clear
