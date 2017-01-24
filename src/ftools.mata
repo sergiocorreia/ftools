@@ -553,7 +553,7 @@ void Factor::__inner_drop(`Vector' idx)
 	assert_msg(dict_size <= 2 ^ 31, "dict size exceeds Mata limits")
 
 	// Hack: alternative approach
-	if (base_method == "mata" & method == "hash1" & integers_only & num_vars > 1 & cols(vars)==num_vars) {
+	if (base_method == "mata" & method == "hash1" & integers_only & num_vars > 1 & cols(vars)==num_vars & num_obs > 1e5) {
 		F1 = factor(vars[1], touse, verbose, "hash0", sort_levels, 1, ., save_keys)
 		F2 = factor(vars[2..num_vars], touse, verbose, "mata", sort_levels, count_levels, ., save_keys)
 		F = join_factors(F1, F2, count_levels, save_keys)
@@ -580,7 +580,7 @@ void Factor::__inner_drop(`Vector' idx)
 		msg = "{txt}(obs: {res}%s{txt}; levels: {res}%s{txt};"
 		printf(msg, strofreal(num_obs, "%12.0g"), strofreal(F.num_levels))
 		msg = "{txt} method: {res}%s{txt}; dict size: {res}%s{txt})\n"
-		printf(msg, method, strofreal(dict_size, "%12.0g"))
+		printf(msg, method, method == "join" ? "n/a" : strofreal(dict_size, "%12.0g"))
 	}
 	F.is_sorted = 0
 	return(F)
