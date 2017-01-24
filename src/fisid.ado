@@ -40,7 +40,7 @@ void fisid(string rowvector varnames,
 	class Factor scalar		F
 	real scalar				ok
 
-	F = factor(varnames, touse, 0, "", 0, 1)
+	F = factor(varnames, touse, 0, "", 0, 1, ., 0)
 	ok = F.is_id()
 	st_local("ok", strofreal(ok))
 }

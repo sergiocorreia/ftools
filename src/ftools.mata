@@ -53,6 +53,8 @@ class Factor
 	`String'				method				// Hash fn used
 	//`Vector'				sorted_levels
 	`Boolean'				is_sorted			// Is varlist==sorted(varlist)?
+	`String'				sortedby			// undocumented; save sort order of dataset
+	`Boolean'				panel_is_setup
 
 	void					new()
 	void					panelsetup()		// aux. vectors
@@ -79,12 +81,14 @@ class Factor
 
 void Factor::new()
 {
+	keys = J(0, 1, .)
 	varlist = J(1, 0, "")
 	info = J(0, 2, .)
 	counts = J(0, 1, .)
 	p = J(0, 1, .)
 	inv_p = J(0, 1, .)
 	touse = ""
+	panel_is_setup = 0
 	extra = asarray_create("string", 1, 20)
 }
 
@@ -96,6 +100,8 @@ void Factor::panelsetup()
 	`Integer'				obs
 	`Vector'				index
 
+	if (panel_is_setup) return
+
 	if (counts == J(0, 1, .)) {
 		_error(123, "panelsetup() requires the -counts- vector")
 	}
@@ -103,6 +109,7 @@ void Factor::panelsetup()
 	if (num_levels == 1) {
 		info = 1, num_obs
 		p = 1::num_obs
+		panel_is_setup = 1
 		return
 	}
 
@@ -126,13 +133,14 @@ void Factor::panelsetup()
 			p[index[level] = index[level] + 1] = obs
 		}
 	}
+	panel_is_setup = 1
 }
 
 
 `DataFrame' Factor::sort(`DataFrame' data)
 {
 	if (is_sorted) return(data)
-	if (p == J(0, 1, .)) panelsetup()
+	panelsetup()
 	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 
 	// For some reason, this is much faster that doing it in-place with collate
@@ -143,7 +151,7 @@ void Factor::panelsetup()
 void Factor::_sort(`DataFrame' data)
 {
 	if (is_sorted) return(data)
-	if (p == J(0, 1, .)) panelsetup()
+	panelsetup()
 	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 	_collate(data, p)
 }
@@ -152,7 +160,7 @@ void Factor::_sort(`DataFrame' data)
 `DataFrame' Factor::invsort(`DataFrame' data)
 {
 	if (is_sorted) return(data)
-	if (p == J(0, 1, .)) panelsetup()
+	panelsetup()
 	if (inv_p == J(0, 1, .)) inv_p = invorder(p)
 	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 
@@ -378,7 +386,8 @@ void Factor::__inner_drop(`Vector' idx)
                 `String' method,
                 `Boolean' sort_levels,
                 `Boolean' count_levels,
-                `Integer' hash_ratio)
+                `Integer' hash_ratio,
+                `Boolean' save_keys)
 {
 	`Factor'				F
 	`Varlist'				vars
@@ -423,8 +432,10 @@ void Factor::__inner_drop(`Vector' idx)
 	}
 	
 	F = _factor(data, integers_only, verbose, method,
-	            sort_levels, count_levels, hash_ratio)
-	F.is_sorted = strpos(st_macroexpand("`" + ": sortedby" + "'"), invtokens(vars))==1
+	            sort_levels, count_levels, hash_ratio,
+	            save_keys)
+	F.sortedby = st_macroexpand("`" + ": sortedby" + "'")
+	F.is_sorted = strpos(F.sortedby, invtokens(vars))==1
 	F.varlist = vars
 	if (touse_is_mask) F.touse = touse
 	F.varformats = F.varlabels = F.varvaluelabels = F.vartypes = J(1, cols(vars), "")
@@ -458,7 +469,8 @@ void Factor::__inner_drop(`Vector' idx)
                  `String' method,
                  `Boolean' sort_levels,
                  `Boolean' count_levels,
-                 `Integer' hash_ratio)
+                 `Integer' hash_ratio,
+                 `Boolean' save_keys)
 {
 	`Factor'				F
 	`Integer'				num_obs, num_vars
@@ -468,22 +480,26 @@ void Factor::__inner_drop(`Vector' idx)
 	`Matrix'				min_max
 	`RowVector'				delta
 	`String'				msg
+
 	if (integers_only == .) integers_only = 0
 	if (verbose == .) verbose = 0
 	if (method == "") method = "mata"
 	if (sort_levels == .) sort_levels = 1
 	if (count_levels == .) count_levels = 1
+	if (save_keys == .) save_keys = 1
+	
 	// Note: Pick a sensible hash ratio; smaller means more collisions
 	// but faster lookups and less memory usage
 
 	msg = "invalid method"
-	assert_msg(anyof(("mata", "hash0", "hash1", "hash2"), method), msg)
+	assert_msg(anyof(("mata", "hash0", "hash1"), method), msg)
 
 	num_obs = rows(data)
 	num_vars = cols(data)
 	assert_msg(num_obs > 0, "no observations")
 	assert_msg(num_vars > 0, "no variables")
 	assert_msg(count_levels == 0 | count_levels == 1, "count_levels")
+	assert_msg(save_keys == 0 | save_keys == 1, "save_keys")
 
 	// Compute upper bound for number of levels
 	if (integers_only) {
@@ -533,19 +549,16 @@ void Factor::__inner_drop(`Vector' idx)
 	assert_msg(dict_size <= 2 ^ 31, "dict size exceeds Mata limits")
  
 	if (method == "hash0") {
-		F = __factor_hash0(data, verbose, dict_size, count_levels, min_max)
-	}
-	else if (method == "hash1") {
-		F = __factor_hash1(data, verbose, dict_size, sort_levels, max_numkeys1)
+		F = __factor_hash0(data, verbose, dict_size, count_levels, min_max, save_keys)
 	}
 	else {
-		F = __factor_hash2(data, verbose, dict_size, sort_levels, max_numkeys1)
+		F = __factor_hash1(data, verbose, dict_size, sort_levels, max_numkeys1, save_keys)
 	}
 	F.method = method
 
 	F.num_obs = num_obs
 	assert_msg(rows(F.levels) == F.num_obs & cols(F.levels) == 1, "levels")
-	assert_msg(rows(F.keys) == F.num_levels, "keys")
+	if (save_keys==1) assert_msg(rows(F.keys) == F.num_levels, "keys")
 	if (count_levels) {
 		assert_msg(rows(F.counts)==F.num_levels & cols(F.counts)==1, "counts")
 	}
@@ -567,7 +580,8 @@ void Factor::__inner_drop(`Vector' idx)
                         `Boolean' verbose,
                         `Integer' dict_size,
                         `Boolean' count_levels,
-                        `Matrix' min_max)
+                        `Matrix' min_max,
+                        `Boolean' save_keys)
 {
 	`Factor'				F
 	`Integer'				K, i, num_levels, num_obs, j
@@ -614,17 +628,19 @@ void Factor::__inner_drop(`Vector' idx)
 	num_levels = rows(levels)
 	dict[levels] = 1::num_levels
 
-	if (K == 1) {
-		keys = levels :+ (min_val - 1)
-	}
-	else {
-		keys = J(num_levels, K, .)
-		levels = levels :- 1
-		for (i = 1; i <= K; i++) {
-			keys[., i] = floor(levels :/ offsets[i])
-			levels = levels - keys[., i] :* offsets[i]
+	if (save_keys) {
+		if (K == 1) {
+			keys = levels :+ (min_val - 1)
 		}
-		keys = keys :+ min_val
+		else {
+			keys = J(num_levels, K, .)
+			levels = levels :- 1
+			for (i = 1; i <= K; i++) {
+				keys[., i] = floor(levels :/ offsets[i])
+				levels = levels - keys[., i] :* offsets[i]
+			}
+			keys = keys :+ min_val
+		}
 	}
 
 	// faster than "levels = dict[hashes, .]"
@@ -642,7 +658,7 @@ void Factor::__inner_drop(`Vector' idx)
 
 	F = Factor()
 	F.num_levels = num_levels
-	swap(F.keys, keys)
+	if (save_keys) swap(F.keys, keys)
 	swap(F.levels, levels)
 	swap(F.counts, counts)
 	return(F)
@@ -656,7 +672,8 @@ void Factor::__inner_drop(`Vector' idx)
                         `Boolean' verbose,
                         `Integer' dict_size,
                         `Boolean' sort_levels,
-                        `Integer' max_numkeys)
+                        `Integer' max_numkeys,
+                        `Boolean' save_keys)
 {
 	`Factor'				F
 	`Integer'				h, num_collisions, j, val
@@ -803,12 +820,12 @@ void Factor::__inner_drop(`Vector' idx)
 
 	dict = . // save memory
 
-	keys = keys[| 1 , 1 \ j , . |]
+	if (save_keys | sort_levels) keys = keys[| 1 , 1 \ j , . |]
 	counts = counts[| 1 \ j |]
 	
 	if (sort_levels & j > 1) {
 		p = order(keys, 1..num_vars) // this is O(K log K) !!!
-		keys = keys[p, .] // _collate(keys, p)
+		if (save_keys) keys = keys[p, .] // _collate(keys, p)
 		counts = counts[p] // _collate(counts, p)
 		levels = rows(levels) > 1 ? invorder(p)[levels] : 1
 	}
@@ -822,135 +839,131 @@ void Factor::__inner_drop(`Vector' idx)
 
 	F = Factor()
 	F.num_levels = j
-	swap(F.keys, keys)
+	if (save_keys) swap(F.keys, keys)
 	swap(F.levels, levels)
 	swap(F.counts, counts)
 	return(F)
 }
 
 
-// Open addressing hash function (quadratic probing) -------------------------
-// Note: this function needs to be optimized (run a diff against factor_hash1)
-
-`Factor' __factor_hash2(`DataFrame' data,
-                        `Boolean' verbose,
-                        `Integer' dict_size,
-                        `Boolean' sort_levels,
-                        `Integer' max_numkeys)
+`Factor' join_factors(`Factor' F1,
+                      `Factor' F2, 
+                    | `Boolean' count_levels,
+                      `Boolean' save_keys)
 {
 	`Factor'				F
-	`Integer'				h, num_collisions, j, val, h2, i
-	`Integer'				obs, start_obs, num_obs, num_vars
-	`Vector'				dict
-	`Vector'				levels // new levels
-	`Vector'				counts
-	`Vector'				p
+	`Varlist'				vars
+	`Boolean'				is_sorted // is sorted by (F1.varlist F2.varlist)
+	`Integer'				num_levels, old_num_levels, N, M, i, j
+	`Integer'				levels_start, levels_end
+	`Integer'				v, last_v, c
+	`Integer'				num_keys1, num_keys2
+	`RowVector'				key_idx
+	`Vector'				Y, p, y, levels, counts, idx
 	`DataFrame'				keys
-	`DataRow'				key, last_key
-	`String'				msg
-	
-	// Maybe use a dict size that is a power of 2? See
-	// https://github.com/attractivechaos/klib/blob/master/khash.h
-	// dict_size = 2 ^ ceil(ln(dict_size) / ln(2)) // to a power of 2
-	assert(dict_size > 0 & dict_size < .)
 
-	num_obs = rows(data)
-	num_vars = cols(data)
-	dict = J(dict_size, 1, 0)
-	levels = J(num_obs, 1, 0)
-	keys = J(max_numkeys, num_vars, missingof(data))
-	counts = J(max_numkeys, 1, 1) // keys are at least present once!
+	`Matrix' tmp
+	// If the dataset is sorted by F1+F2, we are good
+	// To handle this, store the sort order when creating F1 and F2
+	// and ensure it startswith the vars of F1+F2
 
-	j = 0 // counts the number of levels; at the end j == num_levels
-	val = J(0, 0, .)
-	num_collisions = 0
-	last_key = J(0, 0, missingof(data))
+	if (save_keys == .) save_keys = 1
+	if (count_levels == .) count_levels = 1
 
-	for (obs = 1; obs <= num_obs; obs++) {
+	vars = invtokens((F1.varlist, F2.varlist))
+	is_sorted = (F1.sortedby == F2.sortedby) & (strpos(F2.sortedby, vars)==1)
 
-		key = data[obs, .]
-		
-		// (optional) Speedup when dataset is already sorted
-		// (at a ~10% cost for when it's not)
-		if (last_key == key) {
-			start_obs = obs
-			do {
-				obs++
-			} while (obs <= num_obs ? data[obs, .] == last_key : 0 )
-			levels[|start_obs \ obs - 1|] = J(obs - start_obs, 1, val)
-			counts[val] = counts[val] + obs - start_obs
-			if (obs > num_obs) break
-			key = data[obs, .]
-		}
+	F1.panelsetup()
+	Y = F1.sort(F2.levels)
+	levels = J(F1.num_obs, 1, 0)
+	if (count_levels | save_keys) counts = J(F1.num_obs, 1, 1)
 
-		// Compute hash and retrieve the level the key is assigned to
-		h = hash1(key, dict_size)
-		val = dict[h]
-
-		// (new key) The key has not been assigned to a level yet
-		if (val == 0) {
-			val = dict[h] = ++j
-			keys[val, .] = key
-		}
-		// (collision) Another key already points to the same dict slot
-		else if (key != keys[val, .]) {
-			// Look up for an empty slot in the dict
-
-			// Quadratic probing
-			for (i=1; 1; i++) {
-				++num_collisions
-				// From wikipedia:
-				// https://www.wikiwand.com/en/Quadratic_probing
-				// "For m = 2^n, a good choice ... are c1 = c2 = 1/2"
-				// h2 = h1 + 0.5 * i + 0.5 * i ^ 2  --> rewrite it as:
-				//h2 = mod(h + round( i * (1 + i) / 2 ), dict_size) + 1
-				h2 = mod(h + i, dict_size) + 1
-				
-				val = dict[h2]
-				
-				if (val == 0) {
-					dict[h2] = val = ++j
-					keys[val, .] = key
-					break
-				}
-				if (key == keys[val, .]) {
-					counts[val] = counts[val] + 1
-					break
-				}
-			}
-		}
-		else {
-			counts[val] = counts[val] + 1
-		}
-
-		levels[obs] = val
-		last_key = key
+	if (save_keys) {
+		num_keys1 = cols(F1.keys)
+		num_keys2 = cols(F2.keys)
+		key_idx = (num_keys1 + 1)..(num_keys1 + num_keys2)
+		keys = J(F1.num_obs, num_keys1 + num_keys2, missingof(F1.keys))
 	}
+	N = F1.num_levels
+	levels_end = num_levels = 0
 
-	dict = . // save memory
+    for (i = 1; i <= N; i++) {
+    	y = panelsubmatrix(Y, i, F1.info)
+    	M = rows(y)
+    	old_num_levels = num_levels
 
-	keys = keys[| 1 , 1 \ j , . |]
-	counts = counts[| 1 , 1 \ j , . |]
-	
-	if (sort_levels) {
-		p = order(keys, 1..num_vars) // this is O(K log K) !!!
-		_collate(keys, p)
-		_collate(counts, p)
-		levels = invorder(p)[levels, .]
-	}
-	p = . // save memory
+    	if (M == 1) {
+    		levels[++levels_end] = ++num_levels
+    		if (save_keys) keys[num_levels, .] = F1.keys[i, .] , F2.keys[y, .]
+    		// no need to update counts as it's ==1
+    	}
+    	else {
+    		// Compute F.levels
+    		if (!is_sorted) {
+		    	p = order(y, 1)
+		    	y = y[p]
+    		}
+    		idx = runningsum(1 \ (y[2::M] :!= y[1::M-1]))
+	    	levels_start = levels_end + 1
+	    	levels_end = levels_end + M
+	    	if (!is_sorted) {
+	    		levels[|levels_start \ levels_end |] = num_levels :+ idx[invorder(p)]
+	    	}
+	    	else {
+	    		levels[|levels_start \ levels_end |] = num_levels :+ idx
+	    	}
 
-	if (verbose) {
-		msg = "{txt}(%s hash collisions - %4.2f{txt}%%)\n"
-		printf(msg, strofreal(num_collisions), num_collisions / num_obs * 100)
-	}
+	    	// Compute F.counts
+	    	if (count_levels | save_keys) {
+		    	last_v = y[1]
+		    	c = 1
+		    	for (j=2; j<=M; j++) {
+		    		v = y[j]
+		    		if (v==last_v) {
+		    			c++
+		    		}
+		    		else {
+		    			counts[++num_levels] = c
+		    			c = 1
+		    			if (save_keys) keys[num_levels , key_idx] = F2.keys[last_v, .]
+		    		}
+		    		last_v = v // swap?
+		    	}
+		    	if (c) {
+		    		counts[++num_levels] = c
+		    		if (save_keys) keys[num_levels , key_idx] = F2.keys[y[M], .]
+		    	}
+	    	}
+	    	else {
+	    		num_levels = num_levels + idx[M]
+	    	}
+
+	    	// Compute F.keys
+	    	if (save_keys) {
+	    		keys[| old_num_levels + 1 , 1 \ num_levels , num_keys1 |] = J(idx[M], 1, F1.keys[i, .])
+	    	}
+
+    	}
+    }
 
 	F = Factor()
-	F.num_levels = j
-	swap(F.keys, keys)
-	swap(F.levels, levels)
-	swap(F.counts, counts)
-	return(F)
+	F.num_obs = F1.num_obs
+    F.num_levels = num_levels
+    F.method = "join"
+    F.sortedby = F1.sortedby
+    F.varlist = tokens(vars)
+
+    if (!is_sorted) levels = F1.invsort(levels)
+    if (count_levels) counts = counts[| 1 \ num_levels |]
+    swap(F.levels, levels)
+    if (save_keys) {
+    	keys = keys[| 1 , 1 \ num_levels , . |]
+    	swap(F.keys, keys)
+    }
+    swap(F.counts, counts)
+
+    // Extra stuff (labels, etc)
+    return(F)
 }
 
 

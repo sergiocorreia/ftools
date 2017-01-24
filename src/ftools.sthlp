@@ -40,7 +40,8 @@
 {it:method}{cmd:,} 
 {it:sort_levels}{cmd:,} 
 {it:count_levels}{cmd:,} 
-{it:hash_ratio}]{cmd:)}
+{it:hash_ratio}{cmd:,}
+{it:save_keys}]{cmd:)}
 
 {p 8 16 2}
 {it:class Factor scalar}
@@ -50,7 +51,15 @@
 {it:method}{cmd:,} 
 {it:sort_levels}{cmd:,} 
 {it:count_levels}{cmd:,} 
-{it:hash_ratio}]{cmd:)}
+{it:hash_ratio}{cmd:,}
+{it:save_keys}]{cmd:)}
+
+{p 8 16 2}
+{it:class Factor scalar}
+{bind: }{cmd:join_factors(}{it:F1}{cmd:,}
+{it:F2} [{cmd:,}
+{it:count_levels}{cmd:,} 
+{it:save_keys}]{cmd:)}
 
 
 {marker arguments}{...}
@@ -65,6 +74,9 @@
 {synopt:{it:real} sort_levels}set to 0 under {it:hash1} to increase speed, but the new levels will not match the order of the varlist{p_end}
 {synopt:{it:real} count_levels}set to 0 under {it:hash0} to increase speed, but the {it:F.counts} vector will not be generated{p_end}
 {synopt:{it:real} hash_ratio}(advanced) size of the hash vector compared to the maximum number of keys (often num. obs.){p_end}
+{synopt:{it:real} save_keys}set to 0 to increase speed and save memory,
+but the matrix {it:F.keys} with the original values of the factors
+won't be created{p_end}
 
 {synopt:{it:string} data}transmorphic matrix with the group identifiers{p_end}
 {synopt:{it:string} integers_only}whether {it:data} is numeric and takes only {it:integers} or not (unless you are sure of the former, set it to 0){p_end}
@@ -89,8 +101,10 @@ We first need to create a Factor object:
 {synopt:{it:real} F{cmd:.num_levels}}number of levels (distinct values) of the factor{p_end}
 {synopt:{it:real} F{cmd:.num_obs}}number of observations of the sample used to create the factor ({cmd:c(N)} if touse was empty){p_end}
 {synopt:{it:real colvector} F{cmd:.levels}}levels of the factor; dimension {cmd:F.num_obs x 1}; range: {cmd:{1, ..., F.num_levels}}{p_end}
-{synopt:{it:transmorphic matrix} F{cmd:.keys}}values of the input varlist that correspond to the factor levels; dimension {cmd:F.num_levels x 1}; unordered if sort_levels==0{p_end}
-{synopt:{it:real vector} F{cmd:.counts}}frequencies of each level (in the sample set by touse); dimension {cmd:F.num_levels x 1}; will be empty if count_levels==0{p_end}
+{synopt:{it:transmorphic matrix} F{cmd:.keys}}values of the input varlist that correspond to the factor levels;
+dimension {cmd:F.num_levels x 1}; not created if save_keys==0; unordered if sort_levels==0{p_end}
+{synopt:{it:real vector} F{cmd:.counts}}frequencies of each level (in the sample set by touse);
+dimension {cmd:F.num_levels x 1}; will be empty if count_levels==0{p_end}
 
 {synopt:{it:string rowvector} F{cmd:.varlist}}name of variables used to create the factor{p_end}
 {synopt:{it:string rowvector} F{cmd:.varformats}}formats of the input variables{p_end}
@@ -184,7 +198,7 @@ faster ({it:O(N)} instead of {it:O(N log N)}.{p_end}
 {synopt:- }{cmd:F.extra} is an undocumented {help mf_asarray:asarray}
 that can be used to store additional information: {cmd:asarray(f.extra, "lorem", "ipsum")};
 and retrieve it: {cmd:ipsum = asarray(f.extra, "lorem")}{p_end}
-
+{synopt:- }{cmd:join_factors()} is particularly fast if the dataset is sorted in the same order as the factors{p_end}
 
 
 {marker description}{...}

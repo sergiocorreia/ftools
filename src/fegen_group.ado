@@ -82,7 +82,7 @@ program define fegen_group
 	}
 	else {
 		cap noi {
-			mata: F = factor("`varlist'", "`touse'", `verbose', "`method'", `sort', 0, `ratio')
+			mata: F = factor("`varlist'", "`touse'", `verbose', "`method'", `sort', 0, `ratio', 0)
 			mata: F.store_levels("`name'")
 		}
 		loc rc = c(rc)

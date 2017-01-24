@@ -16,7 +16,7 @@ program define fsort
 		assert "`: sort'" == ""
 	}
 
-	mata: F = factor("`varlist'", "`touse'", 1, "", 1, 1)
+	mata: F = factor("`varlist'", "`touse'", 1, "", 1, 1, 0)
 	mata: F.panelsetup()
 	if ("`generate'" != "") {
 		mata: F.store_levels("`generate'")
