@@ -28,7 +28,6 @@ program define Inner
 		gen byte `byvar' = 1
 		loc by `byvar'
 	}
-	_assert "`exp'" == "", msg("weights not currently supported")
 	loc merge = ("`merge'" != "")
 	loc verbose = ("`verbose'" != "")
 	
@@ -103,7 +102,7 @@ program define Inner
 
 	// Main loop: collapses data
 	if ("`anything'" != "") {
-		mata: f_collapse(F, fun_dict, query, "`keepvars'", `pool')
+		mata: f_collapse(F, fun_dict, query, "`keepvars'", `pool', "`exp'", "`weight'")
 	}
 	else {
 		clear

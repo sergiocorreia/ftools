@@ -28,6 +28,12 @@ void f_collapse(`Factor' F,
 	`Boolean'			merge
 	pointer(`DataCol')	scalar fp
 
+	if (args() < 6) wvar = ""
+	if (args() < 7) wtype = ""
+
+	assert(anyof(("", "aweight", "iweight", "fweight", "pweight"), wtype))
+
+
 	// Variable information
 	vars = tokens(vars)
 	assert(cols(vars) == cols(asarray_keys(query)'))
@@ -50,12 +56,12 @@ void f_collapse(`Factor' F,
 		F.levels = . // save memory
 	}
 
-	// Weights (not really implemented!)
+	// Weights (only partially implemented!)
 	if (wvar != "") {
 		weights = F.sort(st_data(., wvar))
 	}
 	else {
-		weights = J(0, 1, .) // empty colvector
+		weights = 1
 	}
 
 	// Load variables
@@ -142,10 +148,12 @@ void f_collapse(`Factor' F,
 			if (regexm(stat, "^p[0-9]+$")) {
 				q = strtoreal(substr(stat, 2, .)) / 100
 				fp = asarray(fun_dict, "quantile")
-				asarray(results_cstore, target, (*fp)(F, data, weights, q))
+				asarray(results_cstore, target, (*fp)(F, data, weights, wtype, q))
 			}
 			else {
-				asarray(results_cstore, target, (*fp)(F, data, weights))
+	timer_on(66)
+				asarray(results_cstore, target, (*fp)(F, data, weights, wtype))
+	timer_off(66)
 			}
 			++i_target
 		} 
