@@ -421,9 +421,9 @@ void Factor::__inner_drop(`Vector' idx)
 	}
 	data = __fload_data(vars, touse, touse_is_mask)
 
-
 	// Are the variables integers (so maybe we can use the fast hash)?
-	for (i = integers_only = 1; i <= cols(vars); i++) {
+	integers_only = 1
+	for (i=1; i<=cols(vars); i++) {
 		type = st_vartype(vars[i])
 		if (!anyof(("byte", "int", "long"), type)) {
 			integers_only = 0
@@ -433,7 +433,8 @@ void Factor::__inner_drop(`Vector' idx)
 	
 	F = _factor(data, integers_only, verbose, method,
 	            sort_levels, count_levels, hash_ratio,
-	            save_keys)
+	            save_keys,
+	            vars, touse)
 	F.sortedby = st_macroexpand("`" + ": sortedby" + "'")
 	F.is_sorted = strpos(F.sortedby, invtokens(vars))==1
 	F.varlist = vars
@@ -470,16 +471,18 @@ void Factor::__inner_drop(`Vector' idx)
                  `Boolean' sort_levels,
                  `Boolean' count_levels,
                  `Integer' hash_ratio,
-                 `Boolean' save_keys)
+                 `Boolean' save_keys,
+                 `Varlist' vars, 			// hack
+                 `DataCol' touse)		 	// hack
 {
-	`Factor'				F
+	`Factor'				F, F1, F2
 	`Integer'				num_obs, num_vars
 	`Integer'				i
 	`Integer'				limit0
 	`Integer'				size0, size1, dict_size, max_numkeys1
 	`Matrix'				min_max
 	`RowVector'				delta
-	`String'				msg
+	`String'				msg, base_method
 
 	if (integers_only == .) integers_only = 0
 	if (verbose == .) verbose = 0
@@ -491,6 +494,7 @@ void Factor::__inner_drop(`Vector' idx)
 	// Note: Pick a sensible hash ratio; smaller means more collisions
 	// but faster lookups and less memory usage
 
+	base_method = method
 	msg = "invalid method"
 	assert_msg(anyof(("mata", "hash0", "hash1"), method), msg)
 
@@ -547,13 +551,23 @@ void Factor::__inner_drop(`Vector' idx)
 	dict_size = (method == "hash0") ? size0 : size1
 	// Mata hard coded limit! (2,147,483,647 rows)
 	assert_msg(dict_size <= 2 ^ 31, "dict size exceeds Mata limits")
- 
-	if (method == "hash0") {
+
+	// Hack: alternative approach
+	if (base_method == "mata" & method == "hash1" & integers_only & num_vars > 1 & cols(vars)==num_vars) {
+		F1 = factor(vars[1], touse, verbose, "hash0", sort_levels, 1, ., save_keys)
+		F2 = factor(vars[2..num_vars], touse, verbose, "mata", sort_levels, count_levels, ., save_keys)
+		F = join_factors(F1, F2, count_levels, save_keys)
+		F1 = F2 = Factor() // clear
+		method = "join"
+	}
+	else if (method == "hash0") {
 		F = __factor_hash0(data, verbose, dict_size, count_levels, min_max, save_keys)
 	}
 	else {
 		F = __factor_hash1(data, verbose, dict_size, sort_levels, max_numkeys1, save_keys)
+		if (!count_levels) F.counts = J(0, 1, .)
 	}
+	
 	F.method = method
 
 	F.num_obs = num_obs
@@ -862,13 +876,13 @@ void Factor::__inner_drop(`Vector' idx)
 	`Vector'				Y, p, y, levels, counts, idx
 	`DataFrame'				keys
 
-	`Matrix' tmp
-	// If the dataset is sorted by F1+F2, we are good
-	// To handle this, store the sort order when creating F1 and F2
-	// and ensure it startswith the vars of F1+F2
-
 	if (save_keys == .) save_keys = 1
 	if (count_levels == .) count_levels = 1
+
+	//if (save_keys & (F1.keys == J(0, 1, .) | F2.keys == J(0, 1, .))) {
+	if (save_keys & !( rows(F1.keys) & rows(F2.keys)) ) {
+		_error(123, "join_factors() with save_keys==1 requires the -keys- vector")
+	}
 
 	vars = invtokens((F1.varlist, F2.varlist))
 	is_sorted = (F1.sortedby == F2.sortedby) & (strpos(F2.sortedby, vars)==1)

@@ -72,7 +72,8 @@
 {synopt:{it:real} verbose}1 to display debug information{p_end}
 {synopt:{it:string} method}hashing method: mata, hash0, hash1, hash2; default is {it:mata} (auto-choose){p_end}
 {synopt:{it:real} sort_levels}set to 0 under {it:hash1} to increase speed, but the new levels will not match the order of the varlist{p_end}
-{synopt:{it:real} count_levels}set to 0 under {it:hash0} to increase speed, but the {it:F.counts} vector will not be generated{p_end}
+{synopt:{it:real} count_levels}set to 0 under {it:hash0} to increase speed, but the {it:F.counts} vector will not be generated
+so F{cmd:.panelsetup()}, F{cmd:.drop_obs()}, and related methods will not be available{p_end}
 {synopt:{it:real} hash_ratio}(advanced) size of the hash vector compared to the maximum number of keys (often num. obs.){p_end}
 {synopt:{it:real} save_keys}set to 0 to increase speed and save memory,
 but the matrix {it:F.keys} with the original values of the factors
@@ -199,6 +200,7 @@ faster ({it:O(N)} instead of {it:O(N log N)}.{p_end}
 that can be used to store additional information: {cmd:asarray(f.extra, "lorem", "ipsum")};
 and retrieve it: {cmd:ipsum = asarray(f.extra, "lorem")}{p_end}
 {synopt:- }{cmd:join_factors()} is particularly fast if the dataset is sorted in the same order as the factors{p_end}
+{synopt:- }{cmd:factor()} will call {cmd:join_factors()} if appropriate{p_end}
 
 
 {marker description}{...}
