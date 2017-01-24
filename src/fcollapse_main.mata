@@ -151,9 +151,7 @@ void f_collapse(`Factor' F,
 				asarray(results_cstore, target, (*fp)(F, data, weights, wtype, q))
 			}
 			else {
-	timer_on(66)
 				asarray(results_cstore, target, (*fp)(F, data, weights, wtype))
-	timer_off(66)
 			}
 			++i_target
 		} 
