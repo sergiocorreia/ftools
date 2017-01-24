@@ -86,11 +86,11 @@ mata set matastrict on
 `Vector' aggregate_mean(`Factor' F, `Vector' data, `Vector' weights, `String' wtype)
 {
 	if (wtype == "") {
-		return(editmissing( aggregate_sum(F, data, 1, "") :/ aggregate_count(F, data, 1, ""), 0))
+		return( aggregate_sum(F, data, 1, "") :/ aggregate_count(F, data, 1, "") )
 	}
 	else {
 		// http://www.statalist.org/forums/forum/general-stata-discussion/general/289901-collapse-and-weights
-		return(editmissing( aggregate_sum(F, data, weights, "iweight") :/ aggregate_count(F, data, weights, "iweight"), 0))
+		return( aggregate_sum(F, data, weights, "iweight") :/ aggregate_count(F, data, weights, "iweight") )
 	}
 
 	// Older:
@@ -241,7 +241,7 @@ mata set matastrict on
 	        tmp_data = panelsubmatrix(data, i, F.info)
 	        tmp_data = select(tmp_data, tmp_data :< .)
 	        if (rows(tmp_data) == 1) results[i] = 0
-	        if (rows(tmp_data) == 0) continue
+	        if (rows(tmp_data) <= 1) continue
 	        tmp_iqr = _mm_quantile(tmp_data, 1, P, 0)
 	        results[i] = tmp_iqr[2] - tmp_iqr[1]
 		}
@@ -253,7 +253,7 @@ mata set matastrict on
 	        tmp_weights = select(tmp_weights, tmp_data :< .)
 	        tmp_data = select(tmp_data, tmp_data :< .)
 	        if (rows(tmp_data) == 1) results[i] = 0
-	        if (rows(tmp_data) == 0) continue
+	        if (rows(tmp_data) <= 1) continue
 	        tmp_iqr = _mm_quantile(tmp_data, tmp_weights, P, 0)
 	        results[i] = tmp_iqr[2] - tmp_iqr[1]
 		}
