@@ -1,4 +1,4 @@
-*! version 1.9.0 10jan2017
+*! version 2.3.0 24jan2017
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -17,6 +17,7 @@ program define Inner
 		[REGister(namelist local)] /// additional aggregation functions
 		[pool(numlist integer missingok max=1 >0 min=1)] /// memory-related
 		[MERGE] /// adds back collapsed vars into dataset; replaces egen
+		[SMART] /// allow calls to collapse instead of fcollapse
 		[Verbose] // debug info
 	
 	// Parse
@@ -29,8 +30,27 @@ program define Inner
 		loc by `byvar'
 	}
 	loc merge = ("`merge'" != "")
+	loc smart = ("`smart'" != "") & !`merge' & ("`freqvar'" == "") & ("`register'" == "") & ("`anything'" != "") & ("`by'" != "")
 	loc verbose = ("`verbose'" != "")
-	
+
+	if (`smart') {
+		gettoken first_by _ : by
+		loc ok = strpos("`: sortedby'", "`first_by'") == 1
+		if (!`ok' & c(N)>1) {
+			tempvar notok
+			gen byte `notok' = `first_by' < `first_by'[_n-1]
+			cou if `notok' in 2/`'c(N)'
+			loc ok = r(N)==0
+			drop `notok'
+		}
+		if (`ok') {
+			if (`verbose') di as text "data already sorted; calling -collapse- due to -smart- option"
+			if ("`weight'" != "") loc eqsign =
+			collapse `anything' `if' `in' [`weight'`eqsign'`exp'] , by(`by') `fast' `cw'
+			exit
+		}
+	}
+
 	if ("`anything'" == "") {
 		if ("`freqvar'"=="") {
 			di as error "need at least a varlist or a freq. option"

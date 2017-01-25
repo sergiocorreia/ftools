@@ -79,6 +79,8 @@ it is much more efficient than {cmd:egen} and that combining {cmd:collapse} with
 saves speed but leaves the data in an unusable state shall the
 user press {hi:Break}
 {p_end}
+{synopt :{opt smart}}invoke {cmd:collapse} if the data is already sorted (in which case {cmd:collapse} might be faster)
+{p_end}
 {synopt :{cmd:freq}[{cmd:(}{newvar}{cmd:)}]}store
 the raw observation count (similar to {help contract}).
 If not indicated, the name of the new variable will be {it:_freq}

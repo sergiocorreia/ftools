@@ -425,10 +425,16 @@ void Factor::__inner_drop(`Vector' idx)
 	integers_only = 1
 	for (i=1; i<=cols(vars); i++) {
 		type = st_vartype(vars[i])
-		if (!anyof(("byte", "int", "long"), type)) {
-			integers_only = 0
-			break
+		if (anyof(("byte", "int", "long"), type)) {
+			continue
 		}
+		else if (anyof(("float", "double"), type)) {
+			if (round(data[., i])==data[., i]) {
+				continue
+			}
+		}
+		integers_only = 0
+		break
 	}
 	
 	F = _factor(data, integers_only, verbose, method,
@@ -437,6 +443,9 @@ void Factor::__inner_drop(`Vector' idx)
 	            vars, touse)
 	F.sortedby = st_macroexpand("`" + ": sortedby" + "'")
 	F.is_sorted = strpos(F.sortedby, invtokens(vars))==1
+	if (!F.is_sorted & integers_only & cols(data)==1) {
+		F.is_sorted = all( data :<= (data[| 2, 1 \ rows(data), 1 |] \ .) )
+	}
 	F.varlist = vars
 	if (touse_is_mask) F.touse = touse
 	F.varformats = F.varlabels = F.varvaluelabels = F.vartypes = J(1, cols(vars), "")

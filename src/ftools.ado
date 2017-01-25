@@ -1,4 +1,4 @@
-*! version 2.2.0 24jan2017
+*! version 2.3.0 24jan2017
 * This file is just used to compile ftools.mlib
 
 program define ftools
