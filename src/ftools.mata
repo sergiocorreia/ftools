@@ -578,9 +578,9 @@ void Factor::__inner_drop(`Vector' idx)
 	}
 	if (verbose) {
 		msg = "{txt}(obs: {res}%s{txt}; levels: {res}%s{txt};"
-		printf(msg, strofreal(num_obs, "%12.0g"), strofreal(F.num_levels))
+		printf(msg, strofreal(num_obs, "%12.0gc"), strofreal(F.num_levels, "%12.0gc"))
 		msg = "{txt} method: {res}%s{txt}; dict size: {res}%s{txt})\n"
-		printf(msg, method, method == "join" ? "n/a" : strofreal(dict_size, "%12.0g"))
+		printf(msg, method, method == "join" ? "n/a" : strofreal(dict_size, "%12.0gc"))
 	}
 	F.is_sorted = 0
 	return(F)
