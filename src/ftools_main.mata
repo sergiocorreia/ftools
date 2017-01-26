@@ -261,6 +261,7 @@ class Factor
 	}
 
 	num_dropped_obs = rows(idx)
+	if (num_dropped_obs==0) return
 
 	// Decrement F.counts to reflect dropped observations
 	offset = levels[idx] // warning: variable will be reused later
@@ -287,14 +288,18 @@ class Factor
 
 	// Levels that have a count of 0 are now dropped
 	dropped_levels = selectindex(!counts) // select i where counts[i] == 0
-	num_dropped_levels = rows(dropped_levels)
+	// if we use rows() instead of length(), dropped_levels would be J(1,0,.) instead of J(0,1,.)
+	// and we get num_dropped_levels=1 instead of num_dropped_levels=0
+	num_dropped_levels = length(dropped_levels)
 
 	// Need to decrement F.levels to reflect that we have fewer levels
 	// (This is the trickiest part)
 	offset = J(num_levels, 1, 0)
-	offset[dropped_levels] = J(num_dropped_levels, 1, 1)
-	offset = runningsum(offset)
-	levels = levels - offset[levels]
+	if (offset != 0) {
+		offset[dropped_levels] = J(num_dropped_levels, 1, 1)
+		offset = runningsum(offset)
+		levels = levels - offset[levels]
+	}
 
 	// Remove the obs of F.levels that were dropped
 	levels[idx] = J(num_dropped_obs, 1, .)
