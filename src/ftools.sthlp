@@ -200,7 +200,9 @@ faster ({it:O(N)} instead of {it:O(N log N)}.{p_end}
 that can be used to store additional information: {cmd:asarray(f.extra, "lorem", "ipsum")};
 and retrieve it: {cmd:ipsum = asarray(f.extra, "lorem")}{p_end}
 {synopt:- }{cmd:join_factors()} is particularly fast if the dataset is sorted in the same order as the factors{p_end}
-{synopt:- }{cmd:factor()} will call {cmd:join_factors()} if appropriate{p_end}
+{synopt:- }{cmd:factor()} will call {cmd:join_factors()} if appropriate
+(2+ integer variables; 10,000+ obs; and method=hash1)
+{p_end}
 
 
 {marker description}{...}

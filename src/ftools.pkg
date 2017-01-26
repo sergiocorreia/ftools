@@ -30,9 +30,9 @@ d KW: sort
 d KW: factor variables
 d KW: mata
 d
-d Requires: Stata version 11.2
+d Requires: Stata version 13.0
 d
-d Distribution-Date: 20160912
+d Distribution-Date: 20170125
 d
 
 f ftools.ado
@@ -51,7 +51,10 @@ f fmerge.ado
 f join.sthlp
 f fmerge.sthlp
 
-f ftools_type_aliases.mata
 f ftools.mata
+f ftools_type_aliases.mata
+f ftools_main.mata
+f ftools_bipartite.mata
+
 f fcollapse_main.mata
 f fcollapse_functions.mata
