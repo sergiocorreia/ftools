@@ -26,7 +26,7 @@ mata:
 				   `Factor' F12_2,
 				   `Vector' queue,
 				   `Vector' stack,
-				   `Vector' connected_group,
+				   `Vector' subgraphs,
 				   `Boolean' verbose)
 {
 	`Integer' N1 			// Number of firms
@@ -42,6 +42,7 @@ mata:
 	`Integer' last_i		// use to fill out the queue
 	`Integer' start_j		// use to search for firms to start graph enumeration
 	`Integer' num_subgraphs
+	`Boolean' save_subgraphs
 	
 	`Vector' counter1
 	`Vector' counter2
@@ -49,8 +50,8 @@ mata:
 	`Vector' keys2_by_1
 	`Vector' done1
 	`Vector' done2
-
 	`Matrix' matches // list of CEOs that matched with firm j (or viceversa)
+
 
 	if (verbose) printf("{txt} - initializing zigzag iterator for bipartite graphs\n")
 
@@ -58,8 +59,9 @@ mata:
 	F12_1.panelsetup()
 	F12_2.panelsetup()
 	
-	// F12 must be created from F1.levels and F2.levels (not the original keys)
-	// This is set automatically by join_factors() with the correct flag
+	// F12 must be created from F1.levels and F2.levels (not from the original keys)
+	// This is set automatically by join_factors() with the correct flag:
+	//			F12 = join_factors(F1, F2, ., ., 1)
 	// But you can also run 
 	//			F12 = _factor( (F1.levels, F2.levels) )
 	//			asarray(F12.extra, "levels_as_keys", 1)
@@ -81,6 +83,12 @@ mata:
 	keys2_by_1 = F12_1.sort(F12.keys[., 2])
 	done1 = J(N1, 1, 0) // if a firm is already on the queue
 	done2 = J(N2, 1, 0) // if a CEO is already on the queue
+
+	// If subgraphs (mobility groups) is anything BUT zero, we will save them
+	save_subgraphs = (subgraphs != 0)
+	if (save_subgraphs) {
+		subgraphs = J(N2, 1, .)
+	}
 
 	// Use -j- for only for firms and -k- only for CEOs
 	// Use -i_queue- to iterate over the queue and -i_stack- over the stack
@@ -144,6 +152,7 @@ mata:
 				}
 			}
 			stack[++i_stack] = 0
+			if (save_subgraphs) subgraphs[k] = num_subgraphs
 		}
 	}
 
@@ -155,6 +164,10 @@ mata:
 	assert(allof(done2, 1))
 	assert(!missing(queue))
 	assert(!missing(stack))
+
+	if (save_subgraphs) {
+		subgraphs = subgraphs[F2.levels]
+	}
 	
 	if (verbose) printf("{txt}   (%g disjoint subgraphs found)\n", j)
 	return(num_subgraphs)

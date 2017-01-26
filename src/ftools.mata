@@ -5,7 +5,7 @@
 
 
 // Miscellanea --------------------------------------------------------------
-	loc debug 1
+	loc debug 0
 	loc debug_on = cond(`debug', "on", "off")
 	loc debug_off = cond(`debug', "off", "on")
 	
