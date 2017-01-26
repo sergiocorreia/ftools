@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.9.0 10jan2017}{...}
+{* *! version 2.4.0 25jan2017}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
 {vieweralsosee "join" "help join"}{...}
@@ -15,8 +15,10 @@
 {vieweralsosee "moremata" "help moremata"}{...}
 {vieweralsosee "reghdfe" "help reghdfe"}{...}
 {viewerjumpto "Syntax" "ftools##syntax"}{...}
+{viewerjumpto "Creation" "ftools##creation"}{...}
 {viewerjumpto "Properties and methods" "ftools##properties"}{...}
 {viewerjumpto "Description" "ftools##description"}{...}
+{viewerjumpto "Usage" "ftools##usage"}{...}
 {viewerjumpto "Example" "ftools##example"}{...}
 {viewerjumpto "Remarks" "ftools##remarks"}{...}
 {viewerjumpto "Source code" "ftools##source"}{...}
@@ -59,7 +61,8 @@
 {bind: }{cmd:join_factors(}{it:F1}{cmd:,}
 {it:F2} [{cmd:,}
 {it:count_levels}{cmd:,} 
-{it:save_keys}]{cmd:)}
+{it:save_keys}{cmd:,}
+{it:levels_as_keys}]{cmd:)}
 
 
 {marker arguments}{...}
@@ -69,30 +72,67 @@
 {p2coldent:* {it:string} varnames}names of variables that identify the factors{p_end}
 {synopt:{it:string} touse}name of dummy {help mark:touse} variable{p_end}
 {p2coldent:}{bf:note:} you can also pass a vector with the obs. index (i.e. the first argument of {cmd:st_data()}){p_end}
+{synopt:{it:string} data}transmorphic matrix with the group identifiers{p_end}
+
+{synopt:{bf:Advanced options:}}{p_end}
 {synopt:{it:real} verbose}1 to display debug information{p_end}
 {synopt:{it:string} method}hashing method: mata, hash0, hash1, hash2; default is {it:mata} (auto-choose){p_end}
 {synopt:{it:real} sort_levels}set to 0 under {it:hash1} to increase speed, but the new levels will not match the order of the varlist{p_end}
 {synopt:{it:real} count_levels}set to 0 under {it:hash0} to increase speed, but the {it:F.counts} vector will not be generated
 so F{cmd:.panelsetup()}, F{cmd:.drop_obs()}, and related methods will not be available{p_end}
-{synopt:{it:real} hash_ratio}(advanced) size of the hash vector compared to the maximum number of keys (often num. obs.){p_end}
+{synopt:{it:real} hash_ratio}size of the hash vector compared to the maximum number of keys (often num. obs.){p_end}
 {synopt:{it:real} save_keys}set to 0 to increase speed and save memory,
 but the matrix {it:F.keys} with the original values of the factors
 won't be created{p_end}
-
-{synopt:{it:string} data}transmorphic matrix with the group identifiers{p_end}
 {synopt:{it:string} integers_only}whether {it:data} is numeric and takes only {it:integers} or not (unless you are sure of the former, set it to 0){p_end}
+{synopt:{it:real} levels_as_keys}if set to 1,
+{cmd:join_factors()} will use the levels of F1 and F2
+as the keys (as the data) when creating F12{p_end}
 {p2colreset}{...}
+
+
+{marker creation}{...}
+{title:Creating factor objects}
+
+{pstd}(optional) First, you can declare the Factor object:
+
+{p 8 8 2}
+{cmd:class Factor scalar}{it: F}{break}
+
+{pstd}Then, you can create a factor from one or more categorical variables:
+
+{p 8 8 2}
+{it:F }{cmd:=}{bind: }{cmd:factor(}{it:varnames}{cmd:)}
+
+{pstd}
+If the categories are already in Mata
+({cmd:data = st_data(., varnames)}), you can do:
+
+{p 8 8 2}
+{it:F }{cmd:=}{bind: }{cmd:_factor(}{it:data}{cmd:)}
+
+{pstd}
+You can also combine two factors ({it:F1} and {it:F2}):
+
+{p 8 8 2}
+{it:F }{cmd:=}{bind: }{cmd:join_factors(}{it:F1}{cmd:,} {it:F2}{cmd:)}
+
+{pstd}
+Note that the above is exactly equivalent (but faster) than:
+
+{p 8 8 2}
+{it: varnames} {cmd:= invtokens((}{it:F1.varnames}{cmd:,} {it:F2.varnames}{cmd:))}{break}
+{it:F} {cmd:=} {cmd:factor(}{it:varnames}{cmd:)}
+
+{pstd}
+If {it:levels_as_keys==1}, it is equivalent to:
+
+{p 8 8 2}
+{it:F }{cmd:=}{bind: }{cmd:_factor((}{it:F1.levels}{cmd:,} {it:F2.levels}{cmd:))}
 
 
 {marker properties}{...}
 {title:Properties and Methods}
-
-{pstd}
-We first need to create a Factor object:
-
-{p 8 8 2}
-{it:class Factor scalar F} // Optional variable declaration{break}
-{it:F }{cmd:=}{bind: }{cmd:factor(}{it:varnames}{cmd:)} // Use {it:F=_factor(..)} if creating from a Mata vector or matrix instead of {it:varnames}
 
 {marker arguments}{...}
 {synoptset 38 tabbed}{...}
@@ -173,12 +213,12 @@ if {it:F.counts} is always 1
 {synopt:{it:transmorphic matrix} F{cmd:.sort(}{it:data}{cmd:)}}equivalent to
 {cmd:data[F.p, .]}
 but calls {cmd:F.panelsetup()} if required; {it:data} is a {it:transmorphic matrix}{p_end}
+{synopt:{it:transmorphic matrix} F{cmd:.invsort(}{it:data}{cmd:)}}equivalent to
+{cmd:data[invorder(F.p), .]}, so it undoes a previous sort operation. Note that {cmd:F.invsort(F.sort(x))==x}. Also, after used it fills the vector {cmd:F.inv_p = invorder(F.p)} so the operation can be repeated easily.
+{p_end}
 {synopt:{it:void} F{cmd:._sort(}{it:data}{cmd:)}}in-place version of
 {cmd:.sort()};
 slower but uses less memory, as it's based on {cmd:_collate()}{p_end}
-{synopt:{it:void} F{cmd:.invsort(}{it:data}{cmd:)}}equivalent to
-{cmd:data[invorder(F.p), .]}, so it undoes a previous sort operation. Note that {cmd:F.invsort(F.sort(x))==x}. Also, after used it fills the vector {cmd:F.inv_p = invorder(F.p)} so the operation can be repeated easily.
-{p_end}
 {synopt:{it:real vector} F{cmd:.info}}equivalent to {help mf_panelsetup:panelsetup()}
 (returns a {it:(num_levels X 2)} matrix with start and end positions of each level/panel).{p_end}
 {p2coldent:}{bf:note:} instead of using {cmd:F.info} directly, use panelsubmatrix():
@@ -195,7 +235,6 @@ faster ({it:O(N)} instead of {it:O(N log N)}.{p_end}
 {synoptset 3 tabbed}{...}
 {synopt:- }If you just downloaded the package and want to use the Mata functions directly (instead of the Stata commands), run {stata ftools} once to, which creates the Mata library if needed.{p_end}
 {synopt:- }To force compilation of the Mata library, type {stata ftools, compile}{p_end}
-{synopt:- }If you already have your data in Mata, use {cmd:F = _factor(data)} instead of {cmd:F = factor(varlist)}{p_end}
 {synopt:- }{cmd:F.extra} is an undocumented {help mf_asarray:asarray}
 that can be used to store additional information: {cmd:asarray(f.extra, "lorem", "ipsum")};
 and retrieve it: {cmd:ipsum = asarray(f.extra, "lorem")}{p_end}
@@ -437,8 +476,10 @@ Alternatively, {it:hash1} is used, which adds {browse "https://www.wikiwand.com/
 {title:Source code}
 
 {pstd}
+{view ftools.mata, adopath asis:ftools.mata};
 {view ftools_type_aliases.mata, adopath asis:ftools_type_aliases.mata};
-{view ftools.mata, adopath asis:ftools.mata}
+{view ftools_main.mata, adopath asis:ftools_main.mata};
+{view ftools_bipartite.mata, adopath asis:ftools_bipartite.mata}
 {p_end}
 
 {pstd}
@@ -449,7 +490,8 @@ Also, the latest version is available online: {browse "https://github.com/sergio
 {title:Author}
 
 {pstd}Sergio Correia{break}
-Board of Governors of the Federal Reserve System, USA{break}
+{break}
+{browse "http://scorreia.com"}{break}
 {browse "mailto:sergio.correia@gmail.com":sergio.correia@gmail.com}{break}
 {p_end}
 
