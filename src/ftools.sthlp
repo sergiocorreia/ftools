@@ -21,6 +21,7 @@
 {viewerjumpto "Usage" "ftools##usage"}{...}
 {viewerjumpto "Example" "ftools##example"}{...}
 {viewerjumpto "Remarks" "ftools##remarks"}{...}
+{viewerjumpto "Experimental/advanced" "ftools##experimental"}{...}
 {viewerjumpto "Source code" "ftools##source"}{...}
 {viewerjumpto "Author" "ftools##contact"}{...}
 
@@ -470,6 +471,32 @@ The program tries to pick the hash function that best matches the dataset and in
 For instance, if the input variables have a small range of possible values (e.g. if they are of {it:byte} type), we select the {it:hash0} method, which uses a (non-minimal) perfect hashing but might consume a lot of memory.
 Alternatively, {it:hash1} is used, which adds {browse "https://www.wikiwand.com/en/Open_addressing":open addressing} to Mata's
 {help mf_hash1:hash1} function to create a form of open addressing (that is more efficient than Mata's {help mf_asarray:asarray}).
+
+
+{marker experimental}{...}
+{title:Experimental/advanced functions}
+
+{p 8 16 2}
+{it:real scalar}
+{bind: }{cmd:init_zigzag(}{it:F1}{cmd:,}
+{it:F2}{cmd:,}
+{it:F12}{cmd:,}
+{it:F12_1}{cmd:,}
+{it:F12_2}{cmd:,}
+{it:queue}{cmd:,} 
+{it:stack}{cmd:,}
+{it:subgraph_id}{cmd:,}
+{it:verbose}{cmd:)}
+
+{pstd}Notes:
+
+{synoptset 3 tabbed}{...}
+{synopt:- }Given the bipartite graph formed by F1 and F2,
+the function returns the number of disjoin subgraphs (mobility groups){p_end}
+{synopt:- }F12 must be set with levels_as_keys==1{p_end}
+{synopt:- }For F12_1 and F12_2, you can set save_keys==0{p_end}
+{synopt:- }The function fills three useful vectors: queue, stack and subgraph_id{p_end}
+{synopt:- }If subgraph_id==0, it the id vector will not be created{p_end}
 
 
 {marker source}{...}

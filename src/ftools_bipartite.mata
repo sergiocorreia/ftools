@@ -16,17 +16,17 @@ mata:
 //   stack: for each firm/CEO, the list of nodes it connects to
 //          note: stacks are zero-separated
 //   
-//   If we only care about -num_subgraphs-, call it with stack==queue==.
+//   If we only care about -num_subgraph_id-, call it with stack==queue==.
 // --------------------------------------------------------------------------
 
-`Real' init_zigzag(`Factor' F1,
+`Real' init_bipartite_zigzag(`Factor' F1,
                    `Factor' F2,
 				   `Factor' F12,
 				   `Factor' F12_1,
 				   `Factor' F12_2,
 				   `Vector' queue,
 				   `Vector' stack,
-				   `Vector' subgraphs,
+				   `Vector' subgraph_id,
 				   `Boolean' verbose)
 {
 	`Integer' N1 			// Number of firms
@@ -84,10 +84,10 @@ mata:
 	done1 = J(N1, 1, 0) // if a firm is already on the queue
 	done2 = J(N2, 1, 0) // if a CEO is already on the queue
 
-	// If subgraphs (mobility groups) is anything BUT zero, we will save them
-	save_subgraphs = (subgraphs != 0)
+	// If subgraph_id (mobility groups) is anything BUT zero, we will save them
+	save_subgraphs = (subgraph_id != 0)
 	if (save_subgraphs) {
-		subgraphs = J(N2, 1, .)
+		subgraph_id = J(N2, 1, .)
 	}
 
 	// Use -j- for only for firms and -k- only for CEOs
@@ -152,7 +152,7 @@ mata:
 				}
 			}
 			stack[++i_stack] = 0
-			if (save_subgraphs) subgraphs[k] = num_subgraphs
+			if (save_subgraphs) subgraph_id[k] = num_subgraphs
 		}
 	}
 
@@ -166,7 +166,7 @@ mata:
 	assert(!missing(stack))
 
 	if (save_subgraphs) {
-		subgraphs = subgraphs[F2.levels]
+		subgraph_id = subgraph_id[F2.levels]
 	}
 	
 	if (verbose) printf("{txt}   (%g disjoint subgraphs found)\n", j)
