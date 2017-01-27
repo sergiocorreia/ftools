@@ -27,7 +27,8 @@ mata:
 				   `Vector' queue,
 				   `Vector' stack,
 				   `Vector' subgraph_id,
-				   `Boolean' cores,
+				   `Vector' cores,
+				   `Vector' drop_order,
 				   `Boolean' verbose)
 {
 	`Integer' N1 			// Number of firms
@@ -172,12 +173,13 @@ mata:
 		subgraph_id = subgraph_id[F2.levels]
 	}
 	
-	if (verbose) printf("{txt}   (%g disjoint subgraphs found)\n", j)
+	if (verbose) printf("{txt} - disjoint subgraphs found: {res}%g{txt}\n", j)
 
 	// Compute vertex core numbers (for k-core prunning)
-	compute_core_numbers(F12_1, F12_2, keys1_by_2, keys2_by_1, 0, 1)
+	cores = compute_core_numbers(F1, F2, F12_1, F12_2, keys1_by_2, keys2_by_1, drop_order=., 1)
+	//((F1.keys \ -F2.keys)), cores, J(rows(cores), 1, .), drop_order
 
-
+	if (verbose) printf("{txt} - 1-core vertices found:{res}{txt}\n")
 
 	return(num_subgraphs)
 }
@@ -188,7 +190,9 @@ mata:
 // This allows us to run k-core prunning
 // Based on: https://arxiv.org/abs/cs/0310049
 
-`Vector' compute_core_numbers(`Factor' F12_1,
+`Vector' compute_core_numbers(`Factor' F1,
+                              `Factor' F2,
+                              `Factor' F12_1,
                               `Factor' F12_2,
                               `Vector' keys1_by_2,
                               `Vector' keys2_by_1,
@@ -208,15 +212,19 @@ mata:
 
 	`Factor'				Fbin
 	`Boolean'				is_firm
-	`Integer'				N, M, ND, N1, j
+	`Integer'				N, M, ND, N1, j, jj
 	`Integer'				i_v, i_u, i_w
 	`Integer'				pv, pu, pw
 	`Integer'				v, u, w
 	`Integer'				dv, du
 	`Vector'				bin, deg, pos, invpos, vert, neighbors
 
+	assert(rows(F1.keys))
+	assert(rows(F2.keys))
 	assert(F12_1.panel_is_setup==1)
 	assert(F12_2.panel_is_setup==1)
+
+	if (verbose) printf("{txt} - computing core numbers for each vertex\n")
 	
 	N1 = F12_1.num_levels
 	N = F12_1.num_levels + F12_2.num_levels
@@ -234,8 +242,9 @@ mata:
 	pos = Fbin.p
 	invpos = invorder(Fbin.p)
 
-	vert = Fbin.sort(F12_1.keys \ -F12_2.keys)
-	
+	//vert = data[p]
+	vert = Fbin.sort((F1.keys \ -F2.keys))
+
 	for (i_v=1; i_v<=N; i_v++) {
 		v = vert[i_v]
 		is_firm = (v > 0)
@@ -245,14 +254,15 @@ mata:
 		
 		for (j=1; j<=M; j++) {	
 			pv = pos[i_v]
-			pu = is_firm ? N1 + neighbors[j] : neighbors[j] // is_firm is *not* for the neighbor
+			jj = neighbors[j]
+			pu = is_firm ? N1 + jj : jj // is_firm is *not* for the neighbor
 			dv = deg[pv]
 			du = deg[pu]
 		
 			if (dv < du) {
 				i_w = bin[du]
 				w = vert[i_w]
-				u = is_firm ? -j : j // is_firm is *not* for the neighbor
+				u = is_firm ? -jj : jj // is_firm is *not* for the neighbor
 				if (u != w) {
 					pw = pos[i_w]
 					i_u = invpos[pu]
@@ -269,7 +279,8 @@ mata:
 			}
 		} // end for neighbor u (u ~ v)
 	} // end for each node v
-
+	
+	swap(drop_order, vert)
 	return(deg)
 	// ((F1.keys \ F2.keys), (F12_1.keys \ -F12_2.keys))[selectindex(deg:==1), .]
 }
