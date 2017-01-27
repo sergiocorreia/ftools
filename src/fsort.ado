@@ -1,6 +1,6 @@
 *! version 1.9.0 10jan2017
 program define fsort
-	syntax varlist [if] [in] , [Generate(name)]
+	syntax varlist [if] [in] , [Generate(name)] [Verbose]
 	
 	* Apply Andrew Maurer's trick:
 	* http://www.statalist.org/forums/forum/general-stata-discussion/mata/172131-big-data-recalling-previous-sort-orders
@@ -16,7 +16,9 @@ program define fsort
 		assert "`: sort'" == ""
 	}
 
-	mata: F = factor("`varlist'", "`touse'", 1, "", 1, 1, 0)
+	loc verbose = ("`verbose'" != "")
+
+	mata: F = factor("`varlist'", "`touse'", `verbose', "", ., ., ., 0)
 	mata: F.panelsetup()
 	if ("`generate'" != "") {
 		mata: F.store_levels("`generate'")

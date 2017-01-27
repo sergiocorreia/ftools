@@ -53,6 +53,7 @@ f fmerge.sthlp
 
 f ftools.mata
 f ftools_type_aliases.mata
+f ftools_common.mata
 f ftools_main.mata
 f ftools_bipartite.mata
 

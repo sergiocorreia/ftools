@@ -29,6 +29,9 @@
 	findfile "ftools_type_aliases.mata"
 	include "`r(fn)'"
 
+	findfile "ftools_common.mata"
+	include "`r(fn)'"
+
 	findfile "ftools_main.mata"
 	include "`r(fn)'"
 
