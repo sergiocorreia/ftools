@@ -9,9 +9,11 @@ program define ftools
 	if inlist("`options'", "check", "compile") {
 		if ("`options'"=="compile") loc force "force"
 		ms_get_version ftools // from moresyntax package; save local package_version
+		// maybe just add all fns...
 		loc functions Factor*() factor*() _factor*() join_factors() ///
 					  __fload_data() __fstore_data() ftools*() __factor*() ///
-					  init_bipartite_zigzag() bin_order() assert_msg()
+					  init_bipartite_zigzag() bin_order() assert_msg() ///
+					  compute_core_numbers()
 		ms_compile_mata, package(ftools) version(`package_version') `force' fun(`functions') verbose // debug
 	}
 	else {

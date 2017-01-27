@@ -27,6 +27,7 @@ mata:
 				   `Vector' queue,
 				   `Vector' stack,
 				   `Vector' subgraph_id,
+				   `Boolean' cores,
 				   `Boolean' verbose)
 {
 	`Integer' N1 			// Number of firms
@@ -51,6 +52,8 @@ mata:
 	`Vector' done1
 	`Vector' done2
 	`Matrix' matches // list of CEOs that matched with firm j (or viceversa)
+
+	`Vector' orphan1, orphan2
 
 
 	if (verbose) printf("{txt} - initializing zigzag iterator for bipartite graphs\n")
@@ -170,6 +173,106 @@ mata:
 	}
 	
 	if (verbose) printf("{txt}   (%g disjoint subgraphs found)\n", j)
+
+	// Compute vertex core numbers (for k-core prunning)
+	compute_core_numbers(F12_1, F12_2, keys1_by_2, keys2_by_1, 0, 1)
+
+
+
 	return(num_subgraphs)
 }
+
+
+
+// Compute core numbers of each vertex
+// This allows us to run k-core prunning
+// Based on: https://arxiv.org/abs/cs/0310049
+
+`Vector' compute_core_numbers(`Factor' F12_1,
+                              `Factor' F12_2,
+                              `Vector' keys1_by_2,
+                              `Vector' keys2_by_1,
+                              `Vector' drop_order,
+                              `Boolean' verbose)
+{
+// v, u, w are vertices; <0 for CEOs and >0 for firms
+// vert is sorted by degree; deg is unsorted
+// pos[i] goes from sorted to unsorted, so:
+// 		vert[i] === original_vert[ pos[i] ]
+// invpos goes from unsorted to sorted, so:
+//		vert[invpos[j]] === original_vert[j]
+
+// i_u represents the pos. of u in the sorted tables
+// pu represents the pos. of u in the unsorted/original tables
+
+
+	`Factor'				Fbin
+	`Boolean'				is_firm
+	`Integer'				N, M, ND, N1, j
+	`Integer'				i_v, i_u, i_w
+	`Integer'				pv, pu, pw
+	`Integer'				v, u, w
+	`Integer'				dv, du
+	`Vector'				bin, deg, pos, invpos, vert, neighbors
+
+	assert(F12_1.panel_is_setup==1)
+	assert(F12_2.panel_is_setup==1)
+	
+	N1 = F12_1.num_levels
+	N = F12_1.num_levels + F12_2.num_levels
+
+	deg = F12_1.counts \ F12_2.counts
+	ND = max(deg) // number of degrees
+	
+	Fbin = _factor(deg, 1, verbose)
+	Fbin.panelsetup()
+
+	bin = J(ND, 1, 0)
+	bin[Fbin.keys] = Fbin.counts
+	bin = runningsum(1 \ bin[1..ND-1])
+	
+	pos = Fbin.p
+	invpos = invorder(Fbin.p)
+
+	vert = Fbin.sort(F12_1.keys \ -F12_2.keys)
+	
+	for (i_v=1; i_v<=N; i_v++) {
+		v = vert[i_v]
+		is_firm = (v > 0)
+			
+		neighbors = is_firm ? panelsubmatrix(keys2_by_1, v, F12_1.info) : panelsubmatrix(keys1_by_2, -v, F12_2.info)
+		M = rows(neighbors)
+		
+		for (j=1; j<=M; j++) {	
+			pv = pos[i_v]
+			pu = is_firm ? N1 + neighbors[j] : neighbors[j] // is_firm is *not* for the neighbor
+			dv = deg[pv]
+			du = deg[pu]
+		
+			if (dv < du) {
+				i_w = bin[du]
+				w = vert[i_w]
+				u = is_firm ? -j : j // is_firm is *not* for the neighbor
+				if (u != w) {
+					pw = pos[i_w]
+					i_u = invpos[pu]
+					pos[i_u] = pw
+					pos[i_w] = pu
+					vert[i_u] = w
+					vert[i_w] = u
+					invpos[pu] = i_w
+					invpos[pw] = i_u
+				}
+				bin[du] = bin[du] + 1
+				deg[pu] = deg[pu] - 1
+				// add order part here
+			}
+		} // end for neighbor u (u ~ v)
+	} // end for each node v
+
+	return(deg)
+	// ((F1.keys \ F2.keys), (F12_1.keys \ -F12_2.keys))[selectindex(deg:==1), .]
+}
+
+
 end
