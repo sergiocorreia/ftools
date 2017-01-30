@@ -253,8 +253,8 @@ class Factor
 	`Integer'				i, j, num_dropped_obs
 	`Vector'				offset
 
-	assert(all(idx :>0))
-	assert(all(idx :<=num_obs))
+	// assert(all(idx :>0))
+	// assert(all(idx :<=num_obs))
 
 	if (counts == J(0, 1, .)) {
 		_error(123, "drop_obs() requires the -counts- vector")
@@ -270,7 +270,7 @@ class Factor
 		j = offset[i]
 		counts[j] = counts[j] - 1
 	}
-	assert(all(counts :>= 0))
+	// assert(all(counts :>= 0))
 	
 	// Update contents of F based on just idx and the updated F.counts
 	__inner_drop(idx)
@@ -315,6 +315,7 @@ class Factor
 	p = J(0, 1, .)
 	inv_p = J(0, 1, .)
 	info = J(0, 2, .)
+	panel_is_setup = 0
 }
 
 

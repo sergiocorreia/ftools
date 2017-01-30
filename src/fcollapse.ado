@@ -113,6 +113,7 @@ program define Inner
 	if (!`merge' & `pool' < .) keep `keepvars' `exp'
 
 	// Get list of aggregating functions
+	mata: fun_dict = aggregate_get_funs()
 	if ("`register'" != "") {
 		foreach fun of local register {
 			mata: asarray(fun_dict, "`fun'", &aggregate_`fun'())
