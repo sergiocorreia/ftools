@@ -1,10 +1,11 @@
 // FCOLLAPSE - Aggregate Functions
-
+// -data- vector must be already sorted by F: F.sort(data)
+// Same for -weights- vector
 
 mata:
 mata set matastrict on
 
-`Dict' get_funs()
+`Dict' aggregate_get_funs()
 {
 	`Dict'					funs
 	funs = asarray_create("string", 1)

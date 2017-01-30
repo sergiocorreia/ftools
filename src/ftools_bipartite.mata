@@ -18,6 +18,22 @@ mata:
 //   
 //   If we only care about -num_subgraph_id-, call it with stack==queue==.
 // --------------------------------------------------------------------------
+//   As a byproduct, also computes the number of disjoint subgraphs.
+//   See the algorithm from on Abowd, Creecy and Kramarz (WP 2002) p4. Sketch:
+//
+//   		g = 0
+//   		While there are firms w/out a group:
+//   		     g++
+//   		     Assign the first firm w/out a group to group g
+//   		     Repeat until no further changes:
+//   		         Add all persons employed by a firm in g to g
+//   		         Add all firms that employ persons in g to g
+//   		 return(g)
+// --------------------------------------------------------------------------
+// 	  Also computes vertex core numbers, which allows k-core pruning
+//	  Algorithm used is listed here: https://arxiv.org/abs/cs/0310049
+// --------------------------------------------------------------------------
+
 
 `Real' init_bipartite_zigzag(`Factor' F1,
                    `Factor' F2,
@@ -54,10 +70,8 @@ mata:
 	`Vector' done2
 	`Matrix' matches // list of CEOs that matched with firm j (or viceversa)
 
-	`Vector' orphan1, orphan2
 
-
-	if (verbose) printf("{txt} - initializing zigzag iterator for bipartite graphs\n")
+	if (verbose) printf("{txt}    - initializing zigzag iterator for bipartite graphs\n")
 
 	// Run this because we use F.info
 	F12_1.panelsetup()
@@ -173,13 +187,11 @@ mata:
 		subgraph_id = subgraph_id[F2.levels]
 	}
 	
-	if (verbose) printf("{txt} - disjoint subgraphs found: {res}%g{txt}\n", j)
+	if (verbose) printf("{txt}      disjoint subgraphs found: {res}%g{txt}\n", num_subgraphs)
 
-	// Compute vertex core numbers (for k-core prunning)
-	cores = compute_core_numbers(F1, F2, F12_1, F12_2, keys1_by_2, keys2_by_1, drop_order=., 1)
+	// Compute vertex core numbers (for k-core pruning)
+	cores = compute_core_numbers(F12_1, F12_2, keys1_by_2, keys2_by_1, drop_order=., 1)
 	//((F1.keys \ -F2.keys)), cores, J(rows(cores), 1, .), drop_order
-
-	if (verbose) printf("{txt} - 1-core vertices found:{res}{txt}\n")
 
 	return(num_subgraphs)
 }
@@ -190,9 +202,7 @@ mata:
 // This allows us to run k-core prunning
 // Based on: https://arxiv.org/abs/cs/0310049
 
-`Vector' compute_core_numbers(`Factor' F1,
-                              `Factor' F2,
-                              `Factor' F12_1,
+`Vector' compute_core_numbers(`Factor' F12_1,
                               `Factor' F12_2,
                               `Vector' keys1_by_2,
                               `Vector' keys2_by_1,
@@ -212,27 +222,26 @@ mata:
 
 	`Factor'				Fbin
 	`Boolean'				is_firm
-	`Integer'				N, M, ND, N1, j, jj
+	`Integer'				N, M, ND, N1, N2, j, jj
 	`Integer'				i_v, i_u, i_w
 	`Integer'				pv, pu, pw
 	`Integer'				v, u, w
 	`Integer'				dv, du
 	`Vector'				bin, deg, pos, invpos, vert, neighbors
 
-	assert(rows(F1.keys))
-	assert(rows(F2.keys))
 	assert(F12_1.panel_is_setup==1)
 	assert(F12_2.panel_is_setup==1)
 
-	if (verbose) printf("{txt} - computing core numbers for each vertex\n")
+	if (verbose) printf("{txt}    - computing core numbers for each vertex\n")
 	
 	N1 = F12_1.num_levels
+	N2 = F12_2.num_levels
 	N = F12_1.num_levels + F12_2.num_levels
 
 	deg = F12_1.counts \ F12_2.counts
 	ND = max(deg) // number of degrees
 	
-	Fbin = _factor(deg, 1, verbose)
+	Fbin = _factor(deg, 1, 0)
 	Fbin.panelsetup()
 
 	bin = J(ND, 1, 0)
@@ -242,13 +251,12 @@ mata:
 	pos = Fbin.p
 	invpos = invorder(Fbin.p)
 
-	//vert = data[p]
-	vert = Fbin.sort((F1.keys \ -F2.keys))
+	vert = Fbin.sort(( (1::N1) \ (-1::-N2) ))
 
 	for (i_v=1; i_v<=N; i_v++) {
 		v = vert[i_v]
 		is_firm = (v > 0)
-			
+
 		neighbors = is_firm ? panelsubmatrix(keys2_by_1, v, F12_1.info) : panelsubmatrix(keys1_by_2, -v, F12_2.info)
 		M = rows(neighbors)
 		
@@ -280,6 +288,14 @@ mata:
 		} // end for neighbor u (u ~ v)
 	} // end for each node v
 	
+	if (verbose) {
+		//printf("{txt}      Table: core numbers and vertex count\n")
+		Fbin = _factor(deg, 1, 0)
+		printf("\n")
+		mm_matlist(Fbin.counts, "%-4.0gc", 2, strofreal(Fbin.keys), "Freq.", "Core #")
+		printf("\n")
+	}
+
 	swap(drop_order, vert)
 	return(deg)
 	// ((F1.keys \ F2.keys), (F12_1.keys \ -F12_2.keys))[selectindex(deg:==1), .]

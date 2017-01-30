@@ -21,6 +21,7 @@
 {viewerjumpto "Usage" "ftools##usage"}{...}
 {viewerjumpto "Example" "ftools##example"}{...}
 {viewerjumpto "Remarks" "ftools##remarks"}{...}
+{viewerjumpto "Using functions from collapse" "ftools##collapse"}{...}
 {viewerjumpto "Experimental/advanced" "ftools##experimental"}{...}
 {viewerjumpto "Source code" "ftools##source"}{...}
 {viewerjumpto "Author" "ftools##contact"}{...}
@@ -473,6 +474,30 @@ Alternatively, {it:hash1} is used, which adds {browse "https://www.wikiwand.com/
 {help mf_hash1:hash1} function to create a form of open addressing (that is more efficient than Mata's {help mf_asarray:asarray}).
 
 
+{marker collapse}{...}
+{title:Using the functions from {it:fcollapse}}
+
+{pstd}
+You can access the {cmd:aggregate_*()} functions so you can collapse information without resorting to Stata. Example:
+
+{inp}
+    {hline 60}
+    sysuse auto, clear
+    mata: F = factor("turn")
+    mata: F.panelsetup()
+    mata: y = st_data(., "price")
+    mata: sum_y = aggregate_sum(F, F.sort(y), ., "")
+    mata: F.keys, F.counts, sum_y
+    
+    * Benchmark
+    collapse (sum) price, by(turn)
+    list
+    {hline 60}
+{txt}
+
+Functions start with {cmd:aggregate_*()}, and are listed {view fcollapse_functions.mata, adopath asis:here}
+
+
 {marker experimental}{...}
 {title:Experimental/advanced functions}
 
@@ -507,6 +532,7 @@ the function returns the number of disjoin subgraphs (mobility groups){p_end}
 {view ftools_type_aliases.mata, adopath asis:ftools_type_aliases.mata};
 {view ftools_main.mata, adopath asis:ftools_main.mata};
 {view ftools_bipartite.mata, adopath asis:ftools_bipartite.mata}
+{view fcollapse_functions.mata, adopath asis:fcollapse_functions.mata}
 {p_end}
 
 {pstd}

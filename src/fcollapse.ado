@@ -113,7 +113,6 @@ program define Inner
 	if (!`merge' & `pool' < .) keep `keepvars' `exp'
 
 	// Get list of aggregating functions
-	mata: fun_dict = get_funs()
 	if ("`register'" != "") {
 		foreach fun of local register {
 			mata: asarray(fun_dict, "`fun'", &aggregate_`fun'())
@@ -242,8 +241,6 @@ end
 
 ftools, check
 findfile "ftools_type_aliases.mata"
-include "`r(fn)'"
-findfile "fcollapse_functions.mata"
 include "`r(fn)'"
 findfile "fcollapse_main.mata"
 include "`r(fn)'"

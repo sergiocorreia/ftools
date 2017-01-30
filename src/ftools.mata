@@ -38,6 +38,10 @@
 	findfile "ftools_bipartite.mata"
 	include "`r(fn)'"
 
+	findfile "fcollapse_functions.mata"
+	include "`r(fn)'"
+
+
 
 // Possible Improvements
 // ----------------------
