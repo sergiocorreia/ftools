@@ -190,7 +190,7 @@ mata:
 	if (verbose) printf("{txt}      disjoint subgraphs found: {res}%g{txt}\n", num_subgraphs)
 
 	// Compute vertex core numbers (for k-core pruning)
-	cores = compute_core_numbers(F12_1, F12_2, keys1_by_2, keys2_by_1, drop_order=., 1)
+	cores = compute_core_numbers(F12_1, F12_2, keys1_by_2, keys2_by_1, drop_order=., verbose)
 	//((F1.keys \ -F2.keys)), cores, J(rows(cores), 1, .), drop_order
 
 	return(num_subgraphs)
@@ -292,7 +292,7 @@ mata:
 		//printf("{txt}      Table: core numbers and vertex count\n")
 		Fbin = _factor(deg, 1, 0)
 		printf("\n")
-		mm_matlist(Fbin.counts, "%-4.0gc", 2, strofreal(Fbin.keys), "Freq.", "Core #")
+		mm_matlist(Fbin.counts, "%-8.0gc", 2, strofreal(Fbin.keys), "Freq.", "Core #")
 		printf("\n")
 	}
 
