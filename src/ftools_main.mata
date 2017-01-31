@@ -104,9 +104,9 @@ class Factor
 
 `DataFrame' Factor::sort(`DataFrame' data)
 {
+	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 	if (is_sorted) return(data)
 	panelsetup()
-	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 
 	// For some reason, this is much faster that doing it in-place with collate
 	return(cols(data)==1 ? data[p] : data[p, .])
@@ -124,10 +124,10 @@ class Factor
 
 `DataFrame' Factor::invsort(`DataFrame' data)
 {
+	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 	if (is_sorted) return(data)
 	panelsetup()
 	if (inv_p == J(0, 1, .)) inv_p = invorder(p)
-	assert_msg(rows(data) ==  num_obs, "invalid data rows")
 
 	// For some reason, this is much faster that doing it in-place with collate
 	return(cols(data)==1 ? data[inv_p] : data[inv_p, .])
