@@ -240,13 +240,13 @@ mata:
 
 	deg = F12_1.counts \ F12_2.counts
 	ND = max(deg) // number of degrees
-	
+
 	Fbin = _factor(deg, 1, 0)
 	Fbin.panelsetup()
 
 	bin = J(ND, 1, 0)
 	bin[Fbin.keys] = Fbin.counts
-	bin = runningsum(1 \ bin[1..ND-1])
+	bin = rows(bin) > 1 ? runningsum(1 \ bin[1..ND-1]) : 1
 	
 	pos = Fbin.p
 	invpos = invorder(Fbin.p)
