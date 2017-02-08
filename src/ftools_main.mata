@@ -67,6 +67,8 @@ class Factor
 
 	if (panel_is_setup) return
 
+	assert(is_sorted==0 | is_sorted==1)
+
 	if (counts == J(0, 1, .)) {
 		_error(123, "panelsetup() requires the -counts- vector")
 	}
@@ -992,6 +994,7 @@ class Factor
     swap(F.counts, counts)
 
     // Extra stuff (labels, etc)
+    F.is_sorted = is_sorted
     return(F)
 }
 
