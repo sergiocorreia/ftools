@@ -25,9 +25,10 @@
         loc Variable          real colvector // N * 1
         loc Variables         real matrix // N * K
 
-        loc DataRow           transmorphic rowvector // 1 * K
-        loc DataCol           transmorphic colvector // N * 1
         loc DataFrame         transmorphic matrix // N * K
+        loc DataCol           transmorphic colvector // N * 1
+        loc DataRow           transmorphic rowvector // 1 * K
+        loc DataCell          transmorphic scalar // 1 * 1
 
         // Classes
         loc Handle            transmorphic scalar // General scalar

@@ -196,22 +196,30 @@ class Factor
 `Boolean' Factor::nested_within(`DataCol' x)
 {
 	`Integer'				i, j
-	`Real'					val, prev_val
-	`Vector'				y
+	`DataCell'				val, prev_val, mv
+	`DataCol'				y
 
-	y = J(num_levels, 1, .)
+	mv = missingof(x)
+	y = J(num_levels, 1, mv)
 	assert(rows(x) == num_obs)
-	assert(!hasmissing(x))
+	
+	assert(!anyof(x, mv))
+	//assert(eltype(x)=="string" | eltype(x)=="real")
+	//if (eltype(x)=="string") {
+	//	assert_msg(!anyof(x, ""), "string vector has missing values")
+	//}
+	//else {
+	//	assert_msg(!hasmissing(x), "real vector has missing values")
+	//}
 
 	for (i = 1; i <= num_obs; i++) {
-		val = x[i]
-		j = levels[i]
-		prev_val = y[j]
-		if (prev_val != val) {
-			if (prev_val != .) {
-				return(0)
-			}
-			y[j] = val
+		j = levels[i] // level of the factor associated with obs. i
+		prev_val = y[j] // value of x the last time this level appeared
+		if (prev_val == mv) {
+			y[j] = x[i]
+		}
+		else if (prev_val != x[i]) {
+			return(0)
 		}
 	}
 	return(1)
