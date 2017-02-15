@@ -329,20 +329,39 @@ class Factor
 }
 
 
-`Vector' Factor::drop_singletons()
+`Vector' Factor::drop_singletons(| `Vector' fweight)
 {
 	`Integer'				num_singletons
 	`Vector'				mask, idx
+	`Boolean'				has_fweight
+	`Vector'				weighted_counts
 
 	if (counts == J(0, 1, .)) {
 		_error(123, "drop_singletons() requires the -counts- vector")
 	}
 
-	mask = (counts :== 1)
+	has_fweight = (args()>=1 & fweight != .)
+
+	if (has_fweight) {
+		assert(rows(fweight)==num_obs)
+		this.panelsetup()
+		weighted_counts = panelsum(this.sort(fweight), this.info)
+		mask = ( weighted_counts :== 1)
+	}
+	else {
+		mask = (counts :== 1)
+	}
+
+
 	num_singletons = sum(mask)
 	if (num_singletons == 0) return(J(0, 1, .))
 	counts = counts - mask
 	idx = selectindex(mask[levels])
+
+	// Update and overwrite fweight
+	if (has_fweight) {
+		fweight = fweight[idx]
+	}
 	
 	// Update contents of F based on just idx and the updated F.counts
 	__inner_drop(idx)
