@@ -46,12 +46,3 @@
 // 2) Use a faster hash function like SpookyHash or CityHash (both MIT-lic)
 // 3) Use double hashing instead of linear/quadratic probing
 // 4) Compute the hashes in parallel
-
-
-// Notes:
-// ----------------------
-// This requires Stata 13+ due to the selectindex() and panelsum() functions
-// They *could* be replaced for Stata 12 with:
-// - select(1::rows(dict), dict)
-// - panelsubmatrix()
-// But this comes at a speed + terseness cost (not worth it)

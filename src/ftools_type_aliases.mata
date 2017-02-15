@@ -1,4 +1,4 @@
-// Type aliases --------------------------------------------------------------
+// Type aliases -------------------------------------------------------------
 
         // Numeric (scalars)
         loc Boolean           real scalar
@@ -41,3 +41,21 @@
 
         // Misc
         loc Void              void
+
+
+// Backwards compatibility for Mata functions -------------------------------
+
+        loc selectindex selectindex
+        loc panelsum panelsum
+
+        if (c(version) < 13) {
+                cap mata: boottestVersion()
+                if (c(rc)) {
+                        di as err "Error: Stata versions 12 of earlier require the boottest package"
+                        di as err "To install, from within Stata type " _c
+                        di in smcl "{stata ssc install boottest :ssc install boottest}"
+                        exit 601
+                }
+                loc selectindex _selectindex
+                loc panelsum _panelsum
+        }

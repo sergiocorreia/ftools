@@ -42,10 +42,10 @@ mata set matastrict on
 `DataCol' aggregate_count(`Factor' F, `DataCol' data, `Vector' weights, `String' wtype)
 {
 	if (wtype == "" | wtype == "aweight") {
-		return( panelsum(data :<., 1, F.info) )
+		return( `panelsum'(data :<., 1, F.info) )
 	}
 	else {
-		return( panelsum(data :<., weights, F.info) )
+		return( `panelsum'(data :<., weights, F.info) )
 	}
 	// Older:
 	//`Integer'	            i
@@ -61,16 +61,16 @@ mata set matastrict on
 `Vector' aggregate_sum(`Factor' F, `Vector' data, `Vector' weights, `String' wtype)
 {
 	if (wtype == "") {
-		return( panelsum(editmissing(data, 0), 1, F.info) )
+		return( `panelsum'(editmissing(data, 0), 1, F.info) )
 	}
 	else if (wtype == "aweight") {
 		`Vector' sum_weights
 		// normalize weights so they add up to number of obs. in the subgroup
-		sum_weights = panelsum(weights :* (data :< .), F.info) :/ panelsum(data :< ., F.info)
-		return( panelsum(editmissing(data, 0), weights, F.info) :/ sum_weights )
+		sum_weights = `panelsum'(weights :* (data :< .), F.info) :/ `panelsum'(data :< ., F.info)
+		return( `panelsum'(editmissing(data, 0), weights, F.info) :/ sum_weights )
 	}
 	else {
-		return( panelsum(editmissing(data, 0), weights, F.info) )
+		return( `panelsum'(editmissing(data, 0), weights, F.info) )
 	}
 
 	// Older:

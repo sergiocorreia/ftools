@@ -239,13 +239,13 @@ class Factor
 
 `Void' Factor::keep_if(`Vector' mask)
 {
-	drop_obs(selectindex(!mask))
+	drop_obs(`selectindex'(!mask))
 }
 
 
 `Void' Factor::drop_if(`Vector' mask)
 {
-	drop_obs(selectindex(mask))
+	drop_obs(`selectindex'(mask))
 }
 
 
@@ -254,7 +254,7 @@ class Factor
 	`Vector'				tmp
 	tmp = J(num_obs, 1, 1)
 	tmp[idx] = J(rows(idx), 1, 0)
-	drop_obs(selectindex(tmp))
+	drop_obs(`selectindex'(tmp))
 }
 
 
@@ -297,7 +297,7 @@ class Factor
 	num_dropped_obs = rows(idx)
 
 	// Levels that have a count of 0 are now dropped
-	dropped_levels = selectindex(!counts) // select i where counts[i] == 0
+	dropped_levels = `selectindex'(!counts) // select i where counts[i] == 0
 	// if we use rows() instead of length(), dropped_levels would be J(1,0,.) instead of J(0,1,.)
 	// and we get num_dropped_levels=1 instead of num_dropped_levels=0
 	num_dropped_levels = length(dropped_levels)
@@ -345,7 +345,7 @@ class Factor
 	if (has_fweight) {
 		assert(rows(fweight)==num_obs)
 		this.panelsetup()
-		weighted_counts = panelsum(this.sort(fweight), this.info)
+		weighted_counts = `panelsum'(this.sort(fweight), this.info)
 		mask = ( weighted_counts :== 1)
 	}
 	else {
@@ -356,7 +356,7 @@ class Factor
 	num_singletons = sum(mask)
 	if (num_singletons == 0) return(J(0, 1, .))
 	counts = counts - mask
-	idx = selectindex(mask[levels])
+	idx = `selectindex'(mask[levels])
 
 	// Update and overwrite fweight
 	if (has_fweight) {
@@ -646,7 +646,7 @@ class Factor
 		dict = 1
 	}
 
-	levels = selectindex(dict)
+	levels = `selectindex'(dict)
 
 	num_levels = rows(levels)
 	dict[levels] = 1::num_levels
