@@ -23,6 +23,7 @@ program define fegen_group
 	loc sort = ("`sort'" != "nosort")
 	_assert inlist("`method'", "", "stata", "mata", "hash0", "hash1", "hash2")
 	_assert ("`by'" == ""), msg("by() not supported")
+	if ("`ratio'"=="") loc ratio .
 
 	// ----------------
 

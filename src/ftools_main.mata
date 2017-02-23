@@ -447,7 +447,7 @@ class Factor
 		F.is_sorted = all( data :<= (data[| 2, 1 \ rows(data), 1 |] \ .) )
 	}
 	F.varlist = vars
-	if (touse_is_mask) F.touse = touse
+	if (touse_is_mask & touse!=.) F.touse = touse
 	F.varformats = F.varlabels = F.varvaluelabels = F.vartypes = J(1, cols(vars), "")
 	F.vl = asarray_create("string", 1)
 	
