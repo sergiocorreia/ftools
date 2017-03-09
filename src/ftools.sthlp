@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.4.0 25jan2017}{...}
+{* *! version 2.8.0 09mar2017}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
 {vieweralsosee "join" "help join"}{...}
@@ -207,6 +207,10 @@ The colvector returned contains the observations that need to be excluded.
 {synopt:{it:real scalar} F{opt .is_id()}}1
 if {it:F.counts} is always 1
 (i.e. if {it:F.levels} has no duplicates)
+{p_end}
+{synopt:{it:real vector} F{cmd:.intersect(}{it:vec}{cmd:)}}return
+a mask vector equal to 1 if the row of {it:vec} is also on F.keys.
+Also accepts the integers_only and verbose options: {it:mask = F.intersect(y, 1, 1)}
 {p_end}
 
 

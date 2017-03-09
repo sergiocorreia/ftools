@@ -40,7 +40,10 @@ class Factor
 	`Void'					keep_if()			// Adjust to dropping obs.
 	`Boolean'				is_id()				// 1 if all(F.counts:==1)
 
+	`Vector'				intersect()			// 1 if Y intersects with F.keys
+	
 	`Dict'					extra				// extra information
+	
 }
 
 
@@ -375,6 +378,31 @@ class Factor
 		_error(123, "is_id() requires the -counts- vector")
 	}
 	return(allof(counts, 1))
+}
+
+
+`Vector' Factor::intersect(`Vector' y,
+              			 | `Boolean' integers_only,
+              			   `Boolean' verbose)
+{
+	`Factor'				F
+	`Vector'				index, mask
+
+	if (integers_only == .) integers_only = 0
+	if (verbose == .) verbose = 0
+
+	assert_msg(keys != J(0, 1, .), "must have set save_keys==1")
+	F = _factor(keys \ y, integers_only, verbose, "", 0, 0, ., 0)
+	// The code above does the same as _factor(keys\y) but faster
+
+	// Create a mask equal to 1 where the value of Y is in F.keys
+	mask = J(F.num_levels, 1, 0)
+	index = F.levels[| 1 \ rows(keys) |] // levels to exclude
+	mask[index] = J(rows(keys), 1, 1)
+	
+	index = F.levels[| rows(keys)+1 \ . |]
+	mask = mask[index] // expand mask
+	return(mask)
 }
 
 
