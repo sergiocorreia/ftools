@@ -51,9 +51,9 @@
         if (c(version) < 13) {
                 cap mata: boottestVersion()
                 if (c(rc)) {
-                        di as err "Error: Stata versions 12 of earlier require the boottest package"
+                        di as err "Error: Stata versions 12 or earlier require the boottest package"
                         di as err "To install, from within Stata type " _c
-                        di in smcl "{stata ssc install boottest :ssc install boottest}"
+                        di as smcl "{stata ssc install boottest :ssc install boottest}"
                         exit 601
                 }
                 loc selectindex _selectindex

@@ -1,4 +1,4 @@
-*! version 2.8.0 09mar2017
+*! version 2.9.0 28mar2017
 * This file is just used to compile ftools.mlib
 
 program define ftools
@@ -8,8 +8,8 @@ program define ftools
 
 	if inlist("`options'", "check", "compile") {
 		if ("`options'"=="compile") loc force "force"
-		ms_get_version ftools // from moresyntax package; save local package_version
-		// maybe just add all fns...
+		ms_get_version ftools // included in this package
+		// maybe just add all fns explicitly?
 		loc functions Factor*() factor*() _factor*() join_factors() ///
 					  __fload_data() __fstore_data() ftools*() __factor*() ///
 					  bin_order() assert_msg() ///

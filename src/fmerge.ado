@@ -1,4 +1,4 @@
-*! version 1.9.0 10jan2017
+*! version 2.9.0 28mar2017
 * wrapper for join.ado, parsing code based on merge.ado
 
 program define fmerge 

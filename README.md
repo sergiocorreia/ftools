@@ -1,6 +1,6 @@
 # FTOOLS: A faster Stata for large datasets
 
-- Current version: `1.6.0 17oct2016`
+- Current version: `2.9.0 28mar2017`
 - Jump to: [`usage`](#usage) [`benchmarks`](#benchmarks) [`install`](#installation)
 
 -----------
@@ -209,19 +209,17 @@ ftools, compile
 
 ## Dependencies
 
-`ftools` requires the `moresyntax` package from Github:
-
-```
-cap ado uninstall moresyntax
-net install moresyntax, from(https://github.com/sergiocorreia/moresyntax/raw/master/src/)
-```
-
-Also, the `fcollapse` function requires the `moremata` package from SSC:
+The `fcollapse` function requires the [`moremata`](https://ideas.repec.org/c/boc/bocode/s455001.html) package for some the median and percentile stats:
 
 ```
 ssc install moremata
 ```
 
+Users of Stata 11 and 12 need to install the [`boottest`](https://ideas.repec.org/c/boc/bocode/s458121.html) package:
+
+```
+ssc install boottest
+```
 
 # FAQ:
 

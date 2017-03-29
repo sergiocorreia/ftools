@@ -33,7 +33,7 @@ d
 d Requires: Stata version 11.2
 d (Stata 12 or older also require the boottest package from ssc)
 d
-d Distribution-Date: 20170214
+d Distribution-Date: 20170329
 d
 
 f ftools.ado
@@ -59,3 +59,13 @@ f ftools_main.mata
 
 f fcollapse_main.mata
 f fcollapse_functions.mata
+
+f ms_compile_mata.ado
+f ms_get_version.ado
+
+f ms_fvunab.ado
+f ms_fvstrip.ado
+f ms_fvstrip.sthlp
+f ms_parse_absvars.ado
+f ms_parse_varlist.ado
+f ms_parse_vce.ado

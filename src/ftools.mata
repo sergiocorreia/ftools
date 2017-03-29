@@ -18,7 +18,7 @@
 
 
 // Versioning ---------------------------------------------------------------
-	ms_get_version ftools // moresyntax package
+	ms_get_version ftools // part of this package
 	assert("`package_version'" != "")
     mata: string scalar ftools_version() return("`package_version'")
     mata: string scalar ftools_stata_version() return("`c(stata_version)'")
