@@ -1,4 +1,4 @@
-*! version 2.9.0 28mar2017
+*! version 2.10.0 3apr2017
 * wrapper for join.ado, parsing code based on merge.ado
 
 program define fmerge 
@@ -36,11 +36,18 @@ program define fmerge
 
     loc uniquemaster = cond("`mtype'" == "1:1", "uniquemaster", "")
 
+    loc check = "`keepusing'"!=""
+    loc keepusing : list keepusing - varlist
+    if ("`keepusing'"=="" & `check') {
+      loc keepnone keepnone // don't keep any variable from using
+    }
+
     loc cmd join `keepusing', ///
     	from(`using') ///
     	by(`varlist') ///
     	keep(`keep') ///
     	assert(`assert') ///
+      `keepnone' ///
     	`generate' ///
     	`nogenerate' ///
     	`uniquemaster' ///

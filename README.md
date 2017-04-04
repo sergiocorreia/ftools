@@ -1,6 +1,6 @@
 # FTOOLS: A faster Stata for large datasets
 
-- Current version: `2.9.0 28mar2017`
+- Current version: `2.10.0 3apr2017`
 - Jump to: [`usage`](#usage) [`benchmarks`](#benchmarks) [`install`](#installation)
 
 -----------

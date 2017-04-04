@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.9.0 10jan2017}{...}
+{* *! version 2.10.0 3apr2017}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "fmerge" "help fmerge"}{...}
 {vieweralsosee "[R] merge" "help merge"}{...}
@@ -70,6 +70,8 @@ As above, but with the "using" dataset currently open instead of the "master"
 {synopt :{opt nol:abel}}do not copy value-label definitions from using{p_end}
 {...}
 {synopt :{opt nonote:s}}do not copy notes from using{p_end}
+{...}
+{synopt :{opt keepn:one}}don't add any variables from using (overrides default of {it:_all}){p_end}
 {...}
 {synopt :{opt v:erbose}}show internal debug info
 {p_end}
@@ -171,6 +173,12 @@ above 100,000 observations (due to Mata's overhead).
 {cmd:nonotes}
     specifies that notes in the using dataset not be added to the 
     merged dataset; see {manhelp notes D:notes}.
+
+{phang}
+{cmd:keepnone}
+    specifies that no variables from using will be added. Use this in combination
+    with {cmd:keep(match)} if you just want to keep a group of observations
+    from the master dataset.
 
 {phang}
 {cmd:noreport}

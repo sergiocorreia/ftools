@@ -1,10 +1,10 @@
-*! version 2.9.0 28mar2017
+*! version 2.10.0 3apr2017
 program define join
 
 // Parse --------------------------------------------------------------------
 
 	syntax ///
-		[anything]  /// Variables that will be added (default is _all)
+		[anything]  /// Variables that will be added (default is _all unless keepnone is used)
 		, ///
 		[from(string asis) into(string asis)] /// -using- dataset
 		[by(string)] /// Primary and foreign keys
@@ -13,6 +13,7 @@ program define join
 		[GENerate(name) NOGENerate] /// _merge variable
 		[UNIQuemaster] /// Assert that -by- is an id in the master dataset
 		[noLabel] ///
+		[KEEPNone] ///
 		[noNOTEs] ///
 		[noREPort] ///
 		[Verbose]
@@ -70,7 +71,7 @@ program define join
 		loc cmd `"qui use `if' using "`filename'", clear"'
 	}
 
-	if ("`anything'" != "") {
+	if ("`anything'" != "" | "`keepnone'"!=""}) {
 		keep `using_keys' `anything'
 	}
 	else {
