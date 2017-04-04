@@ -422,7 +422,7 @@ void join(`String' using_keys,
 
 	// Add labels
 	msg = "{err}(warning: value label %s already exists; values overwritten)"
-	for (i=cols(fk_names)+1; i<=cols(deck)-1; i++) {
+	for (i=1; i<=cols(deck); i++) {
 		var = deck[i]
 
 		// label variable <var> <text>
