@@ -11,7 +11,7 @@ program ms_fvunab
 	if ("`stringok'"=="") loc numeric numeric
 	loc 0 `anything'
 
-	* Unab. varlist and expand parenthesish loc without expanding ## interactions
+	* Unab. varlist and expand parenthesis loc without expanding ## interactions
 	loc _ : subinstr loc 0 "##" "##", all count(loc n)
 	forval i = 1/`n' {
 		tempvar hackvar`i'

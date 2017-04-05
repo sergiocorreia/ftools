@@ -59,7 +59,9 @@ pr ParseIndepvars
 	
 	_assert "`0'" == "", msg("couldn't parse the end of the varlist: <`0'>")
 
-	ms_fvunab indepvars : `indepvars'
+	// ms_fvunab indepvars : `indepvars'
+	loc indepvars `indepvars'
+	
 	c_local indepvars `indepvars'
 	if ("`parens'" != "") {
 		c_local 0 "`_'"
@@ -74,11 +76,15 @@ pr ParseEndogAndInstruments
 	if ("`0'" == "") exit
 	gettoken _ 0 : 0, bind parse("=")
 	if ("`_'" != "=") {
-		ms_fvunab endogvars : `_'
+		// ms_fvunab endogvars : `_'
+		loc endogvars `_'
+		
 		c_local endogvars `endogvars'
 		gettoken equalsign 0 : 0, bind parse("=")
 	}
-	ms_fvunab instruments : `0'
+	// ms_fvunab instruments : `0'
+	loc instruments `0'
+	
 	c_local instruments `instruments'
 	c_local 0
 end
