@@ -422,7 +422,7 @@ class Factor
 	`DataFrame'				data
 	`Integer'				i
 	`Boolean'				integers_only
-	`Boolean'				touse_is_mask
+	`Boolean'				touse_is_selectvar
 	`String'				type, var, lbl
 	`Dict'					map
 	`Vector'				keys
@@ -437,17 +437,17 @@ class Factor
 
 	vars = tokens(invtokens(varnames))
 
-	// touse is a string with the -touse- variable, unless
+	// touse is a string with the -touse- variable (a 0/1 mask), unless
 	// we use an undocumented feature where it is an observation index
 	if (eltype(touse) == "string") {
 		assert_msg(orgtype(touse) == "scalar", "touse must be a scalar string")
 		assert_msg(st_isnumvar(touse), "touse " + touse + " must be a numeric variable")
-		touse_is_mask = 0
+		touse_is_selectvar = 1
 	}
 	else {
-		touse_is_mask = 1
+		touse_is_selectvar = 0
 	}
-	data = __fload_data(vars, touse, touse_is_mask)
+	data = __fload_data(vars, touse, touse_is_selectvar)
 
 	// Are the variables integers (so maybe we can use the fast hash)?
 	integers_only = 1
@@ -471,11 +471,11 @@ class Factor
 	            vars, touse)
 	F.sortedby = st_macroexpand("`" + ": sortedby" + "'")
 	F.is_sorted = strpos(F.sortedby, invtokens(vars))==1
-	if (!F.is_sorted & integers_only & cols(data)==1) {
+	if (!F.is_sorted & integers_only & cols(data)==1 & rows(data)>1) {
 		F.is_sorted = all( data :<= (data[| 2, 1 \ rows(data), 1 |] \ .) )
 	}
 	F.varlist = vars
-	if (touse_is_mask & touse!=.) F.touse = touse
+	if (touse_is_selectvar & touse!=.) F.touse = touse
 	F.varformats = F.varlabels = F.varvaluelabels = F.vartypes = J(1, cols(vars), "")
 	F.vl = asarray_create("string", 1)
 	

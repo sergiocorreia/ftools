@@ -10,7 +10,7 @@ mata:
 
 `DataFrame' __fload_data(`Varlist' varlist,
                        | `DataCol' touse,
-                         `Boolean' touse_is_mask)
+                         `Boolean' touse_is_selectvar)
 {
 	`Integer'				num_vars
 	`Boolean'				is_num
@@ -18,7 +18,7 @@ mata:
 	`DataFrame'				data
 
 	if (args()<2) touse = .
-	if (args()<3) touse_is_mask = 1
+	if (args()<3) touse_is_selectvar = 1 // can be selectvar (a 0/1 mask) or an index vector
 
 	varlist = tokens(invtokens(varlist)) // accept both types
 	num_vars = cols(varlist)
@@ -28,13 +28,13 @@ mata:
 			_error(999, "variables must be all numeric or all strings")
 		}
 	}
-	//   mask    = touse_is_mask ? touse :   .
-	// selectvar = touse_is_mask ?   .   : touse
+	//     idx   = touse_is_selectvar ?   .   : touse
+	// selectvar = touse_is_selectvar ? touse :   .
 	if (is_num) {
-		data =  st_data(touse_is_mask ? touse : . , varlist, touse_is_mask ? . : touse)
+		data =  st_data(touse_is_selectvar ? . : touse , varlist, touse_is_selectvar ? touse : .)
 	}
 	else {
-		data = st_sdata(touse_is_mask ? touse : . , varlist, touse_is_mask ? . : touse)
+		data = st_sdata(touse_is_selectvar ? . : touse , varlist, touse_is_selectvar ? touse : .)
 	}
 	return(data)
 }

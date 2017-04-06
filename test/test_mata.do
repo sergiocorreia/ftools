@@ -17,20 +17,20 @@ gen m2 = "x" + string(foreign)
 ValidateFactor turn
 ValidateFactor turn, method(hash0)
 ValidateFactor turn, method(hash1)
-ValidateFactor turn, method(hash2)
+
 ValidateFactor turn trunk
 ValidateFactor turn trunk, method(hash0)
 ValidateFactor turn trunk, method(hash1)
-ValidateFactor turn trunk, method(hash2)
+
 ValidateFactor m1
 ValidateFactor m1, method(hash0)
 ValidateFactor m1, method(hash1)
-ValidateFactor m1, method(hash2)
+
 
 ValidateFactor m1 m2
 ValidateFactor m1 m2, method(hash0)
 ValidateFactor m1 m2, method(hash1)
-ValidateFactor m1 m2, method(hash2)
+
 
 // -------------------------
 sysuse auto, clear

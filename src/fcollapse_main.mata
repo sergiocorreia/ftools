@@ -6,6 +6,7 @@ void f_collapse(`Factor' F,
                 `Dict' fun_dict,
                 `Dict' query,
                 `String' vars,
+                `Boolean' merge,
                 `Integer' pool,
               | `Varname' wvar,
                 `String' wtype)
@@ -25,7 +26,6 @@ void f_collapse(`Factor' F,
 	`StringMatrix'		target_stat
 	`String'			target, stat
 	`DataCol'			data
-	`Boolean'			merge
 	pointer(`DataCol')	scalar fp
 
 	if (args() < 6) wvar = ""
@@ -51,7 +51,6 @@ void f_collapse(`Factor' F,
 
 	// Compute permutation vector so we can sort the data
 	F.panelsetup()
-	merge = (F.touse != .)
 	if (!merge) {
 		F.levels = . // save memory
 	}
@@ -70,7 +69,8 @@ void f_collapse(`Factor' F,
 	stata("cap set niceness 10") // requires stata 13+
 	data_cstore = asarray_create("real", 1)
 	var_positions = asarray_create("string", 1)
-	num_obs = st_nobs()
+	num_obs = F.num_obs
+	if (!merge) assert(num_obs == st_nobs())
 
 	// i, i_next, j -> index variables
 	// i_cstore -> index vectors in the cstore
@@ -78,13 +78,15 @@ void f_collapse(`Factor' F,
 
 	for (i = i_cstore = 1; i <= num_vars; i = i_next + 1) {
 		i_next = min((i + pool - 1, num_vars))
+		
+		// Can't load strings and numbers together
 		for (j = i; j <= i_next; j++) {
 			if (var_is_str[j] != var_is_str[i]) {
 				i_next = j - 1
 				break
 			}
 		}
-		
+
 		// Load data
 		if (var_is_str[i]) {
 			asarray(data_cstore, i_cstore, st_sdata(., vars[i..i_next], F.touse))

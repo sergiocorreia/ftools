@@ -1,4 +1,4 @@
-*! version 2.9.0 28mar2017
+*! version 2.9.2 06apr2017
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -7,6 +7,7 @@ program define fcollapse
 	cap mata: mata drop F
 	exit `rc'
 end
+
 
 program define Inner
 	syntax [anything(equalok)] [if] [in] [fw aw pw iw/] , ///
@@ -39,7 +40,7 @@ program define Inner
 		if (!`ok' & c(N)>1) {
 			tempvar notok
 			gen byte `notok' = `first_by' < `first_by'[_n-1]
-			cou if `notok' in 2/`'c(N)'
+			cou if `notok' in 2/`c(N)'
 			loc ok = r(N)==0
 			drop `notok'
 		}
@@ -93,20 +94,22 @@ program define Inner
 	}
 
 	// Trim data
-	marksample touse, strok novarlist
-	if ("`cw'" != "") {
-		markout `touse' `keepvars', strok
-	}
-
-	if (!`merge' | ("`if'`in'"=="" & "`cw'"=="")) {
-		qui keep if `touse'
-		drop `touse'
-		loc touse
+	loc need_touse = ("`if'`in'"!="" | "`cw'"!="")
+	if (`need_touse') {
+		marksample touse, strok novarlist
+		if ("`cw'" != "") {
+			markout `touse' `keepvars', strok
+		}
+	
+		if (!`merge') {
+			qui keep if `touse'
+			drop `touse'
+			loc touse
+		}
 	}
 
 	// Create factor structure
 	mata: F = factor("`by'", "`touse'", `verbose')
-	if (`merge') mata: F.touse = " " // hack to fill touse but leave it empty
 
 	// Trim again
 	// (saves memory but is slow for big datasets)
@@ -122,7 +125,7 @@ program define Inner
 
 	// Main loop: collapses data
 	if ("`anything'" != "") {
-		mata: f_collapse(F, fun_dict, query, "`keepvars'", `pool', "`exp'", "`weight'")
+		mata: f_collapse(F, fun_dict, query, "`keepvars'", `merge', `pool', "`exp'", "`weight'")
 	}
 	else {
 		clear
@@ -147,6 +150,7 @@ program define Inner
 	if (!`merge') order `by' `targets'
 	if ("`fast'" == "") restore, not
 end
+
 
 program define ParseList
 	syntax [anything(equalok)] , MERGE(integer)
@@ -193,6 +197,7 @@ program define ParseList
 	c_local keepvars `keepvars'
 end
 
+
 program define TrimSpaces
 	_on_colon_parse `0'
 	loc lhs `s(before)'
@@ -211,6 +216,7 @@ program define TrimSpaces
 	c_local `lhs' `rest'
 end
 
+
 program define GetStat
 	_on_colon_parse `0'
 	loc before `s(before)'
@@ -223,6 +229,7 @@ program define GetStat
 		c_local `rhs' `rest'
 	}
 end
+
 
 program define GetTarget
 	_on_colon_parse `0'
