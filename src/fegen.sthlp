@@ -19,7 +19,7 @@
 {dtype}
 {newvar}
 {cmd:=}
-{it:fcn}{cmd:(}{it:arguments}{cmd:)}
+{it:function}{cmd:(}{it:arguments}{cmd:)}
 {ifin} 
 [{cmd:,} {it:options}]
 
@@ -29,6 +29,20 @@
 {synopt:{opth max(exp)}}{p_end}
 {synopt:{opth group(varlist)}}note: {varlist} cannot have both string and numeric variables{p_end}
 {p2colreset}{...}
+
+{marker group}{...}
+{title:Options for {cmd:group()}}
+
+{synoptset 22 tabbed}{...}
+{synopthdr}
+{synoptline}
+{synopt : {opt method(str)}}the underlying method used; either {cmd:mata}
+(default) or {cmd:stata} (often faster if the inputs are string or nonintegers){p_end}
+{synopt : {opt nosort}}speeds up the {cmd:mata} method, but the new IDs will not respect the sort order of the inputs{p_end}
+{synopt : {opt ratio(#)}}the same as the {it:hash_ratio} option from {help ftools}{p_end}
+{synopt : {opt verbose}}see some internal details{p_end}
+
+
 
 {title:How to add a new function}
 
