@@ -7,6 +7,8 @@ cap cls
 set more off
 timer clear
 set trace off
+log close _all
+log using bench_collapse
 
 * Prepare data
 
@@ -72,6 +74,7 @@ foreach size of local sizes {
 	timer list // interim
 }
 timer list
+log close _all
 exit
 
 
