@@ -36,6 +36,8 @@
 {synoptset 22 tabbed}{...}
 {synopthdr}
 {synoptline}
+{synopt : {opt missing}}treat missing values in varlist (either . or "") as any other value when assigning groups,
+instead of being assigned to the group missing{p_end}
 {synopt : {opt method(str)}}the underlying method used; either {cmd:mata}
 (default) or {cmd:stata} (often faster if the inputs are string or nonintegers){p_end}
 {synopt : {opt nosort}}speeds up the {cmd:mata} method, but the new IDs will not respect the sort order of the inputs{p_end}

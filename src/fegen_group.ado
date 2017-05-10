@@ -1,49 +1,27 @@
-*! version 2.9.0 28mar2017
+*! version 2.9.3 10may2017
 program define fegen_group
 	syntax [if] [in] , [by(varlist) type(string)] /// -by- is ignored
 		name(string) args(string) ///
 		[Missing Label LName(name) Truncate(numlist max=1 int >= 1) ///
-		Ratio(string) Verbose METhod(string) noSORT] ///
-
-	loc ifcmd `if'
-	loc incmd `in'
-
-	local 0 `args'
-	syntax varlist
-
-	loc if `ifcmd'
-	loc in `incmd'
+		Ratio(string) Verbose METhod(string) noSORT]
 
 	* TODO: support label lname truncate
 
-	// ----------------
-
-	loc missing = ("`missing'" != "")
 	loc verbose = ("`verbose'" != "")
 	loc sort = ("`sort'" != "nosort")
 	_assert inlist("`method'", "", "stata", "mata", "hash0", "hash1")
 	_assert ("`by'" == ""), msg("by() not supported")
 	if ("`ratio'"=="") loc ratio .
 
-	// ----------------
+	local 0 `args' `if' `in'
+	syntax varlist [if] [in]
 
-	loc markit = ("`if'`in'" != "")
-	if (!`markit' & !`missing') {
-		foreach var of local varlist {
-			qui cou if missing(`var')
-			if (r(N) > 0) {
-				loc markit 1
-				break
-			}
-		}
+
+	if ("`missing'" == "") {
+		marksample touse, strok
 	}
-
-	if (`markit') {
-		tempvar touse
-		mark `touse' `if' `in'
-		if ("`missing'"=="") { 
-			markout `touse' `varlist', strok
-		}
+	else if ("`if'`in'" != "") {
+		marksample touse, strok novarlist
 	}
 
 	* Choose method if not provided
