@@ -1,4 +1,4 @@
-*! version 2.9.3 10may2017
+*! version 2.11.0 08jun2017
 program define flevelsof, rclass
 	syntax varname [if] [in] [, Separate(str) MISSing loc(str) Clean Verbose FORCEmata]
 
@@ -46,11 +46,20 @@ void flevelsof(`String' varlist,
 {
 	`Factor'				F
 	`DataRow'				keys
+	`String'				ans
 	F = factor(varlist, touse, verbose, "", 1, 0)
 	keys = F.keys'
 	if (isnum) keys = strofreal(keys, "%40.10g")
 	if (!isnum & !clean) keys = (char(96) + char(34)) :+ keys :+ (char(34) + char(39))
-	st_local("vals", invtokens(keys, sep))
+	ans = invtokens(keys, sep)
+	if (strlen(ans)>maxlen) {
+		printf("{err}macro length exceeded\n")
+		exit(1000)
+	}
+	else {
+		123
+	}
+	st_local("vals", ans)
 }
 
 end

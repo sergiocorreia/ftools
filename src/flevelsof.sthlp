@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.9.3 10may2017}{...}
+{* *! version 2.11.0 08jun2017}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[P] levelsof" "mansection P levelsof"}{...}
 {viewerjumpto "Syntax" "flevelsof##syntax"}{...}

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.10.0 08jun2017}{...}
+{* *! version 2.11.0 08jun2017}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
 {vieweralsosee "join" "help join"}{...}
@@ -267,6 +267,10 @@ manipulate data without having to sort it beforehand:
 {pmore}- {help flevelsof} plug-in alternative to {help levelsof}{p_end}
 {pmore}- {help fsort} (note: this is O(N) but with a high constant term){p_end}
 {pmore}- freshape{p_end}
+
+Ancilliary commands include:
+
+{pmore}- {help local_inlist} return local {it:inlist} based on a variable and a list of values or labels{p_end}
 
 {pstd}
 It rearranges one or more categorical variables into a new variable that takes values from 1 to F.num_levels. You can then efficiently sort any other variable by this, in order to compute groups statistics and other manipulations.
