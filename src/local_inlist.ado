@@ -1,4 +1,4 @@
-*! version 2.11.0 08jun2017
+*! version 2.11.1 08jun2017
 program define local_inlist
 	syntax anything(name=0 everything) [, LABels]
 	loc labels = ("`labels'"!="")
@@ -54,7 +54,7 @@ void build_inlist(`String' varname,
 	// Format inlist() expressions
 	for (i=1; i<=n; i=i+maxlen) {
 		k = min((i+maxlen-1, n))
-		ans[i..k-1] = ans[i..k-1] :+ ","
+		if (i < k) ans[i..k-1] = ans[i..k-1] :+ ","
 		ans[i] = (i>1 ? "| " : "") + "inlist(" + varname + ", " + ans[i]
 		ans[k] = ans[k] + ")"
 	}
