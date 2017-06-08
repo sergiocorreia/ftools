@@ -1,16 +1,19 @@
 {smcl}
-{* *! version 2.9.3 10may2017}{...}
+{* *! version 2.10.0 08jun2017}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
 {vieweralsosee "join" "help join"}{...}
 {vieweralsosee "fmerge" "help fmerge"}{...}
+{vieweralsosee "flevelsof" "help flevelsof"}{...}
 {vieweralsosee "fisid" "help fisid"}{...}
 {vieweralsosee "fsort" "help fsort"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] egen" "help egen"}{...}
-{vieweralsosee "[R] sort" "help sort"}{...}
 {vieweralsosee "[R] collapse" "help collapse"}{...}
+{vieweralsosee "[R] contract" "help contract"}{...}
 {vieweralsosee "[R] merge" "help merge"}{...}
+{vieweralsosee "[R] levelsof" "help levelsof"}{...}
+{vieweralsosee "[R] sort" "help sort"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "moremata" "help moremata"}{...}
 {vieweralsosee "reghdfe" "help reghdfe"}{...}
@@ -261,6 +264,7 @@ manipulate data without having to sort it beforehand:
 {pmore}- {help fegen:fegen group}{p_end}
 {pmore}- {help fisid}{p_end}
 {pmore}- {help join} and {help fmerge} (alternative to m:1 and 1:1 merges){p_end}
+{pmore}- {help flevelsof} plug-in alternative to {help levelsof}{p_end}
 {pmore}- {help fsort} (note: this is O(N) but with a high constant term){p_end}
 {pmore}- freshape{p_end}
 

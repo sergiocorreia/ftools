@@ -16,6 +16,7 @@ Currently the following commands are implemented:
 - `fcollapse` replacing `collapse`, `contract` and most of `egen` (through the `, merge` option)
 - `join` (and its wrapper `fmerge`) replacing `merge`
 - `fisid` replacing `isid`
+- `flevelsof` replacing `levelsof`
 - `fsort` replacing `sort` (although it is [rarely](https://github.com/sergiocorreia/ftools/blob/master/test/bench_sort.do) faster than sort)
 
 
@@ -144,6 +145,13 @@ takes a third of the time.
 Similar to `isid`, but allowing for `if in` and on the other hand not allowing for `using` and `sort`.
 
 In very large datasets, it takes roughly a third of the time of `isid`.
+
+
+## flevelsof
+
+Provides the same results as `levelsof`.
+
+In large datasets, takes up to 20% of the time of `levelsof`.
 
 
 ## fsort

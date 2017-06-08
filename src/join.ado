@@ -238,19 +238,19 @@ include "`r(fn)'"
 
 mata:
 mata set matastrict on
-mata set matalnum on
+//mata set matalnum on
 
 void join(`String' using_keys,
-          `String' master_keys,
-          `String' varlist,
-          `String' cmd,
-          `Varname' generate,
-          `Boolean' uniquemaster,
-          `Boolean' keep_using,
-          `Boolean' assert_not_using,
-          `Boolean' join_labels,
-          `Boolean' join_chars,
-          `Boolean' verbose)
+               `String' master_keys,
+               `String' varlist,
+               `String' cmd,
+               `Varname' generate,
+               `Boolean' uniquemaster,
+               `Boolean' keep_using,
+               `Boolean' assert_not_using,
+               `Boolean' join_labels,
+               `Boolean' join_chars,
+               `Boolean' verbose)
 {
 	`Varlist'				pk_names, fk_names, varformats
 	`Varlist'				varnames_num, varnames_str, deck

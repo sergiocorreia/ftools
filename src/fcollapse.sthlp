@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.9.2 06apr2017}{...}
+{* *! version 2.10.0 08jun2017}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[R] collapse" "help collapse"}{...}
 {vieweralsosee "[R] contract" "help contract"}{...}

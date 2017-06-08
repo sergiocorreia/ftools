@@ -22,18 +22,20 @@ d
 d Possible commands include more -egen- functions and -merge- and
 d -reshape- alternatives.
 d
+d KW: factor variables
 d KW: levels
+d KW: mata
 d KW: collapse
 d KW: contract
 d KW: egen
+d KW: merge
+d KW: levelsof
 d KW: sort
-d KW: factor variables
-d KW: mata
 d
 d Requires: Stata version 11.2
 d (Stata 12 or older also require the boottest package from ssc)
 d
-d Distribution-Date: 20170510
+d Distribution-Date: 20170608
 d
 
 f ftools.ado
@@ -48,9 +50,11 @@ f fegen.ado
 f fegen.sthlp
 f fegen_group.ado
 f join.ado
-f fmerge.ado
 f join.sthlp
+f fmerge.ado
 f fmerge.sthlp
+f flevelsof.ado
+f flevelsof.sthlp
 
 f ftools.mata
 f ftools_type_aliases.mata

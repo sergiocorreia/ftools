@@ -4,6 +4,7 @@ log using benchmarks, replace
 do test_mata
 do test_stata
 do test_fcollapse
+do test_flevelsof
 
 do benchmark
 
