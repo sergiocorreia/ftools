@@ -4,7 +4,7 @@ program define flevelsof, rclass
 
 	* Use -levelsof- for small datasets
 	if (c(N)<1e6) & ("`forcemata'"=="") {
-		levelsof `0'
+		levelsof `varlist' `if' `in', separate(`separate') `missing' loc(`loc') `clean'
 		exit
 	}
 
@@ -55,9 +55,6 @@ void flevelsof(`String' varlist,
 	if (strlen(ans)>maxlen) {
 		printf("{err}macro length exceeded\n")
 		exit(1000)
-	}
-	else {
-		123
 	}
 	st_local("vals", ans)
 }
