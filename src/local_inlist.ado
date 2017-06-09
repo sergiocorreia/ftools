@@ -58,6 +58,8 @@ void build_inlist(`String' varname,
 		ans[i] = (i>1 ? "| " : "") + "inlist(" + varname + ", " + ans[i]
 		ans[k] = ans[k] + ")"
 	}
-	st_local("inlist", invtokens(ans))
+	ans = invtokens(ans)
+	if (n > maxlen) ans = "(" + ans + ")"
+	st_local("inlist", ans)
 }
 end
