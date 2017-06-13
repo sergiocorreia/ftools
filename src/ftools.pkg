@@ -36,7 +36,7 @@ d
 d Requires: Stata version 11.2
 d (Stata 12 or older also require the boottest package from ssc)
 d
-d Distribution-Date: 20170608
+d Distribution-Date: 20170613
 d
 
 f ftools.ado
