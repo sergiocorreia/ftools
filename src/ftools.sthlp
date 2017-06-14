@@ -1,9 +1,5 @@
 {smcl}
-<<<<<<< HEAD
 {* *! version 2.12.0 14jun2017}{...}
-=======
-{* *! version 2.11.2 13jun2017}{...}
->>>>>>> origin/master
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
 {vieweralsosee "join" "help join"}{...}
