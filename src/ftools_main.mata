@@ -543,18 +543,11 @@ class Factor
 	assert_msg(save_keys == 0 | save_keys == 1, "save_keys")
 
 	// Compute upper bound for number of levels
-	if (integers_only) {
+	if (integers_only & all(data:<=.)) {
 		min_max = colminmax(data)
-		delta = 1 :+ min_max[2, .] - min_max[1, .]
+		delta = 1 :+ min_max[2, .] - min_max[1, .] + (colmissing(data) :> 0)
 		for (i = size0 = 1; i <= num_vars; i++) {
 			size0 = size0 * delta[i]
-		}
-		// Fall back to hash1 if there are MVs
-		// On principle I could assign a special value to MVs (max + #)
-		// While increasing the reported max value;
-		// but it seems like too much work...
-		if (hasmissing(data)) {
-			size0 = .
 		}
 	}
 	else {
@@ -637,29 +630,33 @@ class Factor
 	`Factor'				F
 	`Integer'				K, i, num_levels, num_obs, j
 	`Vector'				hashes, dict, levels
-	`RowVector'				min_val, max_val, offsets
+	`RowVector'				min_val, max_val, offsets, has_mv
 	`Matrix'				keys
 	`Vector'				counts
 
+	// assert(all(data:<=.)) // no .a .b ...
+
 	num_obs = rows(data)
 	K = cols(data)
+	has_mv = (colmissing(data) :> 0)
 	min_val = min_max[1, .]
-	max_val = min_max[2, .]
+	max_val = min_max[2, .] + has_mv
 
 	// Build the hash
 	
 	// 2x speedup when K = 1 wrt the formula with [., K]
 	if (K == 1) {
-		hashes = data :- (min_val - 1)
+		// Maybe profile and have two cases based on the value of has_mv
+		hashes = editmissing(data, max_val) :- (min_val - 1)
 	}
 	else {
-		hashes = data[., K] :- (min_val[K] - 1)
+		hashes = editmissing(data[., K], max_val[K]) :- (min_val[K] - 1)
 	}
 
 	offsets = J(1, K, 1)
 	for (i = K - 1; i >= 1; i--) {
 		offsets[i] = offsets[i+1] * (max_val[i+1] - min_val[i+1] + 1)
-		hashes = hashes + (data[., i] :- min_val[i]) :* offsets[i]
+		hashes = hashes + (editmissing(data[., i], max_val[i]) :- min_val[i]) :* offsets[i]
 	}
 	assert(offsets[1] * (max_val[1] - min_val[1] + 1) == dict_size)
 	
