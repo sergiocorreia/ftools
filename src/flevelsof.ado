@@ -1,30 +1,30 @@
-*! version 2.11.0 08jun2017
+*! version 2.11.2 13jun2017
 program define flevelsof, rclass
-	syntax varname [if] [in] [, Separate(str) MISSing loc(str) Clean Verbose FORCEmata]
+	syntax varname [if] [in] [, Separate(str) MISSing LOCal(str) Clean Verbose FORCEmata]
 
 	* Use -levelsof- for small datasets
 	if (c(N)<1e6) & ("`forcemata'"=="") {
-		levelsof `varlist' `if' `in', separate(`separate') `missing' loc(`loc') `clean'
-		exit
+		levelsof `varlist' `if' `in', separate(`separate') `missing' local(vals) `clean'
+	}
+	else {
+		_assert (c(N)), msg("no observations") rc(2000)
+		if ("`separate'" == "") loc separate " "
+		if ("`missing'" != "") loc novarlist "novarlist"
+		marksample touse, strok `novarlist'
+		loc isnum = strpos("`: type `varlist''", "str")==0 // Will fail if we have 2+ variables
+		loc clean = ("`clean'"!="")
+		loc verbose = ("`verbose'" != "")
+
+		mata: flevelsof("`varlist'", "`touse'", "`separate'", `isnum', `clean', `c(max_macrolen)', `verbose')
+		//di as err "macro length exceeded"
+		//exit 1000
+
+		di as txt `"`vals'"'
+		return local levels `"`vals'"'
 	}
 
-	
-	_assert (c(N)), msg("no observations") rc(2000)
-	if ("`separate'" == "") loc separate " "
-	if ("`missing'" != "") loc novarlist "novarlist"
-	marksample touse, strok `novarlist'
-	loc isnum = strpos("`: type `varlist''", "str")==0 // Will fail if we have 2+ variables
-	loc clean = ("`clean'"!="")
-	loc verbose = ("`verbose'" != "")
-
-	mata: flevelsof("`varlist'", "`touse'", "`separate'", `isnum', `clean', `c(max_macrolen)', `verbose')
-	//di as err "macro length exceeded"
-	//exit 1000
-
-	di as txt `"`vals'"'
-	return local levels `"`vals'"'
-	if ("`loc'" != "") {
-		c_local `loc' `"`vals'"'
+	if ("`local'" != "") {
+		c_local `local' `"`vals'"'
 	}
 end
 

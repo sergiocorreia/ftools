@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 *! version 2.12.0 14jun2017
+=======
+*! version 2.11.2 13jun2017
+>>>>>>> origin/master
 * This file is just used to compile ftools.mlib
 
 program define ftools
