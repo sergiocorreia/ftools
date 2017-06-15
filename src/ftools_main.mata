@@ -697,8 +697,11 @@ class Factor
 	hashes = dict = . // Save memory
 
 	if (count_levels) {
+		// We need a builtin function that does: increment(counts, levels)
+		// Using decrement+while saves us 10% time wrt increment+for
 		counts = J(num_levels, 1, 0)
-		for (i = 1; i <= num_obs; i++) {
+		i = num_obs + 1
+		while (--i) {
 			j = levels[i]
 			counts[j] = counts[j] + 1
 		}
