@@ -555,11 +555,12 @@ class Factor
 	}
 
 
+
 	max_numkeys1 = min((size0, num_obs))
 	if (hash_ratio == .) {
 		if (size0 < 2 ^ 16) hash_ratio = 5.0
 		else if (size0 < 2 ^ 20) hash_ratio = 3.0
-		else hash_ratio = 1.5
+		else hash_ratio = 1.3 // Standard hash table load factor
 	}
 	msg = sprintf("invalid hash ratio %5.1f", hash_ratio)
 	assert_msg(hash_ratio > 1.0, msg)
@@ -583,8 +584,9 @@ class Factor
 	assert_msg(dict_size <= 2 ^ 31, "dict size exceeds Mata limits")
 
 	// Hack: alternative approach
-	if (base_method == "mata" & method == "hash1" & integers_only & num_vars > 1 & cols(vars)==num_vars & num_obs > 1e5) {
-		F1 = factor(vars[1], touse, verbose, "hash0", sort_levels, 1, ., save_keys)
+	// all(delta :< num_obs) --> otherwise we should just run hash1
+	if (base_method == "mata" & method == "hash1" & integers_only & num_vars > 1 & cols(vars)==num_vars & num_obs > 1e5 & all(delta :< num_obs)) {
+		F1 = factor(vars[1], touse, verbose, "mata", sort_levels, 1, ., save_keys)
 		F2 = factor(vars[2..num_vars], touse, verbose, "mata", sort_levels, count_levels, ., save_keys)
 		F = join_factors(F1, F2, count_levels, save_keys)
 		F1 = F2 = Factor() // clear
