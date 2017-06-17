@@ -543,18 +543,17 @@ class Factor
 	assert_msg(save_keys == 0 | save_keys == 1, "save_keys")
 
 	// Compute upper bound for number of levels
-	if (integers_only & all(data:<=.)) {
-		min_max = colminmax(data)
-		delta = 1 :+ min_max[2, .] - min_max[1, .] + (colmissing(data) :> 0)
-		for (i = size0 = 1; i <= num_vars; i++) {
-			size0 = size0 * delta[i]
+	size0 = .
+	if (integers_only) {
+		// We must nest the conditions; else they will fail with strings
+		if (all(data:<=.)) {
+			min_max = colminmax(data)
+			delta = 1 :+ min_max[2, .] - min_max[1, .] + (colmissing(data) :> 0)
+			for (i = size0 = 1; i <= num_vars; i++) {
+				size0 = size0 * delta[i]
+			}
 		}
 	}
-	else {
-		size0 = .
-	}
-
-
 
 	max_numkeys1 = min((size0, num_obs))
 	if (hash_ratio == .) {
