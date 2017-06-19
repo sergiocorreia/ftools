@@ -8,7 +8,7 @@ set more off
 timer clear
 set trace off
 log close _all
-log using bench_collapse
+log using bench_collapse, replace
 
 * Prepare data
 
@@ -35,11 +35,12 @@ end
 
 timer clear
 loc sizes 1e3 1e4 1e5 1e6 // 1e7 1e8
+loc sizes 1e7
 
 loc K 100
 loc i 0
 loc by id1 id2 // uses hash0 so after 100k obs we're faster
-loc by id5 // uses hash1 (strinG) so only after 1mm obs we're faster
+//loc by id5 // uses hash1 (strinG) so only after 1mm obs we're faster
 
 foreach size of local sizes {
 	//di as error "SIZE = `size'"
@@ -58,16 +59,27 @@ foreach size of local sizes {
 	timer off 3`i'
 	
 	restore, preserve
-
+	timer on 5`i'
+	gcollapse (sum) v1, by(`by') fast v
+	timer off 5`i'
+	
+	restore, preserve
 	timer on 2`i'
 	collapse (sum) v1, by(`by') fast
 	timer off 2`i'
+	su
 
 	restore, preserve
-
 	timer on 4`i'
 	fcollapse (sum) v1, by(`by') fast v
 	timer off 4`i'
+	su
+	
+	restore, preserve
+	timer on 6`i'
+	gcollapse (sum) v1, by(`by') fast v
+	timer off 6`i'
+	su
 	
 	restore, not
 	

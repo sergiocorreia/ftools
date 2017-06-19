@@ -1,0 +1,157 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}c:\git\ftools\test\bench_collapse.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}18 Jun 2017, 20:34:10
+{txt}
+{com}. 
+. * Prepare data
+. 
+. discard
+{txt}
+{com}. cap ado uninstall ftools
+{txt}
+{com}. net install ftools, from("C:/git/ftools/src")
+checking {hilite:ftools} consistency and verifying not already installed...
+installing into c:\ado\plus\...
+installation complete.
+{txt}
+{com}. ftools, compile
+{res}{txt}(compiling lftools.mlib for Stata 14.2)
+(library saved in c:\ado\plus/l/lftools.mlib)
+
+{com}. 
+. 
+. cap pr drop crData
+{txt}
+{com}. program define crData
+{txt}  1{com}.         args N K
+{txt}  2{com}.         loc N = `N'
+{txt}  3{com}.         clear
+{txt}  4{com}.         set obs `N'
+{txt}  5{com}.         gen int id1 = ceil(runiform()*`K')
+{txt}  6{com}.         gen int id2 = ceil(runiform()*`K')
+{txt}  7{com}.         gen int id3 = ceil(runiform()*`K'/`N')
+{txt}  8{com}.         gen str5 id5 = "x" + string(ceil(runiform()*`K'))
+{txt}  9{com}.         gen byte v1 = ceil(runiform()*5)
+{txt} 10{com}.         gen byte v2 = ceil(runiform()*5)
+{txt} 11{com}.         gen double v3 = runiform()
+{txt} 12{com}. end
+{txt}
+{com}. 
+. timer clear
+{txt}
+{com}. loc sizes 1e3 1e4 1e5 1e6 // 1e7 1e8
+{txt}
+{com}. loc sizes 1e7
+{txt}
+{com}. 
+. loc K 100
+{txt}
+{com}. loc i 0
+{txt}
+{com}. loc by id1 id2 // uses hash0 so after 100k obs we're faster
+{txt}
+{com}. //loc by id5 // uses hash1 (strinG) so only after 1mm obs we're faster
+. 
+. foreach size of local sizes {c -(}
+{txt}  2{com}.         //di as error "SIZE = `size'"
+.         loc ++i
+{txt}  3{com}.         crData `size' `K'
+{txt}  4{com}. 
+.         preserve
+{txt}  5{com}. 
+.         timer on 1`i'
+{txt}  6{com}.         collapse (sum) v1, by(`by') fast
+{txt}  7{com}.         timer off 1`i'
+{txt}  8{com}.         
+.         restore, preserve
+{txt}  9{com}.         timer on 3`i'
+{txt} 10{com}.         fcollapse (sum) v1, by(`by') fast v
+{txt} 11{com}.         timer off 3`i'
+{txt} 12{com}.         
+.         restore, preserve
+{txt} 13{com}.         timer on 5`i'
+{txt} 14{com}.         gcollapse (sum) v1, by(`by') fast v
+{txt} 15{com}.         timer off 5`i'
+{txt} 16{com}.         
+.         restore, preserve
+{txt} 17{com}.         timer on 2`i'
+{txt} 18{com}.         collapse (sum) v1, by(`by') fast
+{txt} 19{com}.         timer off 2`i'
+{txt} 20{com}.         su
+{txt} 21{com}. 
+.         restore, preserve
+{txt} 22{com}.         timer on 4`i'
+{txt} 23{com}.         fcollapse (sum) v1, by(`by') fast v
+{txt} 24{com}.         timer off 4`i'
+{txt} 25{com}.         su
+{txt} 26{com}.         
+.         restore, preserve
+{txt} 27{com}.         timer on 6`i'
+{txt} 28{com}.         gcollapse (sum) v1, by(`by') fast v
+{txt} 29{com}.         timer off 6`i'
+{txt} 30{com}.         su
+{txt} 31{com}.         
+.         restore, not
+{txt} 32{com}.         
+.         timer list // interim
+{txt} 33{com}. {c )-}
+{txt}{p}
+number of observations (_N)  was 0,
+now 10,000,000
+{p_end}
+{res}{txt}(obs: {res}10,000,000{txt}; levels: {res}10,000{txt};{txt} method: {res}hash0{txt}; dict size: {res}10,000{txt})
+{res}{txt}(note: failed to load multi-threaded version; using fallback)
+{res}{txt}{res}{txt}In memory: id1 id2 v1
+Hashing 2 integer by variables to whole-nubmer index.
+counting sort on hash; min = 'lu, max = 'lu
+N = 'lu; 'lu unbalanced groups of sizes 'lu to 'lu
+{res}
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 9}id1 {c |}{res}     10,000        50.5    28.86751          1        100
+{txt}{space 9}id2 {c |}{res}     10,000        50.5    28.86751          1        100
+{txt}{space 10}v1 {c |}{res}     10,000     2999.57    104.9214       2618       3414
+{txt}(obs: {res}10,000,000{txt}; levels: {res}10,000{txt};{txt} method: {res}hash0{txt}; dict size: {res}10,000{txt})
+{res}
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 9}id1 {c |}{res}     10,000        50.5    28.86751          1        100
+{txt}{space 9}id2 {c |}{res}     10,000        50.5    28.86751          1        100
+{txt}{space 10}v1 {c |}{res}     10,000     2999.57    104.9214       2618       3414
+{txt}(note: failed to load multi-threaded version; using fallback)
+{res}{txt}{res}{txt}In memory: id1 id2 v1
+Hashing 2 integer by variables to whole-nubmer index.
+counting sort on hash; min = 'lu, max = 'lu
+N = 'lu; 'lu unbalanced groups of sizes 'lu to 'lu
+{res}
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 9}id1 {c |}{res}     10,000        50.5    28.86751          1        100
+{txt}{space 9}id2 {c |}{res}     10,000        50.5    28.86751          1        100
+{txt}{space 10}v1 {c |}{res}     10,000     2999.57    104.9214       2618       3414
+  11:     10.50 /        1 =      10.4990
+  21:     10.08 /        1 =      10.0780
+  31:      3.96 /        1 =       3.9630
+  41:      4.04 /        1 =       4.0380
+  51:      1.86 /        1 =       1.8590
+  61:      1.91 /        1 =       1.9120
+{txt}
+{com}. timer list
+{res}  11:     10.50 /        1 =      10.4990
+  21:     10.08 /        1 =      10.0780
+  31:      3.96 /        1 =       3.9630
+  41:      4.04 /        1 =       4.0380
+  51:      1.86 /        1 =       1.8590
+  61:      1.91 /        1 =       1.9120
+{txt}
+{com}. log close _all
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}c:\git\ftools\test\bench_collapse.smcl
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res}18 Jun 2017, 20:34:54
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}
