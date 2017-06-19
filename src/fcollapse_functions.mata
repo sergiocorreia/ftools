@@ -111,7 +111,7 @@ mata set matastrict on
 	`Vector'	            results
 	results = J(F.num_levels, 1, .)
 	for (i = 1; i <= F.num_levels; i++) {
-        results[i] = min(panelsubmatrix(data, i, F.info))
+        results[i] = colmin(panelsubmatrix(data, i, F.info))
 	}
 	return(results)
 }
@@ -123,7 +123,7 @@ mata set matastrict on
 	`Vector'	            results
 	results = J(F.num_levels, 1, .)
 	for (i = 1; i <= F.num_levels; i++) {
-        results[i] = max(panelsubmatrix(data, i, F.info))
+        results[i] = colmax(panelsubmatrix(data, i, F.info))
 	}
 	return(results)
 }
