@@ -57,4 +57,21 @@ mata:
 	}
 }
 
+
+// Based on Nick Cox's example
+// https://www.statalist.org/forums/forum/general-stata-discussion/general/1330558-product-of-row-elements?p=1330561#post1330561
+`Matrix' rowproduct(`Matrix' X)
+{
+	`Integer' i, k
+	`Matrix' prod
+	k = cols(X)
+	if (k==1) return(X)
+	prod = X[,1]
+	for(i = 2; i<=k; i++) {
+		prod = prod :* E[,i]
+	}
+	return(prod)
+}
+
+
 end
