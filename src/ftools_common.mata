@@ -68,7 +68,7 @@ mata:
 	if (k==1) return(X)
 	prod = X[,1]
 	for(i = 2; i<=k; i++) {
-		prod = prod :* E[,i]
+		prod = prod :* X[,i]
 	}
 	return(prod)
 }
