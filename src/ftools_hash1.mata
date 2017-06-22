@@ -2,14 +2,15 @@
  // 1) hash0 - Perfect hashing (use the value as the hash)
  // 2) hash1 - Use hash1() with open addressing (linear probing)
 
-// Compilation options
+// Compilation options -------
 assert inlist(`is_vector', 0, 1)
 if (`is_vector') {
-
+	loc suffix
 }
 else {
-
+	loc suffix ", ."
 }
+// ---------------------------
 
 mata:
 
@@ -27,7 +28,6 @@ mata:
 	`Factor'				F
 	`Integer'				h, num_collisions, j, val
 	`Integer'				obs, start_obs, num_obs, num_vars
-	`Boolean'				single_col
 	`Vector'				dict
 	`Vector'				levels // new levels
 	`Vector'				counts
@@ -45,126 +45,66 @@ mata:
 	levels = J(num_obs, 1, 0)
 	keys = J(max_numkeys, num_vars, missingof(data))
 	counts = J(max_numkeys, 1, 1) // keys are at least present once!
-	single_col = num_vars == 1
 
 	j = 0 // counts the number of levels; at the end j == num_levels
 	val = J(0, 0, .)
 	num_collisions = 0
 	last_key = J(0, 0, missingof(data))
 
-	// The branching below duplicates lots of code but hopefully
-	// gives a ~15% speedup (a good compiler would just do the same)
-	// (The only diff is replacing "[obs, .]" for "[obs]")
-	if (single_col) {
-		for (obs = 1; obs <= num_obs; obs++) {
-			key = data[obs]
+	for (obs = 1; obs <= num_obs; obs++) {
+		key = data[obs`suffix']
 
-			// (optional) Speedup when dataset is already sorted
-			// (at a ~10% cost for when it's not)
-			if (last_key == key) {
-				start_obs = obs
-				do {
-					obs++
-				} while (obs <= num_obs ? data[obs] == last_key : 0 )
-				levels[|start_obs \ obs - 1|] = J(obs - start_obs, 1, val)
-				counts[val] = counts[val] + obs - start_obs
-				if (obs > num_obs) break
-				key = data[obs]
-			}
+		// (optional) Speedup when dataset is already sorted
+		// (at a ~10% cost for when it's not)
+		if (last_key == key) {
+			start_obs = obs
+			do {
+				obs++
+			} while (obs <= num_obs ? data[obs`suffix'] == last_key : 0 )
+			levels[|start_obs \ obs - 1|] = J(obs - start_obs, 1, val)
+			counts[val] = counts[val] + obs - start_obs
+			if (obs > num_obs) break
+			key = data[obs`suffix']
+		}
 
-			// Compute hash and retrieve the level the key is assigned to
-			h = hash1(key, dict_size)
-			val = dict[h]
+		// Compute hash and retrieve the level the key is assigned to
+		h = hash1(key, dict_size)
+		val = dict[h]
 
-			// (new key) The key has not been assigned to a level yet
-			if (val == 0) {
-				val = dict[h] = ++j
-				keys[val] = key
-			}
-			else if (key == keys[val]) {
-				counts[val] = counts[val] + 1
-			}
-			// (collision) Another key already points to the same dict slot
-			else {
-				// Linear probing, not very sophisticate...
-				do {
-					++num_collisions
-					++h
-					if (h > dict_size) h = 1
-					val = dict[h]
+		// (new key) The key has not been assigned to a level yet
+		if (val == 0) {
+			val = dict[h] = ++j
+			keys[val`suffix'] = key
+		}
+		else if (key == keys[val`suffix']) {
+			counts[val] = counts[val] + 1
+		}
+		// (collision) Another key already points to the same dict slot
+		else {
+			// Look up for an empty slot in the dict
 
-					if (val == 0) {
-						dict[h] = val = ++j
-						keys[val] = key
-						break
-					}
-					if (key == keys[val]) {
-						counts[val] = counts[val] + 1
-						break
-					}
-				} while (1)
-			}
+			// Linear probing, not very sophisticate...
+			do {
+				++num_collisions
+				++h
+				if (h > dict_size) h = 1
+				val = dict[h]
 
-			levels[obs] = val
-			last_key = key
-		} // end for >>>
-	} // end if >>>
-	else {
-		for (obs = 1; obs <= num_obs; obs++) {
-			key = data[obs, .]
+				if (val == 0) {
+					dict[h] = val = ++j
+					keys[val`suffix'] = key
+					break
+				}
+				if (key == keys[val`suffix']) {
+					counts[val] = counts[val] + 1
+					break
+				}
+			} while (1)
+		}
 
-			// (optional) Speedup when dataset is already sorted
-			// (at a ~10% cost for when it's not)
-			if (last_key == key) {
-				start_obs = obs
-				do {
-					obs++
-				} while (obs <= num_obs ? data[obs, .] == last_key : 0 )
-				levels[|start_obs \ obs - 1|] = J(obs - start_obs, 1, val)
-				counts[val] = counts[val] + obs - start_obs
-				if (obs > num_obs) break
-				key = data[obs, .]
-			}
-
-			// Compute hash and retrieve the level the key is assigned to
-			h = hash1(key, dict_size)
-			val = dict[h]
-
-			// (new key) The key has not been assigned to a level yet
-			if (val == 0) {
-				val = dict[h] = ++j
-				keys[val, .] = key
-			}
-			else if (key == keys[val, .]) {
-				counts[val] = counts[val] + 1
-			}
-			// (collision) Another key already points to the same dict slot
-			else {
-				// Look up for an empty slot in the dict
-
-				// Linear probing, not very sophisticate...
-				do {
-					++num_collisions
-					++h
-					if (h > dict_size) h = 1
-					val = dict[h]
-
-					if (val == 0) {
-						dict[h] = val = ++j
-						keys[val, .] = key
-						break
-					}
-					if (key == keys[val, .]) {
-						counts[val] = counts[val] + 1
-						break
-					}
-				} while (1)
-			}
-
-			levels[obs] = val
-			last_key = key
-		} // end for >>>
-	} // end else >>>
+		levels[obs] = val
+		last_key = key
+	} // end for >>>
 
 	dict = . // save memory
 
