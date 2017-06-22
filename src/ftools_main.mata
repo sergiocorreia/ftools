@@ -533,7 +533,7 @@ class Factor
 
 	base_method = method
 	msg = "invalid method: " + method
-	assert_msg(anyof(("mata", "hash0", "hash1", "hashx"), method), msg)
+	assert_msg(anyof(("mata", "hash0", "hash1"), method), msg)
 
 	num_obs = rows(data)
 	num_vars = cols(data)
@@ -597,10 +597,6 @@ class Factor
 	}
 	else if (method == "hash1"){
 		F = __factor_hash1(data, verbose, dict_size, sort_levels, max_numkeys1, save_keys)
-		if (!count_levels) F.counts = J(0, 1, .)
-	}
-	else if (method == "hashx") {
-		F = __factor_hash_long(data, verbose, dict_size, sort_levels, max_numkeys1, save_keys)
 		if (!count_levels) F.counts = J(0, 1, .)
 	}
 	else {
@@ -782,55 +778,130 @@ class Factor
 }
 
 
-// Equivalent to order() for with binary sort algorithm
-// We can use it to sort a vector of integers by its counts:
-// 	F = _factor(y, 1)
-// 	p = bin_order(y, F.keys, F.counts)
-// +-+-+-+-
-`Vector' bin_order(`Vector' id, | `Matrix' info)
+`Factor' __factor_hash0(
+	`Matrix' data,
+	`Boolean' verbose,
+	`Integer' dict_size,
+	`Boolean' count_levels,
+	`Matrix' min_max,
+	`Boolean' save_keys)
 {
-	`Integer'				i, j, num_bins, n, bin
-	`Boolean'				need_expansion
-	`Boolean'				compute_info
 	`Factor'				F
-	`Vector'				bins, offset, p
+	`Integer'				K, i, num_levels, num_obs, j
+	`Vector'				hashes, dict, levels
+	`RowVector'				min_val, max_val, offsets, has_mv
+	`Matrix'				keys
+	`Vector'				counts
 
-	compute_info = (args()==2 & !isfleeting(info))
+	// assert(all(data:<=.)) // no .a .b ...
 
-	assert(cols(id)==1) // is this really necessary?
-	F = _factor(id, 1)
-	n = F.num_obs
+	K = cols(data)
+	num_obs = rows(data)
+	has_mv = (colmissing(data) :> 0)
+	min_val = min_max[1, .]
+	max_val = min_max[2, .] + has_mv
+
+	// Build the hash:
+	// Example with K=2:
+	// hash = (col1 - min(col1)) * (max_col2 - min_col2 + 1) + (col2 - min_col2) 
 	
-	num_bins = F.keys[F.num_levels]
-	need_expansion = F.num_levels < num_bins
-
-	if (compute_info) {
-		info = runningsum(F.counts)
-		info = (1 \ info[1..rows(info)-1] :+ 1) , info
-	}
-	compute_info
-
-	if (need_expansion) {
-		offset = J(num_bins, 1, 0)
-		offset[F.keys] = F.counts
+	offsets = J(1, K, 1)
+	// 2x speedup when K = 1 wrt the formula with [., K]
+	if (K == 1) {
+		hashes = editmissing(data, max_val) :- (min_val - 1)
 	}
 	else {
-		swap(offset, F.counts)
+		hashes = editmissing(data[., K], max_val[K]) :- (min_val[K] - 1)
+		for (i = K - 1; i >= 1; i--) {
+			offsets[i] = offsets[i+1] * (max_val[i+1] - min_val[i+1] + 1)
+			hashes = hashes + (editmissing(data[., i], max_val[i]) :- min_val[i]) :* offsets[i]
+		}
 	}
-	offset = runningsum(1 \ offset[1..num_bins-1])
+	assert(offsets[1] * (max_val[1] - min_val[1] + 1) == dict_size)
 
-	swap(bins, F.levels)
-	F = Factor() // clear it
-	p = J(n, 1, .)
 
-	for (i=1; i<=n; i++) {
-		bin = id[i]
-		offset[bin] = (j = offset[bin]) + 1
-		p[j] = i
+	// Once we have the -hashes- vector, these are the steps:
+	// 1) Create a -dict- vector with more obs. than unique values (our hash table)
+	// 2) Mark the slots of dict that map to a hash "dict[hashes] = J..."
+	// 3) Get the obs. of those slots "levels = selectindex(dict)"
+	//    Note that "num_levels = rows(levels)"
+	//	  Also, at this point -levels- is just the sorted unique values of -hashes-
+	// 4) We can get the keys based on levels by undoing the hash
+	// 5) To create new IDs, do this trick:
+	//	  dict[levels] = 1::num_levels
+	//    levels = dict[hashes]
+	
+	// Build the new keys
+	dict = J(dict_size, 1, 0)
+	// It's faster to do dict[hashes] than dict[hashes, .],
+	// but that fails if dict is 1x1
+	if (length(dict) > 1) {
+		dict[hashes] = J(num_obs, 1, 1)
+	}
+	else {
+		dict = 1
 	}
 
-	return(p)
+	levels = `selectindex'(dict)
+
+	num_levels = rows(levels)
+	dict[levels] = 1::num_levels
+
+	if (save_keys) {
+		if (K == 1) {
+			keys = levels :+ (min_val - 1)
+		}
+		else {
+			keys = J(num_levels, K, .)
+			levels = levels :- 1
+			for (i = 1; i <= K; i++) {
+				keys[., i] = floor(levels :/ offsets[i])
+				levels = levels - keys[., i] :* offsets[i]
+			}
+			keys = keys :+ min_val
+		}
+	}
+
+	// faster than "levels = dict[hashes, .]"
+	levels = rows(dict) > 1 ? dict[hashes] : hashes
+
+	hashes = dict = . // Save memory
+
+	if (count_levels) {
+		// We need a builtin function that does: increment(counts, levels)
+		// Using decrement+while saves us 10% time wrt increment+for
+		counts = J(num_levels, 1, 0)
+		i = num_obs + 1
+		while (--i) {
+			j = levels[i]
+			counts[j] = counts[j] + 1
+		}
+		// maybe replace this with a permutation of levels plus counts[j] = i-last_i
+	}
+
+	F = Factor()
+	F.num_levels = num_levels
+	if (save_keys) swap(F.keys, keys)
+	swap(F.levels, levels)
+	swap(F.counts, counts)
+	return(F)
 }
 
+
+`Factor' __factor_hash1(
+	`DataFrame' data,
+	`Boolean' verbose,
+	`Integer' dict_size,
+	`Boolean' count_levels,
+	`Integer' max_numkeys1,
+	`Boolean' save_keys)
+{
+	if (cols(data)==1) {
+		return(__factor_hash1_1(data, verbose, dict_size, count_levels, max_numkeys1, save_keys))
+	}
+	else {
+		return(__factor_hash1_0(data, verbose, dict_size, count_levels, max_numkeys1, save_keys))
+	}
+}
 
 end

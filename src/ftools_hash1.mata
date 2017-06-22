@@ -1,118 +1,28 @@
  // Hash tables
  // 1) hash0 - Perfect hashing (use the value as the hash)
  // 2) hash1 - Use hash1() with open addressing (linear probing)
- // 3) hashx - (Experimental)
 
-mata:
+// Compilation options
+assert inlist(`is_vector', 0, 1)
+if (`is_vector') {
 
-// Perfect hashing (with limitations) -----------------------------------------
- // Use this for properly encoded byte/int/long variables
+}
+else {
 
-`Factor' __factor_hash0(`Matrix' data,
-                        `Boolean' verbose,
-                        `Integer' dict_size,
-                        `Boolean' count_levels,
-                        `Matrix' min_max,
-                        `Boolean' save_keys)
-{
-	`Factor'				F
-	`Integer'				K, i, num_levels, num_obs, j
-	`Vector'				hashes, dict, levels
-	`RowVector'				min_val, max_val, offsets, has_mv
-	`Matrix'				keys
-	`Vector'				counts
-
-	// assert(all(data:<=.)) // no .a .b ...
-
-	num_obs = rows(data)
-	K = cols(data)
-	has_mv = (colmissing(data) :> 0)
-	min_val = min_max[1, .]
-	max_val = min_max[2, .] + has_mv
-
-	// Build the hash
-	
-	// 2x speedup when K = 1 wrt the formula with [., K]
-	if (K == 1) {
-		// Maybe profile and have two cases based on the value of has_mv
-		hashes = editmissing(data, max_val) :- (min_val - 1)
-	}
-	else {
-		hashes = editmissing(data[., K], max_val[K]) :- (min_val[K] - 1)
-	}
-
-	offsets = J(1, K, 1)
-	for (i = K - 1; i >= 1; i--) {
-		offsets[i] = offsets[i+1] * (max_val[i+1] - min_val[i+1] + 1)
-		hashes = hashes + (editmissing(data[., i], max_val[i]) :- min_val[i]) :* offsets[i]
-	}
-	assert(offsets[1] * (max_val[1] - min_val[1] + 1) == dict_size)
-	
-	// Build the new keys
-	dict = J(dict_size, 1, 0)
-	// It's faster to do dict[hashes] than dict[hashes, .],
-	// but that fails if dict is 1x1
-	if (length(dict) > 1) {
-		dict[hashes] = J(num_obs, 1, 1)
-	}
-	else {
-		dict = 1
-	}
-
-	levels = `selectindex'(dict)
-
-	num_levels = rows(levels)
-	dict[levels] = 1::num_levels
-
-	if (save_keys) {
-		if (K == 1) {
-			keys = levels :+ (min_val - 1)
-		}
-		else {
-			keys = J(num_levels, K, .)
-			levels = levels :- 1
-			for (i = 1; i <= K; i++) {
-				keys[., i] = floor(levels :/ offsets[i])
-				levels = levels - keys[., i] :* offsets[i]
-			}
-			keys = keys :+ min_val
-		}
-	}
-
-	// faster than "levels = dict[hashes, .]"
-	levels = rows(dict) > 1 ? dict[hashes] : hashes
-
-	hashes = dict = . // Save memory
-
-	if (count_levels) {
-		// We need a builtin function that does: increment(counts, levels)
-		// Using decrement+while saves us 10% time wrt increment+for
-		counts = J(num_levels, 1, 0)
-		i = num_obs + 1
-		while (--i) {
-			j = levels[i]
-			counts[j] = counts[j] + 1
-		}
-	}
-
-	F = Factor()
-	F.num_levels = num_levels
-	if (save_keys) swap(F.keys, keys)
-	swap(F.levels, levels)
-	swap(F.counts, counts)
-	return(F)
 }
 
+mata:
 
 // Open addressing hash function (linear probing) ----------------------------
  // Use this for non-integers (2.5, "Bank A") and big ints (e.g. 2014124233573)
 
-`Factor' __factor_hash1(`DataFrame' data,
-                        `Boolean' verbose,
-                        `Integer' dict_size,
-                        `Boolean' sort_levels,
-                        `Integer' max_numkeys,
-                        `Boolean' save_keys)
+`Factor' __factor_hash1_`is_vector'(
+	`DataFrame' data,
+    `Boolean' verbose,
+    `Integer' dict_size,
+    `Boolean' sort_levels,
+    `Integer' max_numkeys,
+    `Boolean' save_keys)
 {
 	`Factor'				F
 	`Integer'				h, num_collisions, j, val
@@ -125,11 +35,12 @@ mata:
 	`DataFrame'				keys
 	`DataRow'				key, last_key
 	`String'				msg
-	
-	assert(dict_size > 0 & dict_size < .)
+
 
 	num_obs = rows(data)
 	num_vars = cols(data)
+	assert(dict_size > 0 & dict_size < .)
+	assert ((num_vars > 1) + (`is_vector') == 1) // XOR
 	dict = J(dict_size, 1, 0)
 	levels = J(num_obs, 1, 0)
 	keys = J(max_numkeys, num_vars, missingof(data))

@@ -35,11 +35,15 @@
 	findfile "ftools_main.mata"
 	include "`r(fn)'"
 
-	findfile "ftools_hashtables.mata"
+	* We have different functions depending on whether cols(data)==1 or >1
+	findfile "ftools_hash1.mata"
+	loc is_vector 1
+	include "`r(fn)'"
+	loc is_vector 0
 	include "`r(fn)'"
 
-	findfile "ftools_experimental.mata"
-	include "`r(fn)'"
+	//findfile "ftools_experimental.mata"
+	//include "`r(fn)'"
 
 	findfile "fcollapse_functions.mata"
 	include "`r(fn)'"
