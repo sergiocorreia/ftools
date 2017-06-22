@@ -35,6 +35,12 @@
 	findfile "ftools_main.mata"
 	include "`r(fn)'"
 
+	findfile "ftools_hashtables.mata"
+	include "`r(fn)'"
+
+	findfile "ftools_experimental.mata"
+	include "`r(fn)'"
+
 	findfile "fcollapse_functions.mata"
 	include "`r(fn)'"
 
