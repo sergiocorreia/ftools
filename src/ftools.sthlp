@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.13.0 22jun2017}{...}
+{* *! version 2.13.1 28jun2017}{...}
 {vieweralsosee "fegen" "help fegen"}{...}
 {vieweralsosee "fcollapse" "help fcollapse"}{...}
 {vieweralsosee "join" "help join"}{...}
@@ -205,7 +205,8 @@ uses {cmd:.drop_obs()}
 {synopt:{it:real colvector} F{cmd:.drop_singletons()}}equivalent
 to dropping the levels that only appear once,
 and their corresponding observations.
-The colvector returned contains the observations that need to be excluded.
+The colvector returned contains the observations that need to be excluded
+(note: see the source code for some advanced optional arguments).
 {p_end}
 {synopt:{it:real scalar} F{opt .is_id()}}1
 if {it:F.counts} is always 1

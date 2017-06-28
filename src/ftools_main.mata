@@ -332,12 +332,15 @@ class Factor
 }
 
 
-`Vector' Factor::drop_singletons(| `Vector' fweight)
+`Vector' Factor::drop_singletons(| `Vector' fweight,
+                                   `Boolean' zero_threshold)
 {
 	`Integer'				num_singletons
 	`Vector'				mask, idx
 	`Boolean'				has_fweight
 	`Vector'				weighted_counts
+
+	if (zero_threshold == .) zero_threshold = 0
 
 	if (counts == J(0, 1, .)) {
 		_error(123, "drop_singletons() requires the -counts- vector")
@@ -349,12 +352,16 @@ class Factor
 		assert(rows(fweight)==num_obs)
 		this.panelsetup()
 		weighted_counts = `panelsum'(this.sort(fweight), this.info)
-		mask = ( weighted_counts :== 1)
+		if (zero_threshold) {
+			mask = (!weighted_counts) :* counts
+		}
+		else {
+			mask = weighted_counts :== 1
+		}
 	}
 	else {
 		mask = (counts :== 1)
 	}
-
 
 	num_singletons = sum(mask)
 	if (num_singletons == 0) return(J(0, 1, .))
