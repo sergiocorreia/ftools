@@ -371,7 +371,7 @@ class Factor
 
 	// Update and overwrite fweight
 	if (has_fweight) {
-		fweight = fweight[idx]
+		fweight = select(fweight, (!mask)[levels])
 	}
 	
 	// Update contents of F based on just idx and the updated F.counts
