@@ -353,7 +353,8 @@ class Factor
 		this.panelsetup()
 		weighted_counts = `panelsum'(this.sort(fweight), this.info)
 		if (zero_threshold) {
-			mask = (!weighted_counts) :* counts
+			mask = (!weighted_counts :| (counts :== 1)) :* counts
+			// drop if all cases of fweight are zero, or if there is only one fweight
 		}
 		else {
 			mask = weighted_counts :== 1
