@@ -286,9 +286,6 @@ void join(`String' using_keys,
 	// Assert keys are unique IDs in using
 	integers_only = is_integers_only(pk_names)
 	F = _factor(pk, integers_only, verbose, "", 0)
-	F.counts
-	F.levels
-	F.num_levels
 	assert_is_id(F, using_keys, "using")
 
 	varnames_num = varnames_str = deck = tokens(varlist)
