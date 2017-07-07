@@ -1,4 +1,4 @@
-*! version 2.10.0 3apr2017
+*! version 2.13.3 07jul2017
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -280,12 +280,15 @@ void join(`String' using_keys,
 
 	// Using
 	pk_names = tokens(using_keys)
-	pk = st_data(., pk_names)
+	pk = __fload_data(pk_names)
 	N = rows(pk)
 
 	// Assert keys are unique IDs in using
 	integers_only = is_integers_only(pk_names)
 	F = _factor(pk, integers_only, verbose, "", 0)
+	F.counts
+	F.levels
+	F.num_levels
 	assert_is_id(F, using_keys, "using")
 
 	varnames_num = varnames_str = deck = tokens(varlist)
@@ -391,7 +394,7 @@ void join(`String' using_keys,
 	if (verbose) {
 		printf("{txt}(integers only? {res}%s{txt})\n", verbose ? "true" : "false")
 	}
-	F = _factor(pk \ st_data(., fk_names), integers_only, verbose, "", 0)
+	F = _factor(pk \ __fload_data(fk_names), integers_only, verbose, "", 0)
 
 	index = F.levels[| 1 \ N |]
 	reshaped_num = J(F.num_levels, cols(data_num)-1, .) , J(F.num_levels, 1, 1) // _merge==1
