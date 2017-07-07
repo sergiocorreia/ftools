@@ -480,19 +480,28 @@ void join(`String' using_keys,
 		}
 
 		if (keep_using & has_using) {
-			data_num = select( (pk, data_num) , mask)
-			data_num[., cols(data_num)] = J(rows(data_num), 1, 2) // _merge==1
 			
-			range = st_nobs() + 1 :: st_nobs() + rows(data_num)
+			// Store keys (numeric or string)
+			pk = select(pk, mask)
+			range = st_nobs() + 1 :: st_nobs() + rows(pk)
+			st_addobs(rows(pk))
+			if (eltype(pk)=="string") {
+				st_sstore(range, fk_names, pk)
+			}
+			else {
+				st_store(range, fk_names, pk)	
+			}
 
-			st_addobs(rows(data_num))
-			varnames_num = fk_names, varnames_num
+			// Store numeric vars
+			data_num = select(data_num, mask)
+			data_num[., cols(data_num)] = J(rows(data_num), 1, 2) // _merge==2
 			st_store(range, varnames_num, data_num)
 
+			// Store string vars
 			if (cols(varnames_str) > 0) {
 				data_str = select(data_str, mask)
-				varnames_str = varnames_str
 				st_sstore(range, varnames_str, data_str)
+				// Move _merge to the end
 				stata("order " + generate + ", last")
 			}
 		}
