@@ -389,7 +389,7 @@ void join(`String' using_keys,
 	fk_names = tokens(master_keys)
 	integers_only = integers_only & is_integers_only(fk_names)
 	if (verbose) {
-		printf("{txt}(integers only? {res}%s{txt})\n", verbose ? "true" : "false")
+		printf("{txt}(integers only? {res}%s{txt})\n", integers_only ? "true" : "false")
 	}
 	F = _factor(pk \ __fload_data(fk_names), integers_only, verbose, "", 0)
 
