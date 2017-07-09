@@ -858,6 +858,7 @@ class Factor
 	if (save_keys) {
 		if (K == 1) {
 			keys = levels :+ (min_val - 1)
+			if (has_mv) keys[num_levels] = .
 		}
 		else {
 			keys = J(num_levels, K, .)
@@ -865,6 +866,7 @@ class Factor
 			for (i = 1; i <= K; i++) {
 				keys[., i] = floor(levels :/ offsets[i])
 				levels = levels - keys[., i] :* offsets[i]
+				if (has_mv[i]) keys[., i] = editvalue(keys[., i], max_val[i] - min_val[i], .)
 			}
 			keys = keys :+ min_val
 		}
