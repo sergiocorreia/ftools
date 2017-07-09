@@ -56,6 +56,6 @@
                         di as smcl "{stata ssc install boottest :ssc install boottest}"
                         exit 601
                 }
-                loc selectindex _selectindex
+                loc selectindex boottest_selectindex
                 loc panelsum _panelsum
         }
