@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.13.4 07jul2017}{...}
+{* *! version 2.14.1 12jul2017}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "fmerge" "help fmerge"}{...}
 {vieweralsosee "[R] merge" "help merge"}{...}
@@ -45,9 +45,9 @@ As above, but with the "using" dataset currently open instead of the "master"
 {synoptset 24 tabbed}{...}
 {synopthdr}
 {synoptline}
-{p2coldent:+ {cmd:from(}{help filename} [{cmd:,} {help if}]{cmd:)}}filename of the {it:using} datasetm, where the keys are unique{p_end}
+{p2coldent:+ {cmd:from(}{help filename} [{help if}]{cmd:)}}filename of the {it:using} datasetm, where the keys are unique{p_end}
 {...}
-{p2coldent:+ {cmd:into(}{help filename} [{cmd:,} {help if}]{cmd:)}}filename of the {it:master} dataset{p_end}
+{p2coldent:+ {cmd:into(}{help filename} [{help if}]{cmd:)}}filename of the {it:master} dataset{p_end}
 {...}
 {p2coldent:* {opth by(varlist)}}key variables; {it:master_var=using_var} is also allowed in case the variable names differ between datasets{p_end}
 {...}
