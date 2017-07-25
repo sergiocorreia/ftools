@@ -455,28 +455,41 @@ class Factor
 	else {
 		touse_is_selectvar = 0
 	}
-	data = __fload_data(vars, touse, touse_is_selectvar)
 
-	// Are the variables integers (so maybe we can use the fast hash)?
-	integers_only = 1
-	for (i=1; i<=cols(vars); i++) {
-		type = st_vartype(vars[i])
-		if (anyof(("byte", "int", "long"), type)) {
-			continue
+	if (method=="gtools") {
+		// Warning: touse can't be a vector
+		if (eltype(touse)=="real") {
+			assert_msg(touse == ., "touse must be a variable name")
+			touse = ""
 		}
-		else if (anyof(("float", "double"), type)) {
-			if (round(data[., i])==data[., i]) {
+		F = __factor_gtools(vars, touse, verbose,
+		                    sort_levels, count_levels, save_keys)
+	}
+	else {
+		data = __fload_data(vars, touse, touse_is_selectvar)
+
+		// Are the variables integers (so maybe we can use the fast hash)?
+		integers_only = 1
+		for (i=1; i<=cols(vars); i++) {
+			type = st_vartype(vars[i])
+			if (anyof(("byte", "int", "long"), type)) {
 				continue
 			}
+			else if (anyof(("float", "double"), type)) {
+				if (round(data[., i])==data[., i]) {
+					continue
+				}
+			}
+			integers_only = 0
+			break
 		}
-		integers_only = 0
-		break
+		
+		F = _factor(data, integers_only, verbose, method,
+		            sort_levels, count_levels, hash_ratio,
+		            save_keys,
+		            vars, touse)
 	}
-	
-	F = _factor(data, integers_only, verbose, method,
-	            sort_levels, count_levels, hash_ratio,
-	            save_keys,
-	            vars, touse)
+
 	F.sortedby = st_macroexpand("`" + ": sortedby" + "'")
 	F.is_sorted = strpos(F.sortedby, invtokens(vars))==1
 	if (!F.is_sorted & integers_only & cols(data)==1 & rows(data)>1) {

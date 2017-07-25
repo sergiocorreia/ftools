@@ -64,6 +64,7 @@ f ftools_type_aliases.mata
 f ftools_common.mata
 f ftools_main.mata
 f ftools_hash1.mata
+f ftools_plugin.mata
 
 f fcollapse_main.mata
 f fcollapse_functions.mata

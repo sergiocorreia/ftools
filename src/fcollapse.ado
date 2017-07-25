@@ -19,6 +19,7 @@ program define Inner
 		[pool(numlist integer missingok max=1 >0 min=1)] /// memory-related
 		[MERGE] /// adds back collapsed vars into dataset; replaces egen
 		[SMART] /// allow calls to collapse instead of fcollapse
+		[METHOD(string)] /// allow choice of internal method (hash0, hash1, etc.)
 		[Verbose] // debug info
 	
 	// Parse
@@ -109,7 +110,7 @@ program define Inner
 	}
 
 	// Create factor structure
-	mata: F = factor("`by'", "`touse'", `verbose')
+	mata: F = factor("`by'", "`touse'", `verbose', "`method'")
 
 	// Trim again
 	// (saves memory but is slow for big datasets)

@@ -42,6 +42,10 @@
 	loc is_vector 0
 	include "`r(fn)'"
 
+	* Experimental dependency on gtools (with method(gtools))
+	findfile "ftools_plugin.mata"
+	include "`r(fn)'"
+
 	//findfile "ftools_experimental.mata"
 	//include "`r(fn)'"
 
