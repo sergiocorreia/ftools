@@ -112,7 +112,7 @@ although string variables are only supported by a few functions
 (first, last, firstnm, lastnm).
 
 {pstd}
-Weights are currently not supported.
+Weights are only partially supported.
 
 {pstd}
 You can implement your own Mata functions to easily extend the fcollapse command.

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Stata help for ftools</title>
+<meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
+<link href="css/smcl.css" rel="stylesheet" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Merriweather:900,400,400italic" rel="stylesheet" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:600,600italic" rel="stylesheet" type="text/css">
+</head>
+<body><div class="smcl" version="2.15.0 25jul2017">
+<h1>Help for ftools</h1>
+<nav id="table-of-contents" class="smcl-nav"><ul>
+<li class="description">Jump to:</li>
+<li class="link"><a href="#syntax">Syntax</a></li>
+<li class="link"><a href="#creation">Creation</a></li>
+<li class="link"><a href="#properties">Properties and methods</a></li>
+<li class="link"><a href="#description">Description</a></li>
+<li class="link"><a href="#usage">Usage</a></li>
+<li class="link"><a href="#example">Example</a></li>
+<li class="link"><a href="#remarks">Remarks</a></li>
+<li class="link"><a href="#collapse">Using functions from collapse</a></li>
+<li class="link"><a href="#experimental">Experimental/advanced</a></li>
+<li class="link"><a href="#source">Source code</a></li>
+<li class="link"><a href="#contact">Author</a></li>
+</ul></nav><nav id="related-content" class="smcl-nav"><ul>
+<li class="description">Also see:</li>
+<li class="link"><a href="http://www.stata.com/help.cgi?fegen">fegen</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?fcollapse">fcollapse</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?join">join</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?fmerge">fmerge</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?flevelsof">flevelsof</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?fisid">fisid</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?fsort">fsort</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?egen">[R] egen</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?collapse">[R] collapse</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?contract">[R] contract</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?merge">[R] merge</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?levelsof">[R] levelsof</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?sort">[R] sort</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?moremata">moremata</a></li>
+<li class="link"><a href="http://www.stata.com/help.cgi?reghdfe">reghdfe</a></li>
+</ul></nav>
+<h2 margin_bottom="1">Title</h2>
+<table class="standard"><tr>
+<td>
+<code class="command">FTOOLS</code> <span>&#8212;</span>
+</td>
+<td>Mata commands for factor variables  </td>
+</tr></table>
+<h2 margin_bottom="1" id="syntax">Syntax</h2>
+<p class="8-16-2-0"><var class="command">class Factor scalar</var> <span class="nowrap"> </span><code class="command">factor(</code><span options="3">{space 3}</span><var class="command">varnames</var> [<span options="1">{space 1}</span> <code class="command">,</code> <var class="command">touse</var><code class="command">,</code> <var class="command">verbose</var><code class="command">,</code> <var class="command">method</var><code class="command">,</code> <var class="command">sort_levels</var><code class="command">,</code> <var class="command">count_levels</var><code class="command">,</code> <var class="command">hash_ratio</var><code class="command">,</code> <var class="command">save_keys</var>]<code class="command">)</code> </p>
+<p class="8-16-2-0"><var class="command">class Factor scalar</var> <span class="nowrap"> </span><code class="command">_factor(</code><var class="command">data</var> [<code class="command">,</code> <var class="command">integers_only</var><code class="command">,</code> <var class="command">verbose</var><code class="command">,</code> <var class="command">method</var><code class="command">,</code> <var class="command">sort_levels</var><code class="command">,</code> <var class="command">count_levels</var><code class="command">,</code> <var class="command">hash_ratio</var><code class="command">,</code> <var class="command">save_keys</var>]<code class="command">)</code> </p>
+<p class="8-16-2-0"><var class="command">class Factor scalar</var> <span class="nowrap"> </span><code class="command">join_factors(</code><var class="command">F1</var><code class="command">,</code> <var class="command">F2</var> [<code class="command">,</code> <var class="command">count_levels</var><code class="command">,</code> <var class="command">save_keys</var><code class="command">,</code> <var class="command">levels_as_keys</var>]<code class="command">)</code> </p>
+<table class="syntab" id="arguments">
+<thead><tr>
+<td colspan="2">Options</td>
+<td>Description</td>
+</tr></thead>  <tbody>
+<tr style="has_footnote">
+<td>*</td>
+<td><var class="command">string</var> varnames</td>
+<td>names of variables that identify the factors</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string</var> touse</td>
+<td>name of dummy <a class="command" href="http://www.stata.com/help.cgi?mark"><b>touse</b></a> variable</td>
+</tr>
+<tr>
+<td colspan="2"></td>
+<td>
+<b>note:</b> you can also pass a vector with the obs. index (i.e. the first argument of <code class="command">st_data()</code>)</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string</var> data</td>
+<td>transmorphic matrix with the group identifiers</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td><b>Advanced options:</b></td>
+<td></td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real</var> verbose</td>
+<td>1 to display debug information</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string</var> method</td>
+<td>hashing method: mata, hash0, hash1, hash2; default is <var class="command">mata</var> (auto-choose)</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real</var> sort_levels</td>
+<td>set to 0 under <var class="command">hash1</var> to increase speed, but the new levels will not match the order of the varlist</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real</var> count_levels</td>
+<td>set to 0 under <var class="command">hash0</var> to increase speed, but the <var class="command">F.counts</var> vector will not be generated so F<code class="command">.panelsetup()</code>, F<code class="command">.drop_obs()</code>, and related methods will not be available</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real</var> hash_ratio</td>
+<td>size of the hash vector compared to the maximum number of keys (often num. obs.)</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real</var> save_keys</td>
+<td>set to 0 to increase speed and save memory, but the matrix <var class="command">F.keys</var> with the original values of the factors won't be created</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string</var> integers_only</td>
+<td>whether <var class="command">data</var> is numeric and takes only <var class="command">integers</var> or not (unless you are sure of the former, set it to 0)</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real</var> levels_as_keys</td>
+<td>if set to 1, <code class="command">join_factors()</code> will use the levels of F1 and F2 as the keys (as the data) when creating F12</td>
+</tr>
+</tbody>              </table>
+<h2 margin_bottom="1" id="creation">Creating factor objects</h2>
+<p class="std">(optional) First, you can declare the Factor object: </p>
+<p class="8-8-2-0"><code class="command">class Factor scalar</code><var class="command"> F</var><br> </p>
+<p class="std">Then, you can create a factor from one or more categorical variables: </p>
+<p class="8-8-2-0"><var class="command">F </var><code class="command">=</code><span class="nowrap"> </span><code class="command">factor(</code><var class="command">varnames</var><code class="command">)</code> </p>
+<p class="std">If the categories are already in Mata (<code class="command">data = st_data(., varnames)</code>), you can do: </p>
+<p class="8-8-2-0"><var class="command">F </var><code class="command">=</code><span class="nowrap"> </span><code class="command">_factor(</code><var class="command">data</var><code class="command">)</code> </p>
+<p class="std">You can also combine two factors (<var class="command">F1</var> and <var class="command">F2</var>): </p>
+<p class="8-8-2-0"><var class="command">F </var><code class="command">=</code><span class="nowrap"> </span><code class="command">join_factors(</code><var class="command">F1</var><code class="command">,</code> <var class="command">F2</var><code class="command">)</code> </p>
+<p class="std">Note that the above is exactly equivalent (but faster) than: </p>
+<p class="8-8-2-0"><var class="command"> varnames</var> <code class="command">= invtokens((</code><var class="command">F1.varnames</var><code class="command">,</code> <var class="command">F2.varnames</var><code class="command">))</code><br> <var class="command">F</var> <code class="command">=</code> <code class="command">factor(</code><var class="command">varnames</var><code class="command">)</code> </p>
+<p class="std">If <var class="command">levels_as_keys==1</var>, it is equivalent to: </p>
+<p class="8-8-2-0"><var class="command">F </var><code class="command">=</code><span class="nowrap"> </span><code class="command">_factor((</code><var class="command">F1.levels</var><code class="command">,</code> <var class="command">F2.levels</var><code class="command">))</code> </p>
+<h2 margin_bottom="1" id="properties">Properties and Methods</h2>
+<table class="syntab" id="arguments">
+<thead><tr>
+<td colspan="2">properties</td>
+<td>Description</td>
+</tr></thead>  <tbody>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real</var> F<code class="command">.num_levels</code>
+</td>
+<td>number of levels (distinct values) of the factor</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real</var> F<code class="command">.num_obs</code>
+</td>
+<td>number of observations of the sample used to create the factor (<code class="command">c(N)</code> if touse was empty)</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real colvector</var> F<code class="command">.levels</code>
+</td>
+<td>levels of the factor; dimension <code class="command">F.num_obs x 1</code>; range: {cmd:{1, ..., F.num_levels}}{p_end} <span>{synopt None}<var class="command">transmorphic matrix</var> F<code class="command">.keys</code></span>values of the input varlist that correspond to the factor levels; dimension <code class="command">F.num_levels x 1</code>; not created if save_keys==0; unordered if sort_levels==0</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real vector</var> F<code class="command">.counts</code>
+</td>
+<td>frequencies of each level (in the sample set by touse); dimension <code class="command">F.num_levels x 1</code>; will be empty if count_levels==0</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string rowvector</var> F<code class="command">.varlist</code>
+</td>
+<td>name of variables used to create the factor</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string rowvector</var> F<code class="command">.varformats</code>
+</td>
+<td>formats of the input variables</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string rowvector</var> F<code class="command">.varlabels</code>
+</td>
+<td>labels of the input variables</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string rowvector</var> F<code class="command">.varvaluelabels</code>
+</td>
+<td>value labels attached to the input variables</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string rowvector</var> F<code class="command">.vartypes</code>
+</td>
+<td>types of the input variables</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string rowvector</var> F<code class="command">.vl</code>
+</td>
+<td>value label definitions used by the input variables</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string</var> F<code class="command">.touse</code>
+</td>
+<td>name of touse variable</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">string</var> F<code class="command">.is_sorted</code>
+</td>
+<td>1 if the dataset is sorted by F<code class="command">.varlist</code>
+</td>
+</tr>
+</tbody>            </table>
+<table class="syntab">
+<thead><tr>
+<td colspan="2">main methods</td>
+<td>Description</td>
+</tr></thead>  <tbody>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">void</var> F<code class="command">.store_levels(</code><a class="command" href="http://www.stata.com/help.cgi?newvar">newvar</a><code class="command">)</code>
+</td>
+<td>save the levels back into the dataset (using the same <var class="command">touse</var>)</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">void</var> F<code class="command">.store_keys(</code>[<var class="command">sort</var>]<code class="command">)</code>
+</td>
+<td>save the original key variables into a reduced dataset, including formatting and labels. If <var class="command">sort</var> is 1, Stata will report the dataset as sorted</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">void</var> F<code class="command">.panelsetup()</code>
+</td>
+<td>compute auxiliary vectors <var class="command">F.info</var> and <var class="command">F.p</var> (see below); used in panel computations</td>
+</tr>
+</tbody>   </table>
+<table class="syntab">
+<thead><tr>
+<td colspan="2">ancilliary methods</td>
+<td>Description</td>
+</tr></thead>  <tbody>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real scalar</var> F<code class="command">.equals(</code>F2<code class="command">)</code>
+</td>
+<td>1 if <var class="command">F</var> represents the same data as <var class="command">F2</var> (i.e. if .num_obs .num_levels .levels .keys and .counts are equal) </td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real scalar</var> F<code options=".nested_within(vec)" class="command">.nested_within(<var>vec</var>)</code>
+</td>
+<td>1 if the factor <var class="command">F</var> is <a class="command" href="http://scorreia.com/software/reghdfe/faq.html#what-does-fixed-effect-nested-within-cluster-means"><b>nested within</b></a> the column vector <var class="command">vec</var> (i.e. if any two obs. with the same factor level also have the same value of <var class="command">vec</var>). For instance, it is true if the factor <var class="command">F</var> represents counties and <var class="command">vec</var> represents states. </td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">void</var> F<code class="command">.drop_obs(</code><var class="command">idx</var><code class="command">)</code>
+</td>
+<td>update <var class="command">F</var> to reflect a change in the underlying dataset, where the observations listed in the column vector <var class="command">idx</var> are dropped (see example below) </td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">void</var> F<code class="command">.keep_obs(</code><var class="command">idx</var><code class="command">)</code>
+</td>
+<td>equivalent to keeping only the obs. enumerated by <var class="command">idx</var> and recreating <var class="command">F</var>; uses <code class="command">.drop_obs()</code> </td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">void</var> F<code class="command">.drop_if(</code><var class="command">vec</var><code class="command">)</code>
+</td>
+<td>equivalent to dropping the obs. where <var class="command">vec==0</var> and recreating <var class="command">F</var>; uses <code class="command">.drop_obs()</code> </td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">void</var> F<code class="command">.keep_if(</code><var class="command">vec</var><code class="command">)</code>
+</td>
+<td>equivalent to keeping the obs. where <var class="command">vec!=0</var> and recreating <var class="command">F</var>; uses <code class="command">.drop_obs()</code> </td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real colvector</var> F<code class="command">.drop_singletons()</code>
+</td>
+<td>equivalent to dropping the levels that only appear once, and their corresponding observations. The colvector returned contains the observations that need to be excluded (note: see the source code for some advanced optional arguments). </td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real scalar</var> F<code options=".is_id()" class="command">.is_id(<var></var>)</code>
+</td>
+<td>1 if <var class="command">F.counts</var> is always 1 (i.e. if <var class="command">F.levels</var> has no duplicates) </td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real vector</var> F<code class="command">.intersect(</code><var class="command">vec</var><code class="command">)</code>
+</td>
+<td>return a mask vector equal to 1 if the row of <var class="command">vec</var> is also on F.keys. Also accepts the integers_only and verbose options: <var class="command">mask = F.intersect(y, 1, 1)</var> </td>
+</tr>
+</tbody>         </table>
+<table class="syntab">
+<thead><tr>
+<td colspan="2">available after F.panelsetup()</td>
+<td>Description</td>
+</tr></thead>  <tbody>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">transmorphic matrix</var> F<code class="command">.sort(</code><var class="command">data</var><code class="command">)</code>
+</td>
+<td>equivalent to <code class="command">data[F.p, .]</code> but calls <code class="command">F.panelsetup()</code> if required; <var class="command">data</var> is a <var class="command">transmorphic matrix</var>
+</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">transmorphic matrix</var> F<code class="command">.invsort(</code><var class="command">data</var><code class="command">)</code>
+</td>
+<td>equivalent to <code class="command">data[invorder(F.p), .]</code>, so it undoes a previous sort operation. Note that <code class="command">F.invsort(F.sort(x))==x</code>. Also, after used it fills the vector <code class="command">F.inv_p = invorder(F.p)</code> so the operation can be repeated easily. </td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">void</var> F<code class="command">._sort(</code><var class="command">data</var><code class="command">)</code>
+</td>
+<td>in-place version of <code class="command">.sort()</code>; slower but uses less memory, as it's based on <code class="command">_collate()</code>
+</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real vector</var> F<code class="command">.info</code>
+</td>
+<td>equivalent to <a class="command" href="http://www.stata.com/help.cgi?mf_panelsetup"><b>panelsetup()</b></a> (returns a <var class="command">(num_levels X 2)</var> matrix with start and end positions of each level/panel).</td>
+</tr>
+<tr>
+<td colspan="2"></td>
+<td>
+<b>note:</b> instead of using <code class="command">F.info</code> directly, use panelsubmatrix(): <code class="command">x = panelsubmatrix(X, i, F.info)</code> and <code class="command">panelsum()</code>(see example at the end)</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>
+<var class="command">real vector</var> F<code class="command">.p</code>
+</td>
+<td>equivalent to <code class="command">order(F.levels)</code> but implemented with a counting sort that is asymptotically faster (<var class="command">O(N)</var> instead of <var class="command">O(N log N)</var>.</td>
+</tr>
+<tr>
+<td colspan="2"></td>
+<td>
+<b>note:</b> do not use <code class="command">F.p</code> directly, as it will be missing if the data is already sorted by the varnames.</td>
+</tr>
+</tbody>        </table>
+<p class="std">Notes: </p>
+<table class="syntab">
+<tbody>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>If you just downloaded the package and want to use the Mata functions directly (instead of the Stata commands), run <code class="command">. ftools</code> once to, which creates the Mata library if needed.</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>To force compilation of the Mata library, type <code class="command">. ftools, compile</code>
+</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>
+<code class="command">F.extra</code> is an undocumented <a class="command" href="http://www.stata.com/help.cgi?mf_asarray"><b>asarray</b></a> that can be used to store additional information: <code class="command">asarray(f.extra, "lorem", "ipsum")</code>; and retrieve it: <code class="command">ipsum = asarray(f.extra, "lorem")</code>
+</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>
+<code class="command">join_factors()</code> is particularly fast if the dataset is sorted in the same order as the factors</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>
+<code class="command">factor()</code> will call <code class="command">join_factors()</code> if appropriate (2+ integer variables; 10,000+ obs; and method=hash1) </td>
+</tr>
+</tbody>     </table>
+<h2 margin_bottom="1" id="description">Description</h2>
+<p class="std">The <var class="command">Factor</var> object is a key component of several commands that manipulate data without having to sort it beforehand: </p>
+<p class="more">- <a class="command" href="http://www.stata.com/help.cgi?fcollapse"><b>fcollapse</b></a> (alternative to collapse, contract, collapse+merge and some egen functions)</p>
+<p class="more">- <a class="command" href="http://www.stata.com/help.cgi?fegen"><b>fegen group</b></a></p>
+<p class="more">- <a class="command" href="http://www.stata.com/help.cgi?fisid"><b>fisid</b></a></p>
+<p class="more">- <a class="command" href="http://www.stata.com/help.cgi?join"><b>join</b></a> and <a class="command" href="http://www.stata.com/help.cgi?fmerge"><b>fmerge</b></a> (alternative to m:1 and 1:1 merges)</p>
+<p class="more">- <a class="command" href="http://www.stata.com/help.cgi?flevelsof"><b>flevelsof</b></a> plug-in alternative to <a class="command" href="http://www.stata.com/help.cgi?levelsof"><b>levelsof</b></a></p>
+<p class="more">- <a class="command" href="http://www.stata.com/help.cgi?fsort"><b>fsort</b></a> (note: this is O(N) but with a high constant term)</p>
+<p class="more">- freshape</p>
+Ancilliary commands include:
+
+<p class="more">- <a class="command" href="http://www.stata.com/help.cgi?local_inlist"><b>local_inlist</b></a> return local <var class="command">inlist</var> based on a variable and a list of values or labels</p>
+<p class="std">It rearranges one or more categorical variables into a new variable that takes values from 1 to F.num_levels. You can then efficiently sort any other variable by this, in order to compute groups statistics and other manipulations. </p>
+<p class="std">For technical information, see <a class="command" href="http://stackoverflow.com/questions/8991709/why-are-pandas-merges-in-python-faster-than-data-table-merges-in-r/8992714#8992714"><b>[1]</b></a> <a class="command" href="http://wesmckinney.com/blog/nycpython-1102012-a-look-inside-pandas-design-and-development/"><b>[2]</b></a>, and to a lesser degree <a class="command" href="https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/AnalyzingData/Optimizations/AvoidingGROUPBYHASHWithProjectionDesign.htm"><b>[3]</b></a>. </p>
+<h2 margin_bottom="1" id="usage">Usage</h2>
+<p class="std">If you only want to create identifiers based on one or more variables, run something like: </p>
+<span>{inp None}</span>
+    <hr options="60" margin_bottom="4">    sysuse auto, clear    mata: F = factor("foreign turn")    mata: F.store_levels("id")    mata: mata drop F    <hr options="60">
+<span>{txt None}</span>
+
+<p class="std">More complex scenarios would involve some of the following: </p>
+<span>{inp None}</span>
+    <hr options="60" margin_bottom="19">    sysuse auto, clear    * Create factors for foreign data only    mata: F = factor("turn", "foreign")    * Report number of levels, obs. in sample, and keys    mata: F.num_levels    mata: F.num_obs    mata: F.keys, F.counts    * View new levels    mata: F.levels[1::10]    * Store back new levels (on the same sample)    mata: F.store_levels("id")    * Verify that the results are correct    sort id    li turn foreign id in 1/10    <hr options="60">
+<span>{txt None}</span>
+
+
+<h2 margin_bottom="1" id="example">Example: operating on levels of each factor</h2>
+<p class="std">This example shows how to process data for each level of the factor (like <a class="command" href="http://www.stata.com/help.cgi?bysort"><b>bysort</b></a>). It does so by combining <code class="command">F.sort()</code> with <a class="command" href="http://www.stata.com/help.cgi?mf_panelsetup"><b>panelsubmatrix()</b></a>. </p>
+<p class="std">In particular, this code runs a regression for each category of <var class="command">turn</var>: </p>
+<span>{inp None}</span>
+    <hr options="60" margin_bottom="23">    clear all    mata:    real matrix reg_by_group(string depvar, string indepvars, string byvar)    {    	class Factor scalar			F    	real scalar				i    	real matrix				X, Y, x, y, betas    	F = factor(byvar)    	Y = F.sort(st_data(., depvar))    	X = F.sort(st_data(., tokens(indepvars)))    	betas = J(F.num_levels, 1 + cols(X), .)    	for (i = 1; i &lt;= F.num_levels; i++) {    		y = panelsubmatrix(Y, i, F.info)    		x = panelsubmatrix(X, i, F.info) , J(rows(y), 1, 1)    		betas[i, .] = qrsolve(x, y)'    	}    	return(betas)    }    end    sysuse auto    mata: reg_by_group("price", "weight length", "foreign")    <hr options="60">
+<span>{text None}</span>
+
+
+<h2 margin_bottom="1" id="example2">Example: Factors nested within another variable</h2>
+<p class="std">You might be interested in knowing if a categorical variable is nested within another, more coarser, variable. For instance, a variable containing months ("Jan2017") is nested within another containing years ("2017")), a variable containing counties ("Durham County, NC") is nested within another containing states ("North Carolina"), and so on. </p>
+<p class="std">To check for this, you can follow this example: </p>
+<span>{inp None}</span>
+    <hr options="60" margin_bottom="9">    sysuse auto    gen turn10 = int(turn/10)    mata:        F = factor("turn")        F.nested_within(st_data(., "trunk")) // False        F.nested_within(st_data(., "turn")) // Trivially true        F.nested_within(st_data(., "turn10")) // True    end    <hr options="60">
+<span>{txt None}</span>
+
+<p class="std">You can also compare two factors directly: </p>
+<span>{inp None}</span>
+    <hr options="60" margin_bottom="5">    mata:        F1 = factor("turn")        F2 = factor("turn10")        F1.nested_within(F2.levels) // True    end    <hr options="60">
+<span>{txt None}</span>
+
+
+<h2 margin_bottom="1" id="example3">Example: Updating a factor after dropping variables</h2>
+<p class="std">If you change the underlying dataset you have to recreate the factor, which is costly. As an alternative, you can use <code class="command">.keep_obs()</code> and related methods: </p>
+<span>{inp None}</span>
+    <hr options="60" margin_bottom="34">    * Benchmark    sysuse auto, clear    drop if price &gt; 4500    mata: F1 = factor("turn")    // Quickly inspect results    mata: F1.num_obs, F1.num_levels, hash1(F1.levels)    * Using F.drop_obs()    sysuse auto, clear    mata        price = st_data(., "price")        F2 = factor("turn")        idx = selectindex(price :&gt; 4500)        mata: F2.num_obs, F2.num_levels, hash1(F2.levels)        F2.drop_obs(idx)        mata: F2.num_obs, F2.num_levels, hash1(F2.levels)        assert(F1.equals(F2))    end    * Using the other methods    mata        F2 = factor("turn")        idx = selectindex(price :&lt;= 4500)        F2.keep_obs(idx)        assert(F1.equals(F2))        F2 = factor("turn")        F2.drop_if(price :&gt; 4500)        assert(F1.equals(F2))        F2 = factor("turn")        F2.keep_if(price :&lt;= 4500)        assert(F1.equals(F2))    end    <hr options="60">
+<span>{txt None}</span>
+
+
+<h2 margin_bottom="1" id="remarks">Remarks</h2>
+<p class="std">All-numeric and all-string varlists are allowed, but hybrid varlists (where some but not all variables are strings) are not possible due to Mata limitations. As a workaround, first convert the string variables to numeric (e.g. using <code class="command">fegen group()</code>) and then run your intended command. </p>
+<p class="std">You can pass as <a class="command" href="http://www.stata.com/help.cgi?varlist">varlist</a> a string like "turn trunk" or a tokenized string like ("turn", "trunk"). </p>
+<p class="std">To generate a group identifier, most commands first sort the data by a list of keys (such as <var class="command">gvkey, year</var>) and then ask if the keys differ from one observation to the other. Instead, <code class="command">ftools</code> exploits the insights that sorting the data is not required to create an identifier, and that once an identifier is created, we can then use a <var class="command">counting sort</var> to sort the data in <var class="command">O(N)</var> time instead of <var class="command">O log(N)</var>. </p>
+<p class="std">To create an identifier (that takes a value in {1, <var class="command">#keys</var>}) we first match each key (composed by one or more numbers and strings) into a unique integer.  For instance, the key <var class="command">gvkey=123, year=2010</var> is assigned the integer <var class="command">4268248869</var> with the Mata function <code class="command">hash1</code>.  This identifier can then be used as an index when accessing vectors, bypassing the need for sorts. </p>
+<p class="std">The program tries to pick the hash function that best matches the dataset and input variables. For instance, if the input variables have a small range of possible values (e.g. if they are of <var class="command">byte</var> type), we select the <var class="command">hash0</var> method, which uses a (non-minimal) perfect hashing but might consume a lot of memory. Alternatively, <var class="command">hash1</var> is used, which adds <a class="command" href="https://www.wikiwand.com/en/Open_addressing"><b>open addressing</b></a> to Mata's <a class="command" href="http://www.stata.com/help.cgi?mf_hash1"><b>hash1</b></a> function to create a form of open addressing (that is more efficient than Mata's <a class="command" href="http://www.stata.com/help.cgi?mf_asarray"><b>asarray</b></a>). </p>
+<h2 margin_bottom="1" id="collapse">Using the functions from <var class="command">fcollapse</var>
+</h2>
+<p class="std">You can access the <code class="command">aggregate_*()</code> functions so you can collapse information without resorting to Stata. Example: </p>
+<span>{inp None}</span>
+    <hr options="60" margin_bottom="10">    sysuse auto, clear    mata: F = factor("turn")    mata: F.panelsetup()    mata: y = st_data(., "price")    mata: sum_y = aggregate_sum(F, F.sort(y), ., "")    mata: F.keys, F.counts, sum_y    * Benchmark    collapse (sum) price, by(turn)    list    <hr options="60">
+<span>{txt None}</span>
+
+Functions start with <code class="command">aggregate_*()</code>, and are listed <span options="fcollapse_functions.mata, adopath asis">{view fcollapse_functions.mata, adopath asis:here}</span>
+
+
+<h2 margin_bottom="1" id="experimental">Experimental/advanced functions</h2>
+<p class="8-16-2-0"><var class="command">real scalar</var> <span class="nowrap"> </span><code class="command">init_zigzag(</code><var class="command">F1</var><code class="command">,</code> <var class="command">F2</var><code class="command">,</code> <var class="command">F12</var><code class="command">,</code> <var class="command">F12_1</var><code class="command">,</code> <var class="command">F12_2</var><code class="command">,</code> <var class="command">queue</var><code class="command">,</code> <var class="command">stack</var><code class="command">,</code> <var class="command">subgraph_id</var><code class="command">,</code> <var class="command">verbose</var><code class="command">)</code> </p>
+<p class="std">Notes: </p>
+<table class="syntab">
+<tbody>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>Given the bipartite graph formed by F1 and F2, the function returns the number of disjoin subgraphs (mobility groups)</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>F12 must be set with levels_as_keys==1</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>For F12_1 and F12_2, you can set save_keys==0</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>The function fills three useful vectors: queue, stack and subgraph_id</td>
+</tr>
+<tr>
+<td class="normal"></td>
+<td>- </td>
+<td>If subgraph_id==0, it the id vector will not be created</td>
+</tr>
+</tbody>     </table>
+<h2 margin_bottom="1" id="source">Source code</h2>
+<p class="std"><span options="ftools.mata, adopath asis">{view ftools.mata, adopath asis:ftools.mata}</span>; <span options="ftools_type_aliases.mata, adopath asis">{view ftools_type_aliases.mata, adopath asis:ftools_type_aliases.mata}</span>; <span options="ftools_main.mata, adopath asis">{view ftools_main.mata, adopath asis:ftools_main.mata}</span>; <span options="ftools_bipartite.mata, adopath asis">{view ftools_bipartite.mata, adopath asis:ftools_bipartite.mata}</span> <span options="fcollapse_functions.mata, adopath asis">{view fcollapse_functions.mata, adopath asis:fcollapse_functions.mata}</span> </p>
+<p class="std">Also, the latest version is available online: <a class="command" href="https://github.com/sergiocorreia/ftools/source"><b>"https://github.com/sergiocorreia/ftools/source"</b></a> </p>
+<h2 margin_bottom="1" id="author">Author</h2>
+<p class="std">Sergio Correia<br> <br> <a class="command" href="http://scorreia.com"><b>"http://scorreia.com"</b></a><br> <a class="command" href="mailto:sergio.correia@gmail.com"><b>sergio.correia@gmail.com</b></a><br> </p>
+
+<h2 margin_bottom="1" id="project">More Information</h2>
+<p class="std"><br> To report bugs, contribute, ask for help, etc. please see the project URL in Github:<br> <a class="command" href="https://github.com/sergiocorreia/ftools"><b>"https://github.com/sergiocorreia/ftools"</b></a><br> </p>
+
+<h2 margin_bottom="1" id="acknowledgment">Acknowledgment</h2>
+<p class="std">This project was largely inspired by the works of <a class="command" href="http://wesmckinney.com/blog/nycpython-1102012-a-look-inside-pandas-design-and-development/"><b>Wes McKinney</b></a>, <a class="command" href="http://www.stata.com/meeting/uk15/abstracts/"><b>Andrew Maurer</b></a> and <a class="command" href="https://ideas.repec.org/c/boc/bocode/s455001.html"><b>Benn Jann</b></a>. </p>
+</div></body>
+</html>

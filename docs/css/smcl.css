@@ -1,0 +1,504 @@
+/* Basic CSS Template for SMCL Help Files
+   Author: Sergio Correia
+   Date: Feb 17, 2016 */
+
+/* Base Typography */
+
+div.smcl {
+    font-family: "equity-text", "Merriweather", "Open Sans", "PT Serif", Georgia, "Times New Roman", Serif;
+    line-height: 1.5;
+    font-size: 1rem;
+}
+
+div.smcl h1, h2, h3, h4, h5, h6 {
+    font-family: "concourse-text", "Source Sans Pro", "Helvetica Neue", Helvetica, sans-serif;
+    font-weight: bold;
+    line-height: 1.25;
+}
+
+div.smcl h1 {
+	font-size: 1.8rem;
+}
+
+div.smcl h2 {
+	font-size: 1.5rem;
+	margin-top: 3.5rem;
+	margin-bottom: 1rem;
+}
+
+div.smcl h3 {
+	font-size: 1.2rem;
+	margin-top: 2rem;
+	margin-bottom: 1em;
+}
+
+div.smcl h4 {
+	font-size: 1.0rem;
+}
+
+div.smcl p, dl, ol, ul {
+  font-size: 1rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+div.smcl ol, ul {
+  padding-left: 2rem;
+}
+
+div.smcl pre, code, samp, var {
+  font-family: 'DejaVu Sans Mono', Consolas, 'Source Code Pro', Input, 'Lucida Console', 'Lucida Sans Typewriter', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, monospace;
+  font-size: 1rem;
+}
+
+div.smcl pre {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+div.smcl hr {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+div.smcl b {
+	font-weight: bold;
+}
+
+
+/* Color Base */
+
+div.smcl pre {
+  /*background-color: $lighter-gray;*/
+  /* Replaced with github's style */
+  background-color:rgba(0, 0, 0, 0.03921568627); /* 1/25.5 */
+  border-radius: 3px;
+}
+
+div.smcl hr {
+  border: 0;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-color: #ccc;
+}
+
+
+/* Links */
+
+div.smcl a {
+  color: #2a5db0;
+  text-decoration: none;
+}
+
+/* medium-style links disabled: http://ux.stackexchange.com/a/7068 */
+
+div.smcl a:hover, a:focus, a:active {
+  text-decoration: none;
+  background: #e9f0f0;
+  -moz-transition-property: background;
+  -webkit-transition-property: background;
+  transition-property: background;
+  -moz-transition-duration: 0.2s;
+  -webkit-transition-duration: 0.2s;
+  transition-duration: 0.2s;
+
+  border-radius: 8px;
+}
+
+
+
+/* Paras */
+/* para : left-first left-subsequent right total-width */
+/* 1) Divide indentations by half */
+/* 2) margin-left is the sum of that and text indent */
+@media screen and (min-width: 48em) {
+
+div.smcl p.std {
+	margin-left: 2rem;
+	margin-right: 1rem;
+	text-indent: 0rem;
+}
+
+div.smcl p.hang {
+	margin-left: 4rem;
+	margin-right: 1rem;
+	text-indent: -2rem;
+}
+
+div.smcl p.hang2 {
+	margin-left: 6rem;
+	margin-right: 1rem;
+	text-indent: -2rem;
+}
+
+div.smcl p.more {
+	margin-left: 4rem;
+	margin-right: 1rem;
+	text-indent: 0rem;
+}
+
+div.smcl p.more2 {
+	margin-left: 6rem;
+	margin-right: 1rem;
+	text-indent: 0rem;
+}
+
+div.smcl p.in {
+	margin-left: 4rem;
+	margin-right: 1rem;
+	text-indent: 0rem;
+}
+
+div.smcl p.see {
+	margin-left: 8.5rem;
+	margin-right: 1rem;
+	text-indent: -6.5rem;
+}
+
+div.smcl p.0-0-2-0 {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	text-indent: -1rem;
+}
+
+div.smcl p.8-15-2-0 {
+	margin-left: 11.5rem;
+	margin-right: 1rem;
+	text-indent: -7.5rem;
+}
+div.smcl p.8-13-2-0 {
+	margin-left: 10.5rem;
+	margin-right: 1rem;
+	text-indent: -6.5rem;
+}
+div.smcl p.8-15-2-0 {
+	margin-left: 12rem;
+	margin-right: 1rem;
+	text-indent: -8rem;
+}
+
+}
+
+/*
+  Table styles copied from Bootstrap
+  Copyright (c) 2013 Twitter, Inc
+*/
+
+table {
+  font-size: 1rem;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5px;
+}
+
+tbody tr:last-child td {
+	padding-bottom: 10px;
+}
+
+table.syntab tbody:last-of-type tr:last-child td{
+	border-bottom: 3px solid #333;
+}
+
+td {
+	vertical-align: top;
+}
+
+thead td {
+    border-bottom: 3px solid #333;
+    font-size: 1.25rem;
+}
+
+tfoot {
+	font-size: 0.9rem;
+}
+
+tfoot td {
+	padding-left: 2rem;
+	text-indent: -1rem;
+}
+
+tbody ~ tbody tr.section td {
+	font-size: 1.1rem;
+	padding-top: 5px;
+	border-top: 1px solid #333;
+}
+
+table.syntab td:first-child {
+	min-width: 2rem;
+}
+
+
+/* Heading Counters */
+/* http://www.2ality.com/2012/01/numbering-headingshtml.html */
+
+div.smcl {
+	counter-reset: h2counter;
+}
+div.smcl h2 {
+    counter-reset: h3counter;
+}
+div.smcl h2:before {
+    content: counter(h2counter) ".\0000a0\0000a0";
+    counter-increment: h2counter;
+}
+div.smcl  h3:before {
+    content: counter(h2counter) "." counter(h3counter) ".\0000a0\0000a0";
+    counter-increment: h3counter;
+}
+
+
+ /* Viewport */
+
+div.smcl {
+  margin: 0 auto;
+  max-width: 40rem;
+}
+
+table {
+	overflow-x: auto;
+	word-wrap:break-word
+}
+
+
+
+@media screen and (min-width: 32em) {
+  body {
+    font-size: 22px;
+  }
+  table.standard td:first-of-type {
+  	white-space: nowrap;
+  }
+}
+
+@media screen and (min-width: 48em) {
+  body {
+    font-size: 20px;
+  }
+}
+
+@media screen and (min-width: 64em) {
+  body {
+    font-size: 24px;
+  }
+
+
+}
+
+@media screen and (min-width: 78em) {
+  em img {
+    max-width: 46rem;
+    margin-left: -7em;
+  }
+}
+
+
+ /*Code */
+
+div.smcl pre {
+	padding: .5rem;
+	line-height: 1.11rem;
+
+	counter-reset: line-numbering;
+	white-space: pre;
+	overflow-x: auto;
+	word-break: inherit;
+	word-wrap: inherit;
+}
+
+div.smcl pre code {
+	font-size: .9rem;
+}
+
+div.smcl pre code:before {
+	content: '.\a0';
+}
+
+/*div.smcl p code {
+    font-weight: bold;
+    line-height: 1.25;
+}
+*/
+
+p kbd,
+dl kbd,
+ul kbd,
+ol kbd {
+  display: inline-block;
+  padding: 6px 5px 8px 5px;
+  font-size: .75rem;
+  line-height: 10px;
+  color: #555;
+  vertical-align: middle;
+  background-color: #fcfcfc;
+  border: solid 1px #ccc;
+  border-bottom-color: #bbb;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #bbb;
+}
+
+var {
+  font-style: italic;
+  font-size: 1rem;
+}
+
+samp {
+  font-size: 0.85rem;
+}
+
+pre code {
+  background-color: transparent;
+}
+/* Misc. */
+
+div.smcl span.nowrap {
+	white-space: nowrap;
+}
+
+
+    /*font-family: "Source Sans Pro","Helvetica Neue", Helvetica, sans-serif;*/
+/**/
+
+/*monospace-font-family: 'DejaVu Sans Mono', Consolas, 'Source Code Pro', 'Input', 'Lucida Console', 'Lucida Sans Typewriter',  'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, monospace !default;
+   10: $ui-font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Roboto","Oxygen","Ubuntu","Cantarell","Open Sans","Helvetica Neue",sans-serif;
+*/
+
+
+
+
+
+/**************************************************************/
+/*             Navigation Menu: Jump To & Also See            */
+/**************************************************************/
+/* Based on: http://exisweb.net/incredibly-useful-list-of-responsive-navigation-and-menu-patterns*/
+
+.smcl-nav {
+	margin: 20px 0;
+}
+.smcl-nav ul {
+	margin: 0;
+	padding: 0;
+}
+.smcl-nav li {
+	margin: 0 5px 10px 0;
+	padding: 0;
+	list-style: none;
+	display: inline-block;
+}
+.smcl-nav a {
+	padding: 3px 12px;
+	text-decoration: none;
+	color: #999;
+	line-height: 100%;
+}
+.smcl-nav a:hover {
+	color: #000;
+}
+.smcl-nav .description {
+	background: #F5F5F5;
+	border-radius: 12px;
+	padding: 0 5px;
+}
+
+
+@media screen and (max-width: 3600px) {
+
+	.smcl-nav {
+		position: relative;
+		display: block;
+		min-height: 20px;
+		margin-right: 1rem;
+		vertical-align: top;
+	}
+
+	.smcl-nav ul {
+		width: 240px;
+		padding: 0px 0;
+		top: 0;
+		left: 0;
+		position: absolute;
+		border: solid 1px #aaa;
+		background: #fff ;
+		border-radius: 14px;
+		box-shadow: 0 1px 2px rgba(0,0,0,.3);
+	}
+	.smcl-nav li {
+		display: none; /* hide all <li> items */
+		margin: 0;
+		padding: 5px 5px 5px 16px;
+		text-align: left;
+	}
+
+	.smcl-nav li.description {
+		display: block; /* show only description <li> item */
+		padding: 5px 5px 5px 28px;
+	}
+
+	.smcl-nav li.description:before {
+		content: '\2630\a0'; /* Unicode for TRIGRAM FOR HEAVEN aka burger menu bar*/
+		width:0;
+		position:absolute;
+		left:0px;
+		padding: 0px 5px;
+	}
+
+	.smcl-nav a {
+		display: block;
+
+	}
+
+	/* on nav hover */
+	.smcl-nav ul:hover {
+		z-index: 10;
+	}
+	.smcl-nav ul:hover li {
+		display: block;
+		margin: 0 0 5px;
+	}
+
+	.smcl-nav li.link:hover a:before {
+		content: '\2713\a0'; /* Unicode for CHECK MARK*/
+		width:0;
+		position:absolute;
+		left:5px;
+	}
+
+}
+
+/* Move nav buttons one below the other to save space*/
+@media screen and (min-width: 32em) {
+	.smcl-nav {
+		display: inline-block;
+	}
+	.smcl-nav ~ .smcl-nav {
+		margin-left: 240px; /*Same as width*/
+	}
+}
+
+
+/* BASE */
+
+html, body {
+  height: auto;
+  min-height: 100%;
+}
+
+/* Prevent jumps in website
+http://stackoverflow.com/questions/6357870/scrollbar-on-browser-and-div-margin-0-auto-jumping */
+html {
+	  overflow-y: scroll;
+}
+
+img {
+  max-width: 100%;
+}
+
+em img {
+  max-width: 100%;
+  margin-left: 0;
+}
+
+body {
+          box-sizing: border-box;
+     -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}

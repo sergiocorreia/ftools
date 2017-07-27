@@ -1,0 +1,86 @@
+/* www.fontsquirrel.com/tools/webfont-generator */
+
+/* Body */
+
+@font-face {
+font-family: 'equity-text';
+font-style: normal;
+font-weight: normal;
+font-stretch: normal;
+src: url('/fonts/equity-a-regular.woff2') format('woff2'),
+     url('/fonts/equity-a-regular.woff') format('woff');
+}
+
+@font-face {
+font-family: 'equity-text';
+font-style: italic;
+font-weight: normal;
+font-stretch: normal;
+src: url('/fonts/equity-a-italic.woff2') format('woff2'),
+     url('/fonts/equity-a-italic.woff') format('woff');
+}
+
+@font-face {
+font-family: 'equity-text';
+font-style: normal;
+font-weight: bold;
+font-stretch: normal;
+src: url('/fonts/equity-a-bold.woff2') format('woff2'),
+     url('/fonts/equity-a-bold.woff') format('woff');
+}
+
+@font-face {
+font-family: 'equity-caps';
+font-style: normal;
+font-weight: normal;
+font-stretch: normal;
+src: url('/fonts/equity-a-caps.woff2') format('woff2'),
+     url('/fonts/equity-a-caps.woff') format('woff');
+}
+
+/* Headers */
+
+@font-face {
+font-family: 'concourse-text';
+font-style: normal;
+font-weight: normal;
+font-stretch: normal;
+src: url('/fonts/concourse-3-text-regular.woff2') format('woff2'),
+     url('/fonts/concourse-3-text-regular.woff') format('woff');
+}
+
+@font-face {
+font-family: 'concourse-text';
+font-style: normal;
+font-weight: bold;
+font-stretch: normal;
+src: url('/fonts/concourse-3-text-bold.woff2') format('woff2'),
+     url('/fonts/concourse-3-text-bold.woff') format('woff');
+}
+
+@font-face {
+font-family: 'concourse-text';
+font-style: italic;
+font-weight: normal;
+font-stretch: normal;
+src: url('/fonts/concourse-3-text-italic.woff2') format('woff2'),
+     url('/fonts/concourse-3-text-italic.woff') format('woff');
+}
+
+@font-face {
+font-family: 'concourse-caps';
+font-style: normal;
+font-weight: normal;
+font-stretch: normal;
+src: url('/fonts/concourse-3-caps.woff2') format('woff2'),
+     url('/fonts/concourse-3-caps.woff') format('woff');
+}
+
+@font-face {
+font-family: 'concourse-caps';
+font-style: normal;
+font-weight: bold;
+font-stretch: normal;
+src: url('/fonts/concourse-3-caps-bold.woff2') format('woff2'),
+     url('/fonts/concourse-3-caps-bold.woff') format('woff');
+}
