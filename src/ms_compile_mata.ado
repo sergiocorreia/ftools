@@ -126,8 +126,22 @@ program Compile
 	* Delete any preexisting .mlib
 	loc mlib "l`package'.mlib"
 	cap findfile "`mlib'"
-	while !_rc {
-	        erase "`r(fn)'"
+	while (c(rc)!=601) {
+	        * Try to delete file
+	        cap erase "`r(fn)'"
+	        
+	        * Catch exception when file is read-only
+	        if c(rc)==608 {
+	        	di as error "(warning: file `r(fn)' is read-only; skipping delete)"
+	        	continue, break
+	        }
+	        * Abort in case of other errors
+	        else if c(rc) {
+	        	di as error "Cannot delete `r(fn)'; error `c(rc)'; aborting"
+	        	error `c(rc)'
+	        }
+
+	        * Check if the mlib file still persists somewhere (error 601: file not found)
 	        cap findfile "`mlib'"
 	}
 
@@ -141,12 +155,25 @@ program Compile
 	if (`debug') mata: mata desc
 
 	* Find out where can I save the .mlib
-	loc path = c(sysdir_plus)
+	TrySave "`c(sysdir_plus)'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
+	if (!`ok') TrySave "`c(sysdir_personal)'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
+	if (!`ok') TrySave "." "current path" "`package'" "`functions'" `debug' `verbose'
+	if (!`ok') {
+		di as error "Could not compile file; ftools will not work correctly"
+		error 123
+	}
+end
+
+
+program TrySave
+	args path name package functions debug verbose
+	assert "`package'"!=""
 	loc random_file = "`=int(runiform()*1e8)'"
 	cap conf new file "`path'`random_file'"
 	if (c(rc)) {
-		di as error `"cannot save compiled Mata file in sysdir_plus (`path'); saving in ".""'
-		loc path "."
+		di as error `"cannot save compiled Mata file in `name' (`path')"'
+		c_local ok 0
+		exit
 	}
 	else {
 		loc path = "`path'l/"
@@ -154,19 +181,31 @@ program Compile
 		if (c(rc)) {
 			mkdir "`path'"
 		}
+
+		cap conf new file "`path'l`package'.mlib"
+
+		* Create .mlib
+		cap mata: mata mlib create l`package'  , dir("`path'") replace
+		if c(rc)==608 {
+			c_local ok 0
+			exit
+		}
+		else if c(rc) {
+			di as error "could not compile mlib file"
+			error 608
+		}
+		qui mata: mata mlib add l`package' `functions', dir("`path'") complete
+		//qui mata: mata mlib add l`package' HDFE() , dir("`path'") complete
+		
+		* Verify file exists and works correctly
+		qui findfile l`package'.mlib
+		loc fn `r(fn)'
+		if (`verbose') di as text `"(library saved in `fn')"'
+		qui mata: mata mlib index
+
+		if (`debug') di as error "Functions indexed:"
+		if (`debug') mata: mata describe using l`package'
+
+		c_local ok 1
 	}
-
-	* Create .mlib
-	qui mata: mata mlib create l`package'  , dir("`path'") replace
-	qui mata: mata mlib add l`package' `functions', dir("`path'") complete
-	//qui mata: mata mlib add l`package' HDFE() , dir("`path'") complete
-	
-	* Verify file exists and works correctly
-	qui findfile l`package'.mlib
-	loc fn `r(fn)'
-	if (`verbose') di as text `"(library saved in `fn')"'
-	qui mata: mata mlib index
-
-	if (`debug') di as error "Functions indexed:"
-	if (`debug') mata: mata describe using l`package'
 end
