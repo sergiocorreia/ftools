@@ -489,13 +489,16 @@ void join(`String' using_keys,
 			st_addobs(rows(pk))
 
 			if (eltype(pk)=="string") {
-
 				// We might need to recast the variables
 				for (i=1; i<=cols(pk); i++) {
 					new_width = max(strlen(pk[., i]))
 					old_width = strtoreal(substr(st_vartype(fk_names[i]), 4, .))
 					if (old_width < new_width) {
-						stata(sprintf("recast str%-6.0f %s", new_width, fk_names[i]))
+						// Recast fails; perhaps there is a bug in recast.ado
+						// or a conflict with this program
+						// Thus, we resort to a hack
+						stata(sprintf("assert mi(%s) in -1", fk_names[i]))
+						stata(sprintf(`"replace %s = "%s" in -1"', fk_names[i], " " * new_width))
 					}
 				}
 				st_sstore(range, fk_names, pk)
