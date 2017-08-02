@@ -1,12 +1,97 @@
+// This is just a prototype
+
 program define ftab
-	timer on 10
-	syntax varname
-	tempname table
-	mata: ftab("`varlist'", "`table'")
-	//set trace on
-	Display, variable(`varlist') table(`table')
-	timer off 10
+	syntax varlist [if] [in] , ///
+		[SELect(str) Order(str)] ///
+		[Missing] ///
+		[Verbose]
+
+	loc verbose = ("`verbose'" != "")
+	
+	// Trim data
+	if ("`missing'" == "") {
+		marksample touse, strok
+	}
+	else if ("`if'`in'" != "") {
+		marksample touse, strok novarlist
+	}
+
+	//tempname table
+	mata: ftab("`varlist'", "`touse'", "`table'", `verbose')
+	ParseSelect, select(`select') order(`order')
+	di as error "`select'-`Select'-`Selectint'-`order'"
+	//Display, variable(`varlist') table(`table')
 end
+
+
+program ParseSelect
+* Taken from groups.ado from njc (!!!)
+	// select option 
+	syntax, [select(str) order(str)]
+	if "`select'" != "" {
+	        if real("`select'") < . { 
+	                capture confirm integer number `select' 
+	                if _rc { 
+	                        di as inp "`select' " ///
+	                           as err "invalid argument for " /// 
+	                           as inp "select()" 
+	                        exit 198 
+	                }       
+	                local Selectint 1
+	        } 
+	        else {
+	                tokenize "`select'", parse(" ><=") 
+	                local w "`1'"  
+	                local W : subinstr local select "`w'" ""
+	                
+	                if lower(substr("`w'",1,1)) == "r" { 
+	                        local w = lower("`w'") 
+	                }       
+
+	                local OK 0 
+	                foreach s in freq percent Freq Percent rfreq ///
+	                        rpercent vpercent Vpercent rvpercent { 
+	                        if "`w'" == substr("`s'",1,length("`w'")) { 
+	                                local OK 1 
+	                                local Select "``s''" 
+	                                continue, break 
+	                        }
+	                }       
+	                
+	                // selection should specify an equality or inequality 
+	                qui count if 1 `W' 
+	                if _rc | !`OK' { 
+	                        di as inp "`select' " ///
+	                           as err "invalid argument for " /// 
+	                           as inp "select()"
+	                        exit 198 
+	                }       
+
+	                local Selectint 0 
+	        }       
+	}
+	c_local Select `Select' 
+	c_local Selectint `Selectint' 
+
+	// order option 
+	if "`order'" != "" { 
+	        if `: word count `order'' > 1 { 
+	                di as err "invalid " as inp "order()" as err "option"
+	                exit 198 
+	        } 
+	        
+	        local orderlist "h hi hig high l lo low" 
+	        if !`: list order in orderlist' { 
+	                di as inp "`order' " ///
+	                   as err "invalid argument for " /// 
+	                   as inp "order()"
+	                exit 198    
+	        }
+	        local order = substr("`order'",1,1) 
+	}
+	c_local order `order'
+end
+
 
 program define Display
 	syntax, variable(name) table(name)
@@ -40,30 +125,46 @@ include "`r(fn)'"
 
 mata:
 mata set matastrict on
-void ftab(`Varname' var, `String' mat_name) {
-	`Factor' F
-	`Vector' sums, perc
-	`Matrix' ans
-	`StringMatrix' rowstripe, colstripe
-	timer_on(11)
-	F = factor(var, "", 1)
-	timer_off(11)
-	timer_on(12)
-	sums = runningsum(F.counts)
-	perc = sums :/ sums[rows(sums)] :* 100
-	timer_off(12)
-	timer_on(13)
-	st_matrix(mat_name, (F.counts, sums, perc))
-	timer_off(13)
-	timer_on(14)
-	rowstripe = J(rows(F.keys), 1, ""), (isreal(F.keys) ? strofreal(F.keys) : F.keys)
-	colstripe = ("", "", "" \ "Freq.", "Percent", "Cum.")'
-	st_matrixcolstripe(mat_name, colstripe)
-	st_matrixrowstripe(mat_name, rowstripe)
-	timer_off(14)
+
+void ftab(`Varname' var,
+          `String' touse,
+          `String' mat_name,
+          `Boolean' verbose)
+{
+	`Factor' 		F
+	`Vector' 		perc, smpl
+	`Matrix' 		ans
+	`StringMatrix' 	keys
+	//`StringMatrix' 	rowstripe, colstripe
+
+	F = factor(var, touse, verbose)
+	smpl = F.counts :> 50
+	perc = F.counts :/ colsum(F.counts) :* 100
+	ans = F.counts, perc, runningsum(perc)
+	//sums = runningsum(F.counts)
+	//perc = sums :/ sums[rows(sums)] :* 100
+
+	ans = select(ans, smpl)
+	keys = select(isreal(F.keys) ? strofreal(F.keys) : F.keys, smpl)
+
+	// Sort; recycle smpl vector
+	smpl = order(ans, -1)
+	ans = ans[smpl, .]
+	keys = keys[smpl]
+
+	mm_matlist(ans \ (colsum(ans[., 1..2]), 100),
+	           ("%g", "%6.2f", "%6.2f"),
+	           3,
+	           keys \ "Total",
+	           ("Freq.", "Percent", "Cum."), F.varlist) // we could use F.varlabels
+
+	//st_matrix(mat_name, (F.counts, sums, perc))
+	//rowstripe = J(rows(F.keys), 1, ""), (isreal(F.keys) ? strofreal(F.keys) : F.keys)
+	//colstripe = ("", "", "" \ "Freq.", "Percent", "Cum.")'
+	//st_matrixcolstripe(mat_name, colstripe)
+	//st_matrixrowstripe(mat_name, rowstripe)
 }
 end
-
 
 exit
 
@@ -73,7 +174,7 @@ net install ftools, from("C:/git/ftools/src")
 
 clear all
 sysuse auto
-la var turn "this is a very very VERY long label"
+//la var turn "this is a very very VERY long label"
 tab turn
 ftab turn
 
