@@ -1,4 +1,4 @@
-*! version 2.13.4 07jul2017
+*! version 2.18.0 02aug2017
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -272,6 +272,8 @@ void join(`String' using_keys,
 	`StringVector'			text
 	`String'				label
 
+	`Integer'				old_width, new_width
+
 	`Integer'				num_chars
 	`StringMatrix'			chars
 	`StringVector'			charnames
@@ -485,7 +487,17 @@ void join(`String' using_keys,
 			pk = select(pk, mask)
 			range = st_nobs() + 1 :: st_nobs() + rows(pk)
 			st_addobs(rows(pk))
+
 			if (eltype(pk)=="string") {
+
+				// We might need to recast the variables
+				for (i=1; i<=cols(pk); i++) {
+					new_width = max(strlen(pk[., i]))
+					old_width = strtoreal(substr(st_vartype(fk_names[i]), 4, .))
+					if (old_width < new_width) {
+						stata(sprintf("recast str%-6.0f %s", new_width, fk_names[i]))
+					}
+				}
 				st_sstore(range, fk_names, pk)
 			}
 			else {
