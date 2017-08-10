@@ -48,7 +48,7 @@
         loc selectindex selectindex
         loc panelsum panelsum
 
-        if (c(version) < 13) {
+        if (c(stata_version) < 13) {
                 cap mata: boottestVersion()
                 if (c(rc)) {
                         di as err "Error: Stata versions 12 or earlier require the boottest package"
