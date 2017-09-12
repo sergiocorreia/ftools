@@ -340,6 +340,12 @@ class Factor
 	`Boolean'				has_fweight
 	`Vector'				weighted_counts
 
+	// - By default, this drops all singletons (obs where F.counts==1)
+	// - If fweights are provided, we'll only drop those singletons with fweight of 1
+	// - As a hack, if zero_threshold==1, we'll drop singletons AND all obs where 
+	//   "weighted_counts" (actually depvar) is zero
+	//   Also, we multiply by counts so we can track how many actual obs were dropped
+
 	if (zero_threshold == .) zero_threshold = 0
 
 	if (counts == J(0, 1, .)) {
@@ -354,7 +360,6 @@ class Factor
 		weighted_counts = `panelsum'(this.sort(fweight), this.info)
 		if (zero_threshold) {
 			mask = (!weighted_counts :| (counts :== 1)) :* counts
-			// drop if all cases of fweight are zero, or if there is only one fweight
 		}
 		else {
 			mask = weighted_counts :== 1
