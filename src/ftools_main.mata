@@ -321,7 +321,7 @@ class Factor
 	// Update the remaining properties
 	num_obs = num_obs - num_dropped_obs
 	num_levels = num_levels - num_dropped_levels
-	keys = select(keys, counts)
+	if (keys != J(0, 1, .)) keys = select(keys, counts)
 	counts = select(counts, counts) // must be at the end!
 
 	// Clear these out to prevent mistakes
