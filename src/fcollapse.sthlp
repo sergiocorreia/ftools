@@ -57,6 +57,7 @@ make dataset of summary statistics{p_end}
 {p2col :{opt last}}last value{p_end}
 {p2col :{opt firstnm}}first nonmissing value{p_end}
 {p2col :{opt lastnm}}last nonmissing value{p_end}
+{p2col :{opt nansum}}same as sum, but if all obs. in the group are missing it will also be missing (instead of zero){p_end}
 {p2colreset}{...}
 
 {pstd}

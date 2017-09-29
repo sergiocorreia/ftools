@@ -64,7 +64,7 @@ program define Inner
 	}
 
 	loc valid_stats mean median sum count percent max min ///
-		iqr first last firstnm lastnm sd
+		iqr first last firstnm lastnm sd nansum
 	loc invalid_stats : list stats - valid_stats
 	loc invalid_stats : list invalid_stats - register
 	foreach stat of local invalid_stats {
