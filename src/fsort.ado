@@ -16,31 +16,43 @@ program define fsort
 	else if ("`sortvar'" != "") {
 		* Andrew Maurer's trick to clear `: sortedby'
 		loc sortvar : word 1 of `sortvar'
+		loc sortvar_type : type `sortvar'
+		loc sortvar_is_str = strpos("`sortvar_type'", "str") == 1
 		loc val = `sortvar'[1]
-		cap replace `sortvar' = 0 in 1
-		cap replace `sortvar' = . in 1
-		cap replace `sortvar' = "" in 1
-		cap replace `sortvar' = "." in 1
-		qui replace `sortvar' = `val' in 1
+
+		if (`sortvar_is_str') {
+			qui replace `sortvar' = cond(mi(`"`val'"'), ".", "")
+			qui replace `sortvar' = `"`val'"' in 1
+		}
+		else {
+			qui replace `sortvar' = cond(mi(`val'), 0, .)
+			qui replace `sortvar' = `val' in 1
+		}
 		assert "`: sortedby'" == ""
 	}
 
 	fsort_inner `varlist', `verbose'
 	sort `varlist' // dataset already sorted by `varlist' but flag `: sortedby' not set
-
 end
 
 
 program define fsort_inner, sortpreserve
 	syntax varlist, [Verbose]
 	loc verbose = ("`verbose'" != "")
-	mata: F = factor("`varlist'", "", `verbose', "", ., ., ., 0)
-	mata: st_local("is_sorted", strofreal(F.is_sorted))
-	if (!`is_sorted') {
-		mata: F.panelsetup()
-		mata: st_store(., "`_sortindex'", invorder(F.p))
+	mata: fsort_inner("`varlist'", "`_sortindex'", `verbose')
+end
+
+
+mata:
+void fsort_inner(string scalar vars, string scalar sortindex, real scalar verbose)
+{
+	class Factor scalar F
+	F = factor(vars, "", verbose, "", ., ., ., 0)
+	if (!F.is_sorted) {
+		F.panelsetup()
+		st_store(., sortindex, invorder(F.p))
 	}
-	mata: mata drop F
+}
 end
 
 
