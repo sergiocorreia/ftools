@@ -16,13 +16,12 @@
 {p 8 13 2}
 {cmd:fsort}
 {varlist}
-[{cmd:,}{opth g:enerate(newvar)}]
+[{cmd:,} {opt v:erbose}]
 
 {p 8 13 2}not implemented:
 {cmd:fsort}
 {varlist}
 {ifin}
-[{cmd:,}{opth g:enerate(newvar)}]
 
 {p 8 14 2}not implemented:
 {cmd:fsort}
@@ -30,8 +29,6 @@
 {varname}
 [[{cmd:+}|{cmd:-}]
 {varname} {it:...}]
-{ifin}
-[{cmd:,}{opth g:enerate(newvar)}]
 
 {marker description}{...}
 {title:Description}
@@ -40,10 +37,10 @@
 {opt fsort} is an alternative to {help sort} and {help gsort}, with some differences:
 
 {synoptset 3 tabbed}{...}
-{synopt:1)}It requires the variables to represent categories (it would be quite slow to use it to sort a normal random variable){p_end}
+{synopt:1)}It expects the variables to represent categories (it would be quite slow to use it to sort a normal random variable){p_end}
 {synopt:2)}{varlist} cannot have both string and numeric variables{p_end}
 {synopt:3)}The sort is always stable{p_end}
-{synopt:3)}It is faster with several million observations (10m+){p_end}
+{synopt:3)}It is is faster than {cmd:sort} only with large datasets (above 200k obs.){p_end}
 {synopt:4)}(wip) It allows {it:if} and {it:in} options{p_end}
 {p2colreset}{...}
 
