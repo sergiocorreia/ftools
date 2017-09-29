@@ -79,20 +79,7 @@ mata set matastrict on
 `Vector' aggregate_nansum(`Factor' F, `Vector' data, `Vector' weights, `String' wtype)
 {
 	assert(wtype == "")
-	`panelsum'(editmissing(data, 0), 1, F.info) , `panelsum'(data :<., 1, F.info) , (`panelsum'(data :<., 1, F.info) :> 0)
 	return( `panelsum'(editmissing(data, 0), 1, F.info) :/ (`panelsum'(data :<., 1, F.info) :> 0) )
-	
-	if (wtype == "") {
-	}
-	else if (wtype == "aweight") {
-		`Vector' sum_weights
-		// normalize weights so they add up to number of obs. in the subgroup
-		sum_weights = `panelsum'(weights :* (data :< .), F.info) :/ `panelsum'(data :< ., F.info)
-		return( `panelsum'(editmissing(data, 0), weights, F.info) :/ sum_weights )
-	}
-	else {
-		return( `panelsum'(editmissing(data, 0), weights, F.info) )
-	}
 }
 
 
