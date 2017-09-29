@@ -21,11 +21,11 @@ program define fsort
 		loc val = `sortvar'[1]
 
 		if (`sortvar_is_str') {
-			qui replace `sortvar' = cond(mi(`"`val'"'), ".", "")
+			qui replace `sortvar' = cond(mi(`"`val'"'), ".", "") in 1
 			qui replace `sortvar' = `"`val'"' in 1
 		}
 		else {
-			qui replace `sortvar' = cond(mi(`val'), 0, .)
+			qui replace `sortvar' = cond(mi(`val'), 0, .) in 1
 			qui replace `sortvar' = `val' in 1
 		}
 		assert "`: sortedby'" == ""
