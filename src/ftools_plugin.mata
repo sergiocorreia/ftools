@@ -11,8 +11,8 @@ mata:
 {
 	`Factor'				F
 	`Integer'				num_vars, num_levels, num_obs
-	`String'				levels_var, tag_var, counts_var, cmd, ifcmd
-	`Vector'				levels, counts, idx, p
+	`String'				levels_var, tag_var, counts_var, cmd, if_cmd, counts_cmd
+	`Vector'				levels, counts, idx
 	`Matrix'				keys
 
 	// Options
@@ -24,62 +24,38 @@ mata:
 	assert_msg(count_levels == 0 | count_levels == 1, "count_levels")
 	assert_msg(save_keys == 0 | save_keys == 1, "save_keys")
 
-	// Load data, based on output from -gegen group+tag+count
+	// Load data, based on output from -gegen group-
 	levels_var = st_tempname()
-	tag_var = st_tempname()
 	counts_var = st_tempname()
-	
-	// BUGBUG use fegen temporarily until bugfix with touse!!
-	ifcmd = touse == "" ? "" : " if " + touse
-	cmd = "gegen long %s = group(%s)%s, missing"
-	cmd = sprintf(cmd, levels_var, invtokens(vars), ifcmd)
+
+	// Run gegen group() from Stata
+	if_cmd = touse == "" ? "" : " if " + touse
+	counts_cmd = count_levels ? sprintf("counts(%s) fill(data)", counts_var) : ""
+	cmd = "gegen long %s = group(%s)%s, missing %s"
+	cmd = sprintf(cmd, levels_var, invtokens(vars), if_cmd, counts_cmd)
 	if (verbose) printf(cmd + "\n")
 	stata(cmd)
-	
-	cmd = sprintf("gegen byte %s = tag(%s)%s", tag_var, levels_var, ifcmd)
-	if (verbose) printf(cmd + "\n")
-	stata(cmd)
-	
-	if (count_levels) {
-		cmd = sprintf("gegen long %s = count(1)%s, by(%s)", counts_var, ifcmd, levels_var)
-		if (verbose) printf(cmd + "\n")
-		stata(cmd)
 
-		cmd = sprintf("qui replace %s = 0 if %s!=1", counts_var, tag_var)
-		if (verbose) printf(cmd + "\n")
-		stata(cmd)
-		
-		st_dropvar(tag_var)
-	}
-	else {
-		counts_var = tag_var
-	}
-
+	num_levels = st_numscalar("r(J)")
+	num_obs = st_numscalar("r(N)")
+	num_vars = cols(vars)
 	levels = st_data(., levels_var, touse)
-	counts = st_data(., counts_var, touse)
-	idx = selectindex(counts)
-	counts = counts[idx]
+	
 
-	// TODO: allow strings with st_sdata()
-	if (save_keys | sort_levels) {
+	if (count_levels) {
+		counts = st_data( (1,num_levels) , counts_var, .)
+	}
+
+	if (save_keys) {
+		idx = J(num_levels, 1, .)
+		idx[levels] = 1::num_obs
 		keys = st_data(idx, vars, touse)
 	}
 
-	num_levels = rows(counts)
-	num_obs = rows(levels)
-	num_vars = cols(vars)
-
+	if (count_levels) assert_msg(num_levels == rows(counts), "num_levels")
+	assert_msg(num_obs == rows(levels), "num_obs")
 	assert_msg(num_obs > 0, "no observations")
 	assert_msg(num_vars > 0, "no variables")
-
-	// Sort levels by keys
-	if (sort_levels & num_levels > 1) {
-		p = order(keys, 1..num_vars) // this is O(K log K) !!!
-		if (save_keys) keys = keys[p, .] // _collate(keys, p)
-		counts = counts[p] // _collate(counts, p)
-		levels = rows(levels) > 1 ? invorder(p)[levels] : 1
-	}
-	p = . // save memory
 
 	F = Factor()
 	F.num_levels = num_levels
