@@ -20,6 +20,10 @@ foreach size of local sizes {
 	flevelsof id1, loc(x)
 	timer off 12
 
+	timer on 13
+	glevelsof id1, loc(x)
+	timer off 13
+	
 	timer on 21
 	levelsof id2, loc(x)
 	timer off 21
@@ -28,8 +32,12 @@ foreach size of local sizes {
 	flevelsof id2, loc(x)
 	timer off 22
 
+	timer on 23
+	glevelsof id2, loc(x)
+	timer off 23
+
 	di as text "Sample size: `size'"
-	di as text "11 12: small id - 21 22 large id"
+	di as text "11 12 13: small id - 21 22 23 large id"
 	timer list
 	timer clear
 }
