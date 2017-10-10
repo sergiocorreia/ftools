@@ -29,9 +29,10 @@
 {synoptline}
 {synopt:{opt c:lean}}display string values without compound double quotes{p_end}
 {synopt:{opt l:ocal(macname)}}insert the list of values in the local macro {it:macname}{p_end}
-{synopt:{opt miss:ing}}include missing values of {varname} in calculation{p_end}
+{synopt:{opt mi:ssing}}include missing values of {varname} in calculation{p_end}
 {synopt:{opt s:eparate(separator)}}separator to serve as punctuation for the values of returned list; default is a space{p_end}
 {synopt:{opt force:mata}}prevents calling {help levelsof} for datasets with less than 1mm obs.{p_end}
+{synopt:{opt v:erbose}}display debugging information{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -55,17 +56,17 @@ quotes, this is an appropriate option.  {cmd:clean}
 does not affect the display of values from numeric variables.
 
 {phang}
-{cmd:local(}{it:macname}{cmd:)} inserts the list of values in
+{cmdab:loc:al(}{it:macname}{cmd:)} inserts the list of values in
 local macro {it:macname} within the calling program's space.  Hence,
 that macro will be accessible after {cmd:flevelsof} has finished.
 This is helpful for subsequent use, especially with {helpb foreach}.
 
 {phang}
-{cmd:missing} specifies that missing values of {varname}
+{cmdab:mi:ssing} specifies that missing values of {varname}
 should be included in the calculation.  The default is to exclude them.
 
 {phang}
-{cmd:separate(}{it:separator}{cmd:)} specifies a separator
+{cmdab:s:eparate(}{it:separator}{cmd:)} specifies a separator
 to serve as punctuation for the values of the returned list.
 The default is a space.  A useful alternative is a comma.
 
