@@ -1,4 +1,5 @@
-*! ms_fvstrip 1.01 ms 24march2015
+*! ms_fvstrip 1.02 ms 24march2015
+*! updated by Sergio Correia on 10Oct2017
 // takes varlist with possible FVs and strips out b/n/o notation
 // returns results in r(varlist)
 // optionally also omits omittable FVs
@@ -116,11 +117,10 @@ di as result "`stripped'"
 	return local varlist	`stripped'					//  return results in r(varnames)
 end
 
+cap pr drop ExpandBN
 program ExpandBN
 	args op
-	cap di `op'+0 // is it a number?
-	loc ok = !c(rc)
-	if (inlist("`op'", "c")) loc ok 0
-	if (`ok') loc bn "bn"
+	// Return -bn- if op is 1/2/3/etc but not if it is F/L/c
+	if (!mi(real("`op'"))) loc bn "bn"
 	c_local bn `bn'
 end
