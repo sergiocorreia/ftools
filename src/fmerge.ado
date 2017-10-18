@@ -43,7 +43,7 @@ program define fmerge
     }
 
     loc cmd join `keepusing', ///
-    	from(`using') ///
+    	from(`"`using'"') ///
     	by(`varlist') ///
     	keep(`keep') ///
     	assert(`assert') ///

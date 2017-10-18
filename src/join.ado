@@ -1,4 +1,4 @@
-*! version 2.18.0 02aug2017
+*! version 2.19.6 17oct2017
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -21,7 +21,7 @@ program define join
 	* Parse details of using dataset
 	_assert (`"`from'"' != "") + (`"`into'"' != "") == 1, ///
 		msg("specify either from() or into()")
-	ParseUsing `from' `into' // Return -filename- and -if-
+	ParseUsing `"`from'"' `"`into'"' // Return -filename- and -if-
 	
 	* Parse _merge indicator
 	_assert ("`generate'" != "") + ("`nogenerate'" != "") < 2, ///
@@ -61,14 +61,14 @@ program define join
 	* Load -using- dataset
 	if (`is_from') {
 		preserve
-		use "`filename'", clear
+		use `filename', clear
 		unab using_keys : `using_keys' // continuation of ParseBy
-		if ("`if'" != "") qui keep `if'
+		if (`"`if'"' != "") qui keep `if'
 
 		loc cmd restore
 	}
 	else {
-		loc cmd `"qui use `if' using "`filename'", clear"'
+		loc cmd `"qui use `if' using `filename', clear"'
 	}
 
 	if ("`anything'" != "" | "`keepnone'"!=""}) {
@@ -115,7 +115,7 @@ end
 program define ParseUsing
 	* SAMPLE INPUT: somefile.dta if foreign==true
 	gettoken filename if : 0,
-	c_local filename `filename'
+	c_local filename `"`filename'"'
 	c_local if `if'
 end
 
