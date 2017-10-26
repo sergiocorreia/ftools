@@ -1,6 +1,20 @@
+/*
+ado uninstall gtools
+net install gtools, from(https://raw.githubusercontent.com/mcaceresb/stata-gtools/master/build/)
+pr drop _all
+*/
+
 clear all
 cls
 timer clear
+
+* Warm up
+sysuse auto
+levelsof turn
+flevelsof turn
+glevelsof turn
+
+* Benchmark
 
 log using benchmark_flevelsof, replace name(collapse)
 
@@ -21,7 +35,7 @@ foreach size of local sizes {
 	timer off 12
 
 	timer on 13
-	glevelsof id1, loc(x)
+	glevelsof id1, loc(x) benchmark
 	timer off 13
 	
 	timer on 21
@@ -33,7 +47,7 @@ foreach size of local sizes {
 	timer off 22
 
 	timer on 23
-	glevelsof id2, loc(x)
+	glevelsof id2, loc(x) benchmark
 	timer off 23
 
 	di as text "Sample size: `size'"
