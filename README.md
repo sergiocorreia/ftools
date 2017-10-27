@@ -11,15 +11,18 @@ Some of the most common Stata commands (collapse, merge, sort, etc.) are not des
 
 ![collapse benchmark](docs/benchmark_small.png "collapse benchmark")
 
-Other commands that are very useful for speeding up Stata include:
+Other user commands that are very useful for speeding up Stata with large datasets include:
 
-- [`gtools`](https://github.com/mcaceresb/stata-gtools) a package similar to `ftools` but written in C (so it supports multiple cores and is even faster than ftools, as shown in the graph above). Try it out!
-- [`sumup`](https://github.com/matthieugomez/sumup.ado) provides fast summary statistics, as well as `fasttabstat`, a faster version of `tabstat`.
+- [`gtools`](https://github.com/mcaceresb/stata-gtools), a package similar to `ftools` but written in C. In most cases it's much faster than both ftools and the standard Stata commands, as shown in the graph above. Try it out!
+- [`sumup`](https://github.com/matthieugomez/sumup.ado) provides fast summary statistics, and includes the `fasttabstat` command, a faster version of `tabstat`.
+- [`egenmisc`](https://github.com/matthieugomez/stata-egenmisc) introduces the egen functions `fastxtile`, `fastwpctile`, etc. that provide much faster alternatives to `xtile` and `pctile`. Also see the [`fastxtile`](https://github.com/michaelstepner/fastxtile) package, which provides similar functionality.
+- [`randomtag`](https://ideas.repec.org/c/boc/bocode/s457898.html) is a much faster alternative to `sample`.
 - [`reghdfe`](https://github.com/sergiocorreia/reghdfe/) provides a faster alternative to `xtreg` and `areg`, as well as multi-way clustering and IV regression.
 - [`parallel`](https://github.com/gvegayon/parallel) allows for easier parallel computing in Stata (useful when running simulations, reshaping, etc.)
 - [`boottest`](https://github.com/droodman/boottest), for efficiently running wild bootstraps.
+- The [`rangerun`](https://ideas.repec.org/c/boc/bocode/s458356.html), [`runby`](https://ideas.repec.org/c/boc/bocode/s458413.html) and [`rangestat`](https://ideas.repec.org/c/boc/bocode/s458161.html) commands are useful for running commands and collecting statistics on rolling windows of observations.
 
-`ftools` can also be used to write your own commands. For more information, see [this presentation](https://github.com/sergiocorreia/ftools/raw/master/docs/baltimore17_correia.pdf) from the 2017 Stata Conference, as well as `help ftools` (within Stata).
+`ftools` can also be used to speed up your own commands. For more information, see [this presentation](https://github.com/sergiocorreia/ftools/raw/master/docs/baltimore17_correia.pdf) from the 2017 Stata Conference (slides 14 and 15 show how to create faster alternatives to `unique` and `xmiss` with only a couple lines of code). Also, see `help ftools` for the detailed documentation.
 
 
 ## Details
