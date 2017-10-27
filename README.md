@@ -1,14 +1,33 @@
 # FTOOLS: A faster Stata for large datasets
 
-- Current version: `2.11.0 08jun2017`
+- Current version: `2.21.1 17oct2017`
 - Jump to: [`usage`](#usage) [`benchmarks`](#benchmarks) [`install`](#installation)
 
 -----------
 
+## Introduction
+
+Some of the most common Stata commands (collapse, merge, sort, etc.) are not designed for large datasets. This package provides alternative implementations that solves this problem, speeding up these commands by 3x-10x:
+
+![collapse benchmark](docs/benchmark_small.png "collapse benchmark")
+
+Other commands that are very useful for speeding up Stata include:
+
+- [`gtools`](https://github.com/mcaceresb/stata-gtools) a package similar to `ftools` but written in C (so it supports multiple cores and is even faster than ftools, as shown in the graph above). Try it out!
+- [`sumup`](https://github.com/matthieugomez/sumup.ado) provides fast summary statistics, as well as `fasttabstat`, a faster version of `tabstat`.
+- [`reghdfe`](https://github.com/sergiocorreia/reghdfe/) provides a faster alternative to `xtreg` and `areg`, as well as multi-way clustering and IV regression.
+- [`parallel`](https://github.com/gvegayon/parallel) allows for easier parallel computing in Stata (useful when running simulations, reshaping, etc.)
+- [`boottest`](https://github.com/droodman/boottest), for efficiently running wild bootstraps.
+
+`ftools` can also be used to write your own commands. For more information, see [this presentation](https://github.com/sergiocorreia/ftools/raw/master/docs/baltimore17_correia.pdf) from the 2017 Stata Conference, as well as `help ftools` (within Stata).
+
+
+## Details
+
 **ftools** is two things:
 
 1. A list of Stata commands optimized for large datasets, replacing commands such as: collapse, contract, merge, egen, sort, levelsof, etc.
-2. A Mata class (*Factor*) that focuses on working with categorical variables. This class is what makes the above commands fast.
+2. A Mata class (*Factor*) that focuses on working with categorical variables. This class is what makes the above commands fast, and is also what powers [`reghdfe`](https://github.com/sergiocorreia/reghdfe)
 
 Currently the following commands are implemented:
 
@@ -20,7 +39,7 @@ Currently the following commands are implemented:
 - `fsort` replacing `sort` (although it is [rarely](https://github.com/sergiocorreia/ftools/blob/master/test/bench_sort.do) faster than sort)
 
 
-# Usage
+## Usage
 
 ```stata
 * Stata usage:
@@ -47,11 +66,11 @@ Other features include:
 - Embed -factor()- into your own Mata program. For this, you can
   use `F.sort()` and the built-in `panelsubmatrix()`.
 
-# Benchmarks
+## Benchmarks
 
 (see the *test* folder for the details of the tests and benchmarks)
 
-## egen group
+### egen group
 
 Given a dataset with 20 million obs. and 5 variables, we create the following variable, and create IDs based on that:
 
@@ -80,7 +99,7 @@ Notes:
 - The gap is larger in datasets with more observations or variables.
 - The gap is larger with fewer levels
 
-## collapse
+### collapse
 
 On a dataset of similar size, we ran `collapse (sum) y1-y15, by(x3)` where `x3` takes 100 different values:
 
@@ -107,7 +126,7 @@ Notes:
 - In a computer with less memory, it seems `pool(#)` might actually be faster.
 
 
-### collapse: alternative benchmark
+#### collapse: alternative benchmark
 
 We can run a more complex query, collapsing means and medians instead of sums, also with 20mm obs.:
 
@@ -125,7 +144,7 @@ We can run a more complex query, collapsing means and medians instead of sums, a
 And we can see that the results are similar.
 
 
-## join (and fmerge)
+### join (and fmerge)
 
 
 Similar to `merge` but avoids sorting the datasets. It is faster than `merge`
@@ -140,21 +159,21 @@ takes a third of the time.
 | join/fmerge | 8.69  | 30%        |
 
 
-## fisid
+### fisid
 
 Similar to `isid`, but allowing for `if in` and on the other hand not allowing for `using` and `sort`.
 
 In very large datasets, it takes roughly a third of the time of `isid`.
 
 
-## flevelsof
+### flevelsof
 
 Provides the same results as `levelsof`.
 
 In large datasets, takes up to 20% of the time of `levelsof`.
 
 
-## fsort
+### fsort
 
 At this stage, you would need a significantly large dataset (50 million+) for `fsort` to be faster than `sort`.
 
@@ -170,9 +189,9 @@ The unstable sorting is slightly slower (col. 1) or slighlty faster (col. 2)
 than the `fsort` approach. On the other hand, a stable sort is clearly
 slower than `fsort` (which always produces a stable sort)
 
-# Installation
+## Installation
 
-## Stable Version
+### Stable Version
 
 Within Stata, type:
 
@@ -181,7 +200,7 @@ cap ado uninstall ftools
 ssc install ftools
 ```
 
-## Dev Version
+### Dev Version
 
 With Stata 13+, type:
 
@@ -199,11 +218,12 @@ net install ftools, from(SOME_FOLDER)
 
 Where *SOME_FOLDER* is the folder that contains the *stata.toc* and related files.
 
-## Compiling the mata library
+### Compiling the mata library
 
 In case of a Mata error, try typing `ftools` to create the Mata library (lftools.mlib).
 
-## Installing local versions
+
+### Installing local versions
 
 To install from a git fork, type something like:
 
@@ -215,7 +235,7 @@ ftools, compile
 
 (Changing "C:/git/" to your own folder)
 
-## Dependencies
+### Dependencies
 
 The `fcollapse` function requires the [`moremata`](https://ideas.repec.org/c/boc/bocode/s455001.html) package for some the median and percentile stats:
 
@@ -229,16 +249,16 @@ Users of Stata 11 and 12 need to install the [`boottest`](https://ideas.repec.or
 ssc install boottest
 ```
 
-# FAQ:
+## FAQ:
 
-## "What features is this missing?"
+### "What features is this missing?"
 
 - You can create levels based on one or more variables, and on numeric or string variables, but *not* on combinations of both. Thus, you can't do something like `fcollapse price, by(make foreign)` because make is string and foreign is numeric. This is due to a limitation in Mata and is probably a hard restriction. As a workaround, just run something like `fegen id = group(make)`, to create a numeric ID.
 - Support for weights is incomplete (datasets that use weights are often relatively small, so this feature has less priority)
 - Some commands could also gain large speedups (merge, reshape, etc.)
 - Since Mata is ~4 times slower than C, rewriting this in a C plugin should lead to a large speedup.
 
-## "How can this be faster than existing commands?"
+### "How can this be faster than existing commands?"
 
 Existing commands (e.g. sort) are often compiled and don't have to move data
 from Stata to Mata and viceversa.
@@ -246,7 +266,7 @@ However, they use inefficient algorithms, so for datasets large enough, they are
 In particular, creating identifiers can be an ~O(N) operation if we use hashes instead of sorting the data (see the help file).
 Similarly, once the identifiers are created, sorting other variables by these identifiers can be done as an O(N) operation instead of O(N log N).
 
-## "But I already tried to use Mata's `asarray` and it was much slower"
+### "But I already tried to use Mata's `asarray` and it was much slower"
 
 Mata's `asarray()` has a key problem: it is very slow with hash collisions (which you see a lot in this use case). Thus, I avoid using `asarray()` and instead use `hash1()` to create a hash table with open addressing (see a comparision between both approaches [here](http://www.algolist.net/Data_structures/Hash_table/Open_addressing#open_addressing_vs_chaining)).
 
