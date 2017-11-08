@@ -75,6 +75,7 @@ As above, but with the "using" dataset currently open instead of the "master"
 {...}
 {synopt :{opt v:erbose}}show internal debug info
 {...}
+{p_end}
 {synopt :{opt method(string)}}(advanced) set method used internally for hashing
 {p_end}
 {synoptline}

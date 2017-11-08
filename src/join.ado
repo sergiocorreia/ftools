@@ -398,7 +398,7 @@ void join(`String' using_keys,
 	if (verbose) {
 		printf("{txt}(integers only? {res}%s{txt})\n", integers_only ? "true" : "false")
 	}
-	F = _factor(pk \ fk, integers_only, verbose, "", 0)
+	F = _factor(pk \ fk, integers_only, verbose, method, 0)
 
 	index = F.levels[| 1 \ N |]
 	reshaped_num = J(F.num_levels, cols(data_num)-1, .) , J(F.num_levels, 1, 1) // _merge==1
