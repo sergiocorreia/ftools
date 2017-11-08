@@ -1,4 +1,4 @@
-*! version 2.19.6 17oct2017
+*! version 2.22.0 08nov2017
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -16,7 +16,8 @@ program define join
 		[KEEPNone] ///
 		[noNOTEs] ///
 		[noREPort] ///
-		[Verbose]
+		[Verbose] ///
+		[METHOD(string)] // empty, or hash0, hash1, etc.
 
 	* Parse details of using dataset
 	_assert (`"`from'"' != "") + (`"`into'"' != "") == 1, ///
@@ -87,7 +88,7 @@ program define join
 	    `"`cmd'"', "`generate'", `uniquemaster', ///
 	    `keep_using', `assert_not_using', ///
 	    `label', `notes', ///
-	    `verbose')
+	    `verbose', "`method'")
 
 
 // Apply requirements on _merge variable ------------------------------------
@@ -250,12 +251,13 @@ void join(`String' using_keys,
                `Boolean' assert_not_using,
                `Boolean' join_labels,
                `Boolean' join_chars,
-               `Boolean' verbose)
+               `Boolean' verbose,
+               `String' method)
 {
 	`Varlist'				pk_names, fk_names, varformats
 	`Varlist'				varnames_num, varnames_str, deck
 	`Varlist'				vartypes_num, vartypes_str
-	`Variables'				pk
+	`Variables'				pk, fk
 	`Integer'				N, i, val, j, k
 	`Factor'				F
 	`DataFrame'				data_num, reshaped_num, data_str, reshaped_str
@@ -279,15 +281,14 @@ void join(`String' using_keys,
 	`StringVector'			charnames
 	`String'				char_name, char_val
 
-
 	// Using
 	pk_names = tokens(using_keys)
 	pk = __fload_data(pk_names)
 	N = rows(pk)
 
 	// Assert keys are unique IDs in using
-	integers_only = is_integers_only(pk_names)
-	F = _factor(pk, integers_only, verbose, "", 0)
+	integers_only = is_integers_only(pk_names, pk)
+	F = _factor(pk, integers_only, verbose, method, 0)
 	assert_is_id(F, using_keys, "using")
 
 	varnames_num = varnames_str = deck = tokens(varlist)
@@ -389,11 +390,15 @@ void join(`String' using_keys,
 	if (verbose) printf("{txt}variables added: {res}%s{txt}\n", invtokens(deck))
 	
 	fk_names = tokens(master_keys)
-	integers_only = integers_only & is_integers_only(fk_names)
+	fk = __fload_data(fk_names)
+	if (integers_only) {
+		integers_only = is_integers_only(fk_names, fk)
+	}
+
 	if (verbose) {
 		printf("{txt}(integers only? {res}%s{txt})\n", integers_only ? "true" : "false")
 	}
-	F = _factor(pk \ __fload_data(fk_names), integers_only, verbose, "", 0)
+	F = _factor(pk \ fk, integers_only, verbose, "", 0)
 
 	index = F.levels[| 1 \ N |]
 	reshaped_num = J(F.num_levels, cols(data_num)-1, .) , J(F.num_levels, 1, 1) // _merge==1
@@ -532,11 +537,13 @@ void join(`String' using_keys,
 }
 
 
-`Boolean' is_integers_only(`Varlist' vars)
+`Boolean' is_integers_only(`Varlist' vars, `Variables' data)
 {
 	`Boolean'				integers_only
 	`Integer'				i
 	`String'				type
+	
+	// First look at the variable types
 	for (i = integers_only = 1; i <= cols(vars); i++) {
 		type = st_vartype(vars[i])
 		if (!anyof(("byte", "int", "long"), type)) {
@@ -544,6 +551,13 @@ void join(`String' using_keys,
 			break
 		}
 	}
+
+	// However, long IDs can be doubles.
+	// If there is only one ID and it's a double, verify if it's an integer
+	if (!integers_only & cols(vars)==1 & st_vartype(vars[1]) == "double") {
+		integers_only = !any(mod(data, 1)) // all(data :== floor(data))
+	}
+
 	return(integers_only)
 }
 

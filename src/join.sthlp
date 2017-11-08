@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.18.0 02aug2017}{...}
+{* *! version 2.22.0 08nov2017}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "fmerge" "help fmerge"}{...}
 {vieweralsosee "[R] merge" "help merge"}{...}
@@ -74,6 +74,8 @@ As above, but with the "using" dataset currently open instead of the "master"
 {synopt :{opt keepn:one}}don't add any variables from using (overrides default of {it:_all}){p_end}
 {...}
 {synopt :{opt v:erbose}}show internal debug info
+{...}
+{synopt :{opt method(string)}}(advanced) set method used internally for hashing
 {p_end}
 {synoptline}
 {p2colreset}{...}
