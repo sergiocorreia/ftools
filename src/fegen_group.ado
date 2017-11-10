@@ -1,4 +1,4 @@
-*! version 2.9.3 10may2017
+*! version 2.23.0 10nov2017
 program define fegen_group
 	syntax [if] [in] , [by(varlist) type(string)] /// -by- is ignored
 		name(string) args(string) ///
@@ -16,12 +16,17 @@ program define fegen_group
 	local 0 `args' `if' `in'
 	syntax varlist [if] [in]
 
+	loc is_sorted = ("`: sortedby'" == "`varlist'")
 
-	if ("`missing'" == "") {
+	if ("`missing'" == "" & !`is_sorted') {
 		marksample touse, strok
 	}
 	else if ("`if'`in'" != "") {
 		marksample touse, strok novarlist
+	}
+	else if (`is_sorted' & inlist("`method'", "", "stata")) {
+		* Shortcut if already sorted
+		loc method stata_sorted
 	}
 
 	* Choose method if not provided
@@ -59,6 +64,10 @@ program define fegen_group
 		Group_FirstPrinciples `varlist' , id(`name') ///
 			touse(`touse') verbose(`verbose')
 	}
+	else if ("`method'" == "stata_sorted") {
+		Group_FirstPrinciplesSorted `varlist' , id(`name') ///
+			missing("`missing'") verbose(`verbose')
+	}
 	else {
 		cap noi {
 			mata: F = factor("`varlist'", "`touse'", `verbose', "`method'", `sort', 0, `ratio', 0)
@@ -89,6 +98,30 @@ program define Group_FirstPrinciples, sortpreserve
 	}
 	qui compress `id'
 end
+
+
+program define Group_FirstPrinciplesSorted
+	syntax varlist, id(name) [missing(string) Verbose(integer 0)]
+	if (`verbose') {
+		di as smcl "{txt}(method: {res}stata_sorted{txt})"
+	}
+
+	if ("`missing'" == "") {
+		by `varlist': gen long `id' = (_n == 1)
+		qui replace `id' = sum(`id')
+	}
+	else {
+		mata: st_local("exp", invtokens("mi(" :+ tokens("`varlist'") :+ ")", " | "))
+		tempvar hasmv
+		gen byte `hasmv' = `exp'
+
+		qui bys `touse' `varlist': gen long `id' = (_n == 1) if !`hasmv'
+		qui replace `id' = sum(`id')
+		qui replace `id' = . if `hasmv'
+	}
+	qui compress `id'
+end
+
 
 ftools, check
 exit
