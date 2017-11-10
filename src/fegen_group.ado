@@ -1,4 +1,4 @@
-*! version 2.23.0 10nov2017
+*! version 2.23.1 10nov2017
 program define fegen_group
 	syntax [if] [in] , [by(varlist) type(string)] /// -by- is ignored
 		name(string) args(string) ///
@@ -16,7 +16,8 @@ program define fegen_group
 	local 0 `args' `if' `in'
 	syntax varlist [if] [in]
 
-	loc is_sorted = ("`: sortedby'" == "`varlist'")
+	loc is_sorted = ("`: sortedby'" == "`varlist'") | (strpos("`: sortedby'", "`varlist' ")==1
+	* Note: we need the space after `varlist' to prevent "id10" being matched with "id1"
 
 	if ("`missing'" == "" & !`is_sorted') {
 		marksample touse, strok
