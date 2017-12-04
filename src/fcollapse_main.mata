@@ -131,19 +131,21 @@ void f_collapse(`Factor' F,
 		var_pos = asarray(var_positions, var)
 
 		for (j = 1; j <= rows(target_stat); j++) {
+
+			i_cstore = var_pos[1]
+			j_cstore = var_pos[2]
+			box = j_cstore \ j_cstore + num_obs - 1
+			data = asarray(data_cstore, i_cstore)[|box|]
+			
 			target = target_stat[j, 1]
 			stat = target_stat[j, 2]
 			fp = asarray(fun_dict, stat)
 			targets[i_target] =  target
 			target_labels[i_target] = sprintf("(%s) %s", stat, var)
-			target_types[i_target] = infer_type(var_types[i], var_is_str[i], stat)
+			target_types[i_target] = infer_type(var_types[i], var_is_str[i], stat, data)
 			target_formats[i_target] = stat=="count" ? "%8.0g" : var_formats[i]
 			target_is_str[i_target] = var_is_str[i]
 			
-			i_cstore = var_pos[1]
-			j_cstore = var_pos[2]
-			box = j_cstore \ j_cstore + num_obs - 1
-			data = asarray(data_cstore, i_cstore)[|box|]
 			if (stat == "median") {
 				stat = "p50"
 			}
@@ -194,10 +196,13 @@ void f_collapse(`Factor' F,
 
 
 // Infer type required for new variables after collapse
-`String' infer_type(`String' var_type, `Boolean' var_is_str, `String' stat)
+`String' infer_type(`String' var_type, `Boolean' var_is_str, `String' stat, `DataCol' data)
 {
 	`String' 					ans
 	`StringRowVector' 			fixed_stats
+	`RowVector'					_
+	`Integer'					min, max
+
 
 	fixed_stats = ("min", "max", "first", "last", "firstnm", "lastnm")
 
@@ -210,6 +215,25 @@ void f_collapse(`Factor' F,
 	else {
 		ans = "double"
 	}
+
+	// Speedup: sometimes we can keep (sum) as integer types
+	if (stat == "sum" | stat == "nansum") {
+		if (any( ("byte", "int", "long") :== var_type )) {
+			_ = minmax(data)
+			min = _[1]
+			max = _[2]
+			if (-127 <= min & max <= 100) {
+				ans = "byte"
+			}
+			else if (-32767 <= min & max <= 32740) {
+				ans = "int"
+			}
+			else if (-2147483647 <= min & max <= 2147483620) {
+				ans = "long"
+			}
+		}
+	}
+
 	return(ans)
 }
 
