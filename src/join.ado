@@ -1,4 +1,4 @@
-*! version 2.22.1 08nov2017
+*! version 2.24.0 11jan2018
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -537,7 +537,7 @@ void join(`String' using_keys,
 }
 
 
-`Boolean' is_integers_only(`Varlist' vars, `Variables' data)
+`Boolean' is_integers_only(`Varlist' vars, `DataFrame' data)
 {
 	`Boolean'				integers_only
 	`Integer'				i
