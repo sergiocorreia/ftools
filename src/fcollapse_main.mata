@@ -201,7 +201,7 @@ void f_collapse(`Factor' F,
 	`String' 					ans
 	`StringRowVector' 			fixed_stats
 	`RowVector'					_
-	`Integer'					min, max
+	`Integer'					min, max, n
 
 
 	fixed_stats = ("min", "max", "first", "last", "firstnm", "lastnm")
@@ -220,8 +220,9 @@ void f_collapse(`Factor' F,
 	if (stat == "sum" | stat == "nansum") {
 		if (any( ("byte", "int", "long") :== var_type )) {
 			_ = minmax(data)
-			min = _[1]
-			max = _[2]
+			n = rows(data)
+			min = _[1] * n
+			max = _[2] * n
 			if (-127 <= min & max <= 100) {
 				ans = "byte"
 			}
