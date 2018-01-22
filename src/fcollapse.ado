@@ -1,4 +1,4 @@
-*! version 2.24.1 15jan2018
+*! version 2.24.2 21jan2018
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -95,7 +95,7 @@ program define Inner
 	}
 
 	// Trim data
-	loc need_touse = ("`if'`in'"!="" | "`cw'"!="")
+	loc need_touse = ("`if'`in'"!="" | "`cw'"!="" | "`exp'" != "")
 	if (`need_touse') {
 		marksample touse, strok novarlist
 		if ("`cw'" != "") {
