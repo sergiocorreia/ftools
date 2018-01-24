@@ -1,4 +1,4 @@
-*! version 2.24.2 21jan2018
+*! version 2.24.3 24jan2018
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -94,10 +94,16 @@ program define Inner
 		error 110
 	}
 
-	// Trim data
+	* Trim data
 	loc need_touse = ("`if'`in'"!="" | "`cw'"!="" | "`exp'" != "")
 	if (`need_touse') {
 		marksample touse, strok novarlist
+		
+		* Raise error with [iw] and negative weights (other weight types already do so)
+		if ("`weight'"=="iweight") {
+			_assert (!`touse') | (`exp' >= 0), msg("negative weights encountered") rc(402)
+		}
+
 		if ("`cw'" != "") {
 			markout `touse' `keepvars', strok
 		}
