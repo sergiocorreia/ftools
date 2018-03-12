@@ -1,4 +1,4 @@
-*! version 2.24.0 11jan2018
+*! version 2.24.4 12mar2018
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -62,14 +62,14 @@ program define join
 	* Load -using- dataset
 	if (`is_from') {
 		preserve
-		use `filename', clear
+		use "`filename'", clear
 		unab using_keys : `using_keys' // continuation of ParseBy
 		if (`"`if'"' != "") qui keep `if'
 
 		loc cmd restore
 	}
 	else {
-		loc cmd `"qui use `if' using `filename', clear"'
+		loc cmd `"qui use `if' using "`filename'", clear"'
 	}
 
 	if ("`anything'" != "" | "`keepnone'"!=""}) {
