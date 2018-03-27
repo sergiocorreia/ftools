@@ -9,7 +9,8 @@ void f_collapse(`Factor' F,
                 `Boolean' merge,
                 `Integer' pool,
               | `Varname' wvar,
-                `String' wtype)
+                `String' wtype,
+                `Boolean' compress)
 {
 	`Integer'			num_vars, num_targets, num_obs, niceness
 	`Integer'			i, i_next, j, i_cstore, j_cstore, i_target
@@ -178,10 +179,16 @@ void f_collapse(`Factor' F,
 		}
 
 		if (target_is_str[i]) {
-			st_sstore(., st_addvar(target_types[i], target, 1), F.touse, data)
+			st_sstore(., st_addvar(target_types[i], target), F.touse, data)
 		}
 		else {
-			st_store(., st_addvar(target_types[i], target, 1), F.touse, data)
+			if (compress) {
+				target_types[i] = compress_type(target_types[i], data)
+			}
+			
+			// note: we can't do -nofill- with addvar because that sets the values to 0 instead of missing
+			// (sp. tricky with -merge-, but not so much otherwise, as touse will be always 1)
+			st_store(., st_addvar(target_types[i], target), F.touse, data)
 		}
 		asarray(results_cstore, target, .)
 	}
@@ -195,14 +202,52 @@ void f_collapse(`Factor' F,
 }
 
 
+// Try to pick a more compact type after the data has been created
+`String' compress_type(`String' target_type,
+                       `DataCol' data)
+{
+	`RowVector'					_
+	`Integer'					min, max
+
+	// We can't improve on byte
+	if (target_type == "byte") {
+		return(target_type)
+	}
+
+	// We shouldn't lose accuracy
+	if (any( target_type :== ("float", "double") )) {
+		if (trunc(data) != data)  {
+			return(target_type)
+		}
+	}
+	
+	_ = minmax(data)
+	min = _[1]
+	max = _[2]
+
+	if (-127 <= min & max <= 100) {
+		return("byte")
+	}
+	else if (-32767 <= min & max <= 32740) {
+		return("int")
+	}
+	else if (-2147483647 <= min & max <= 2147483620) {
+		return("long")
+	}
+	else {
+		return(target_type)
+	}
+}
+
+
 // Infer type required for new variables after collapse
-`String' infer_type(`String' var_type, `Boolean' var_is_str, `String' stat, `DataCol' data)
+`String' infer_type(`String' var_type,
+                    `Boolean' var_is_str,
+                    `String' stat,
+                    `DataCol' data)
 {
 	`String' 					ans
 	`StringRowVector' 			fixed_stats
-	`RowVector'					_
-	`Integer'					min, max, n
-
 
 	fixed_stats = ("min", "max", "first", "last", "firstnm", "lastnm")
 
@@ -214,25 +259,6 @@ void f_collapse(`Factor' F,
 	}
 	else {
 		ans = "double"
-	}
-
-	// Speedup: sometimes we can keep (sum) as integer types
-	if (stat == "sum" | stat == "nansum") {
-		if (any( ("byte", "int", "long") :== var_type )) {
-			_ = minmax(data)
-			n = rows(data)
-			min = _[1] * n
-			max = _[2] * n
-			if (-127 <= min & max <= 100) {
-				ans = "byte"
-			}
-			else if (-32767 <= min & max <= 32740) {
-				ans = "int"
-			}
-			else if (-2147483647 <= min & max <= 2147483620) {
-				ans = "long"
-			}
-		}
 	}
 
 	return(ans)

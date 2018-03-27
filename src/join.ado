@@ -6,7 +6,7 @@ program define join
 	syntax ///
 		[anything]  /// Variables that will be added (default is _all unless keepnone is used)
 		, ///
-		[from(string asis) into(string asis)] /// -using- dataset
+		[from(string) into(string)] /// -using- dataset
 		[by(string)] /// Primary and foreign keys
 		[KEEP(string)] /// 1 master 2 using 3 match
 		[ASSERT(string)] /// 1 master 2 using 3 match

@@ -1,4 +1,4 @@
-*! version 2.24.3 24jan2018
+*! version 2.25.0 27mar2018
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -16,10 +16,11 @@ program define Inner
 		[cw] ///
 		[FREQ FREQvar(name)] /// -contract- feature for free
 		[REGister(namelist local)] /// additional aggregation functions
-		[pool(numlist integer missingok max=1 >0 min=1)] /// memory-related
+		[POOL(numlist integer missingok max=1 >0 min=1)] /// memory-related
 		[MERGE] /// adds back collapsed vars into dataset; replaces egen
 		[SMART] /// allow calls to collapse instead of fcollapse
 		[METHOD(string)] /// allow choice of internal method (hash0, hash1, etc.)
+		[noCOMPRESS] /// save variables in the smallest type that preserves information
 		[Verbose] // debug info
 	
 	// Parse
@@ -33,6 +34,7 @@ program define Inner
 	}
 	loc merge = ("`merge'" != "")
 	loc smart = ("`smart'" != "") & !`merge' & ("`freqvar'" == "") & ("`register'" == "") & ("`anything'" != "") & ("`by'" != "")
+	loc compress = ("`compress'" != "nocompress")
 	loc verbose = ("`verbose'" != "")
 
 	if (`smart') {
@@ -83,12 +85,12 @@ program define Inner
 		error `rc'
 	}
 
-	loc interserction : list targets & by
+	loc intersection : list targets & by
 	if ("`intersection'" != "") {
 		di as error "targets in collapse are also in by(): `intersection'"
 		error 110
 	}
-	loc interserction : list targets & freqvar
+	loc intersection : list targets & freqvar
 	if ("`intersection'" != "") {
 		di as error "targets in collapse are also in freq(): `intersection'"
 		error 110
@@ -132,7 +134,7 @@ program define Inner
 
 	// Main loop: collapses data
 	if ("`anything'" != "") {
-		mata: f_collapse(F, fun_dict, query, "`keepvars'", `merge', `pool', "`exp'", "`weight'")
+		mata: f_collapse(F, fun_dict, query, "`keepvars'", `merge', `pool', "`exp'", "`weight'", `compress')
 	}
 	else {
 		clear

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.23.3 04dec2017}{...}
+{* *! version 2.25.0 27mar2018}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[R] collapse" "help collapse"}{...}
 {vieweralsosee "[R] contract" "help contract"}{...}
@@ -86,16 +86,18 @@ user press {hi:Break}
 the raw observation count (similar to {help contract}).
 If not indicated, the name of the new variable will be {it:_freq}
 {p_end}
-{synopt :{opt register(keys)}}add new stat functions.
+{synopt :{opt reg:ister(keys)}}add new stat functions.
 For each key, a corresponding Mata function should exist.
 See example at the end
 {p_end}
-
 {synopt :{opt pool(#)}}load the data into stata in blocks of # variables
 Default is {it:pool(.)}, select a low value ({it:pool(5)})
 or very low value ({it:pool(1)}) to save memory at the cost of speed
 {p_end}
-{synopt :{opt verbose}}display misc. debug messages
+{synopt :{opt nocompress}}{it:compress} chooses the most compact variable type, at a small speed cost
+(on by default)
+{p_end}
+{synopt :{opt v:erbose}}display misc. debug messages
 {p_end}
 
 {synoptline}
@@ -148,12 +150,18 @@ should the user press {hi:Break}.
 To choose the name of the variable, use {opth freq(newvar)}
 
 {phang}
-{opt register(fun1 ...)} registers Mata functions {it:fun1}, etc. so 
+{opt reg:ister(fun1 ...)} registers Mata functions {it:fun1}, etc. so 
 to extend {cmd fcollapse}; see example below.
 
 {phang}
 {opt pool(#)} load the data into Stata in blocks of # variables Default is pool(.),
 select a low value (pool(5)) or very low value (pool(1)) to save memory at the cost of speed.
+
+{phang}
+{opt compress} will fit variables into more compact types, such as {it:byte},
+{it:int}, and {it:long}, without losing information when compared to more accurate types
+such as {it:double}.
+The cost is a slight reduction in speed, due to the extra checks involved.
 
 {marker example}{...}
 {title:Example: Adding your own aggregation functions}
