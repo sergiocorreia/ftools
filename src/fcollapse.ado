@@ -1,4 +1,4 @@
-*! version 2.26.0 19apr2018
+*! version 2.27.0 20apr2018
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -18,6 +18,7 @@ program define Inner
 		[REGister(namelist local)] /// additional aggregation functions
 		[POOL(numlist integer missingok max=1 >0 min=1)] /// memory-related
 		[MERGE] /// adds back collapsed vars into dataset; replaces egen
+		[APPEND] /// appends collapsed variables at the end of the dataset (useful to add totals to tables)
 		[SMART] /// allow calls to collapse instead of fcollapse
 		[METHOD(string)] /// allow choice of internal method (hash0, hash1, etc.)
 		[noCOMPRESS] /// save variables in the smallest type that preserves information
@@ -33,9 +34,12 @@ program define Inner
 		loc by `byvar'
 	}
 	loc merge = ("`merge'" != "")
-	loc smart = ("`smart'" != "") & !`merge' & ("`freqvar'" == "") & ("`register'" == "") & ("`anything'" != "") & ("`by'" != "")
+	loc append = ("`append'" != "")
+	loc smart = ("`smart'" != "") & !`merge' & !`append' & ("`freqvar'" == "") & ("`register'" == "") & ("`anything'" != "") & ("`by'" != "")
 	loc compress = ("`compress'" != "nocompress")
 	loc verbose = ("`verbose'" != "")
+
+	_assert `merge' + `append' < 2, msg("cannot append and merge at the same time")
 
 	if (`smart') {
 		gettoken first_by _ : by
@@ -117,12 +121,17 @@ program define Inner
 		}
 	}
 
+	// Raise error if no obs.
+	if (!c(N)) {
+		error 2000
+	}
+
 	// Create factor structure
 	mata: F = factor("`by'", "`touse'", `verbose', "`method'")
 
 	// Trim again
 	// (saves memory but is slow for big datasets)
-	if (!`merge' & `pool' < .) keep `keepvars' `exp'
+	if (!`merge' & !`append' & `pool' < .) keep `keepvars' `exp'
 
 	// Get list of aggregating functions
 	mata: fun_dict = aggregate_get_funs()
@@ -134,7 +143,7 @@ program define Inner
 
 	// Main loop: collapses data
 	if ("`anything'" != "") {
-		mata: f_collapse(F, fun_dict, query, "`keepvars'", `merge', `pool', "`exp'", "`weight'", `compress')
+		mata: f_collapse(F, fun_dict, query, "`keepvars'", `merge', `append', `pool', "`exp'", "`weight'", `compress')
 	}
 	else {
 		clear
@@ -156,7 +165,7 @@ program define Inner
 		la var `freqvar' "Frequency"
 	}
 
-	if (!`merge') order `by' `targets'
+	if (!`merge' & !`append') order `by' `targets'
 	if ("`fast'" == "") restore, not
 end
 

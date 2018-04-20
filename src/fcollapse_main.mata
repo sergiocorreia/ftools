@@ -7,6 +7,7 @@ void f_collapse(`Factor' F,
                 `Dict' query,
                 `String' vars,
                 `Boolean' merge,
+                `Boolean' append,
                 `Integer' pool,
               | `Varname' wvar,
                 `String' wtype,
@@ -29,6 +30,7 @@ void f_collapse(`Factor' F,
 	`DataCol'			data
 	`Boolean'			raw
 	`Boolean'			nofill
+	`Vector'			idx // used by APPEND to index the new obs.
 	pointer(`DataCol')	scalar fp
 
 	if (args() < 6) wvar = ""
@@ -99,7 +101,7 @@ void f_collapse(`Factor' F,
 		}
 
 		// Keep pending vars
-		if (!merge) {
+		if (!merge & !append) {
 			if (i_next == num_vars) {
 				stata("clear")
 			}
@@ -169,41 +171,88 @@ void f_collapse(`Factor' F,
 		}
 	}
 
-	// Store results
-	if (!merge) {
-		F.store_keys(1) // sort=1 will 'sort' by keys (faster now than later)
-		assert(F.touse == "")
-	}
-
-	nofill = (merge == 0)
-
-	for (i = 1; i <= length(targets); i++) {
-		target = targets[i]
-		data = asarray(results_cstore, target)
-		if (merge) {
-			data = rows(data) == 1 ? data[F.levels, .] : data[F.levels]
-		}
-
-		if (target_is_str[i]) {
-			st_sstore(., st_addvar(target_types[i], target, nofill), F.touse, data)
+	if (append) {
+		// 1) Add obs
+		st_addobs(F.num_levels)
+		assert(st_nobs() == F.num_levels + F.num_obs)
+		idx = (F.num_obs+1)::st_nobs()
+		// 2) Fill out -by- variables
+		if (substr(F.vartypes[1], 1, 3) == "str") {
+			st_sstore(idx, F.varlist, F.keys)
 		}
 		else {
-			if (compress) {
-				target_types[i] = compress_type(target_types[i], data)
-			}
-			
-			// note: we can't do -nofill- with addvar because that sets the values to 0 instead of missing
-			// (sp. tricky with -merge-, but not so much otherwise, as touse will be always 1)
-			st_store(., st_addvar(target_types[i], target, nofill), F.touse, data)
+			st_store(idx, F.varlist, F.keys)
 		}
-		asarray(results_cstore, target, .)
-	}
 
-	// Label and format vars
-	for (i = 1; i <= cols(targets); i++) {
-		st_varlabel(targets[i], target_labels[i])
-		st_varformat(targets[i], target_formats[i])
-	}
+		// Add data to bottom rows, adding variables or recasting if necessary
+		for (i = 1; i <= length(targets); i++) {
+			target = targets[i]
+			data = asarray(results_cstore, target)
+
+			if (target_is_str[i]) {
+				if (missing(_st_varindex(target))) {
+					(void) st_addvar(target_types[i], target)
+				}
+				st_sstore(idx, target, data)
+			}
+			else {
+				if (compress) {
+					target_types[i] = compress_type(target_types[i], data)
+				}
+
+				if (missing(_st_varindex(target))) {
+					(void) st_addvar(target_types[i], target)
+				}
+				else if (st_vartype(target) != target_types[i]) {
+					stata(sprintf("recast %s %s", target_types[i], target))
+				}
+
+				// (sp. tricky with -merge-, but not so much otherwise, as touse will be always 1)
+				st_store(idx, target, data)
+			}
+			asarray(results_cstore, target, .)
+		}
+	} // APPEND CASE
+	else {
+
+		// Store results
+		if (!merge) {
+			F.store_keys(1) // sort=1 will 'sort' by keys (faster now than later)
+			assert(F.touse == "")
+		}
+
+		nofill = (merge == 0)
+
+		for (i = 1; i <= length(targets); i++) {
+			target = targets[i]
+			data = asarray(results_cstore, target)
+			if (merge) {
+				data = rows(data) == 1 ? data[F.levels, .] : data[F.levels]
+			}
+
+			if (target_is_str[i]) {
+				st_sstore(., st_addvar(target_types[i], target, nofill), F.touse, data)
+			}
+			else {
+				if (compress) {
+					target_types[i] = compress_type(target_types[i], data)
+				}
+				
+				// note: we can't do -nofill- with addvar because that sets the values to 0 instead of missing
+				// (sp. tricky with -merge-, but not so much otherwise, as touse will be always 1)
+				st_store(., st_addvar(target_types[i], target, nofill), F.touse, data)
+			}
+			asarray(results_cstore, target, .)
+		}
+
+		// Label and format vars
+		for (i = 1; i <= cols(targets); i++) {
+			st_varlabel(targets[i], target_labels[i])
+			st_varformat(targets[i], target_formats[i])
+		}
+
+	} // NOT APPEND
+
 	stata(sprintf("cap set niceness %s", strofreal(niceness)))
 }
 

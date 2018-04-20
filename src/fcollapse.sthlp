@@ -1,5 +1,5 @@
-{smcl}
-{* *! version 2.26.0 19apr2018}{...}
+2.27.0 20apr2018{smcl}
+{* *! version 2.27.0 20apr2018}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[R] collapse" "help collapse"}{...}
 {vieweralsosee "[R] contract" "help contract"}{...}
@@ -64,6 +64,9 @@ make dataset of summary statistics{p_end}
 {pstd}
 If {it:stat} is not specified, {opt mean} is assumed.
 
+{pstd}
+Technical limitation: Both normal stats and {it:raw} stats will ignore zero weights
+
 {synoptset 15 tabbed}{...}
 {marker table_options}{...}
 {synopthdr}
@@ -74,6 +77,9 @@ If {it:stat} is not specified, {opt mean} is assumed.
 {synopt :{opt merge}}merge collapsed dataset back into the original one;
 if the dataset is unsorted or sorted by something different than {opt by()},
 it is much more efficient than {cmd:egen} and that combining {cmd:collapse} with {cmd:merge}
+{p_end}
+{synopt :{opt append}}append collapsed dataset at the end of the original one;
+this is useful to create rows of totals
 {p_end}
 {synopt :{opt cw}}casewise deletion instead of all possible observations
 {p_end}
