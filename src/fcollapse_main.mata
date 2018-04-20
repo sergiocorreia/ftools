@@ -175,6 +175,7 @@ void f_collapse(`Factor' F,
 		assert(F.touse == "")
 	}
 
+	nofill = (merge == 0)
 
 	for (i = 1; i <= length(targets); i++) {
 		target = targets[i]
