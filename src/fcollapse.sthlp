@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.25.0 27mar2018}{...}
+{* *! version 2.26.0 19apr2018}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[R] collapse" "help collapse"}{...}
 {vieweralsosee "[R] contract" "help contract"}{...}
@@ -58,6 +58,7 @@ make dataset of summary statistics{p_end}
 {p2col :{opt firstnm}}first nonmissing value{p_end}
 {p2col :{opt lastnm}}last nonmissing value{p_end}
 {p2col :{opt nansum}}same as sum, but if all obs. in the group are missing it will also be missing (instead of zero){p_end}
+{p2col :{opt raw}{inp:{bf:{it:stat}}}}compute stats while ignoring weights (a generalization of {it:rawsum}){p_end}
 {p2colreset}{...}
 
 {pstd}

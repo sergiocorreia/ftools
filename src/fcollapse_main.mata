@@ -24,9 +24,10 @@ void f_collapse(`Factor' F,
 	`Dict'				var_positions // varname -> (column, start)
 	`RowVector'			var_pos
 	`Vector'			box
-	`StringMatrix'		target_stat
+	`StringMatrix'		target_stat_raw
 	`String'			target, stat
 	`DataCol'			data
+	`Boolean'			raw
 	pointer(`DataCol')	scalar fp
 
 	if (args() < 6) wvar = ""
@@ -128,18 +129,19 @@ void f_collapse(`Factor' F,
 	// Apply aggregations
 	for (i = i_target = 1; i <= num_vars; i++) {
 		var = vars[i]
-		target_stat = asarray(query, var)
+		target_stat_raw = asarray(query, var)
 		var_pos = asarray(var_positions, var)
 
-		for (j = 1; j <= rows(target_stat); j++) {
+		for (j = 1; j <= rows(target_stat_raw); j++) {
 
 			i_cstore = var_pos[1]
 			j_cstore = var_pos[2]
 			box = j_cstore \ j_cstore + num_obs - 1
 			data = asarray(data_cstore, i_cstore)[|box|]
 			
-			target = target_stat[j, 1]
-			stat = target_stat[j, 2]
+			target = target_stat_raw[j, 1]
+			stat = target_stat_raw[j, 2]
+			raw = strtoreal(target_stat_raw[j, 3])
 			fp = asarray(fun_dict, stat)
 			targets[i_target] =  target
 			target_labels[i_target] = sprintf("(%s) %s", stat, var)
@@ -153,10 +155,10 @@ void f_collapse(`Factor' F,
 			if (regexm(stat, "^p[0-9]+$")) {
 				q = strtoreal(substr(stat, 2, .)) / 100
 				fp = asarray(fun_dict, "quantile")
-				asarray(results_cstore, target, (*fp)(F, data, weights, wtype, q))
+				asarray(results_cstore, target, (*fp)(F, data, weights, raw ? "" : wtype, q))
 			}
 			else {
-				asarray(results_cstore, target, (*fp)(F, data, weights, wtype))
+				asarray(results_cstore, target, (*fp)(F, data, weights, raw ? "" : wtype))
 			}
 			++i_target
 		} 

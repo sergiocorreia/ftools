@@ -2,7 +2,7 @@ v 3
 
 d ftools. Alternatives to common Stata commands optimized for large datasets
 d
-d Author: Sergio Correia. Fuqua School of Business, Duke University
+d Author: Sergio Correia. Board of Governors of the Federal Reserve
 d Support: sergio.correia@gmail.com
 d
 d ftools consists of a Mata file and several Stata commands:
@@ -36,7 +36,7 @@ d
 d Requires: Stata version 11.2
 d (Stata 12 or older also require the boottest package from ssc)
 d
-d Distribution-Date: 20180111
+d Distribution-Date: 20180419
 d
 
 f ftools.ado

@@ -1,4 +1,4 @@
-*! version 2.25.0 27mar2018
+*! version 2.26.0 19apr2018
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -167,7 +167,7 @@ program define ParseList
 
 	loc stat mean // default
 	mata: query = asarray_create("string") // query[var] -> [stat, target]
-	mata: asarray_notfound(query, J(0, 2, ""))
+	mata: asarray_notfound(query, J(0, 3, ""))
 
 	while ("`0'" != "") {
 		GetStat stat 0 : `0'
@@ -183,10 +183,16 @@ program define ParseList
 					loc target `var'
 				}
 			}
+
+			loc raw = strpos("`stat'", "raw") == 1
+			if (`raw') {
+				loc stat = substr("`stat'", 4, .)
+			}
+
 			loc targets `targets' `target'
 			loc keepvars `keepvars' `var'
 			loc stats `stats' `stat'
-			mata: asarray(query, "`var'", asarray(query, "`var'") \ ("`target'", "`stat'"))
+			mata: asarray(query, "`var'", asarray(query, "`var'") \ ("`target'", "`stat'", "`raw'"))
 			loc target
 		}
 	}
