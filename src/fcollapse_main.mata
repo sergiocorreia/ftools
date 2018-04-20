@@ -28,6 +28,7 @@ void f_collapse(`Factor' F,
 	`String'			target, stat
 	`DataCol'			data
 	`Boolean'			raw
+	`Boolean'			nofill
 	pointer(`DataCol')	scalar fp
 
 	if (args() < 6) wvar = ""
@@ -171,7 +172,9 @@ void f_collapse(`Factor' F,
 	// Store results
 	if (!merge) {
 		F.store_keys(1) // sort=1 will 'sort' by keys (faster now than later)
+		assert(F.touse == "")
 	}
+
 
 	for (i = 1; i <= length(targets); i++) {
 		target = targets[i]
@@ -181,7 +184,7 @@ void f_collapse(`Factor' F,
 		}
 
 		if (target_is_str[i]) {
-			st_sstore(., st_addvar(target_types[i], target), F.touse, data)
+			st_sstore(., st_addvar(target_types[i], target, nofill), F.touse, data)
 		}
 		else {
 			if (compress) {
@@ -190,7 +193,7 @@ void f_collapse(`Factor' F,
 			
 			// note: we can't do -nofill- with addvar because that sets the values to 0 instead of missing
 			// (sp. tricky with -merge-, but not so much otherwise, as touse will be always 1)
-			st_store(., st_addvar(target_types[i], target), F.touse, data)
+			st_store(., st_addvar(target_types[i], target, nofill), F.touse, data)
 		}
 		asarray(results_cstore, target, .)
 	}
