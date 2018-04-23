@@ -75,7 +75,7 @@ void f_collapse(`Factor' F,
 	data_cstore = asarray_create("real", 1)
 	var_positions = asarray_create("string", 1)
 	num_obs = F.num_obs
-	if (!merge) assert(num_obs == st_nobs())
+	if (!merge & !append) assert(num_obs == st_nobs())
 
 	// i, i_next, j -> index variables
 	// i_cstore -> index vectors in the cstore
@@ -173,9 +173,9 @@ void f_collapse(`Factor' F,
 
 	if (append) {
 		// 1) Add obs
+		idx = ( st_nobs()) + 1 :: (st_nobs() + F.num_levels )
 		st_addobs(F.num_levels)
-		assert(st_nobs() == F.num_levels + F.num_obs)
-		idx = (F.num_obs+1)::st_nobs()
+		idx
 		// 2) Fill out -by- variables
 		if (substr(F.vartypes[1], 1, 3) == "str") {
 			st_sstore(idx, F.varlist, F.keys)

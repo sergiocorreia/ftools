@@ -1,4 +1,4 @@
-2.27.0 20apr2018{smcl}
+2.27.1 23apr2018{smcl}
 {* *! version 2.27.0 20apr2018}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[R] collapse" "help collapse"}{...}

@@ -1,4 +1,4 @@
-*! version 2.27.0 20apr2018
+*! version 2.27.1 23apr2018
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -114,7 +114,7 @@ program define Inner
 			markout `touse' `keepvars', strok
 		}
 	
-		if (!`merge') {
+		if (!`merge' & !`append') {
 			qui keep if `touse'
 			drop `touse'
 			loc touse
@@ -125,6 +125,8 @@ program define Inner
 	if (!c(N)) {
 		error 2000
 	}
+
+	if (`append') loc offset = c(N) + 1
 
 	// Create factor structure
 	mata: F = factor("`by'", "`touse'", `verbose', "`method'")
@@ -158,6 +160,9 @@ program define Inner
 		if (`maxfreq' <= 100) loc freqtype byte
 		if (`merge') {
 			mata: st_store(., st_addvar("`freqtype'", "`freqvar'", 1), F.counts[F.levels])
+		}
+		else if (`append') {
+			mata: st_store((`offset'::`=c(N)'), st_addvar("`freqtype'", "`freqvar'", 1), F.counts)
 		}
 		else {
 			mata: st_store(., st_addvar("`freqtype'", "`freqvar'", 1), F.counts)
