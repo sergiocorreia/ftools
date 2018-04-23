@@ -60,9 +60,9 @@ void f_collapse(`Factor' F,
 		F.levels = . // save memory
 	}
 
-	// Weights (only partially implemented!)
+	// Weights
 	if (wvar != "") {
-		weights = F.sort(st_data(., wvar))
+		weights = F.sort(st_data(., wvar, F.touse))
 	}
 	else {
 		weights = 1
