@@ -1,5 +1,9 @@
 *! ms_fvstrip 1.02 ms 24march2015
 *! updated by Sergio Correia on 10Oct2017
+
+*! updated by Sergio Correia on 07jun2018: added r(nobase) and r(fullvarlist) options
+*! (So we can report base vars)
+
 // takes varlist with possible FVs and strips out b/n/o notation
 // returns results in r(varlist)
 // optionally also omits omittable FVs
@@ -15,6 +19,7 @@
 program define ms_fvstrip, rclass
 	version 11
 	syntax [anything] [if] , [ dropomit expand onebyone NOIsily addbn]
+
 	if "`expand'"~="" {							//  force call to fvexpand
 		if "`onebyone'"=="" {
 			// fvexpand is *VERY* slow as it does a -tabulate- internally; avoid it if possible
@@ -46,16 +51,57 @@ program define ms_fvstrip, rclass
 	foreach vn of local anything {						//  loop through varnames
 		if "`dropomit'"~="" {						//  check & include only if
 			_ms_parse_parts `vn'					//  not omitted (b. or o.)
-			if ~`r(omit)' {
+
+			* Detect omitted variables that are actually base variables
+			* Need to be careful because they can be 0b.foreign (simple)
+			* or 0b.foreign#1.turn (more complex)
+			loc omit_var = `r(omit)'
+			loc is_omitted_base 0
+
+			if (`omit_var') {
+				if ("`r(type)'" == "factor") {
+					loc is_omitted_base = "`r(base)'" == "1"
+				}
+				else if ("`r(type)'" == "interaction") {
+					loc k = r(k_names)
+					_assert !mi(`k')
+					forval i = 1/`k' {
+						if ("`r(base`i')'" == "1") loc is_omitted_base 1
+					}
+				}
+				else {
+					return list
+					_assert 0, msg("Invalid var. type: `r(type)'")
+				}
+			}
+
+			if (`is_omitted_base') {
+				loc omit_var 0
+				loc vn "@`vn'" // HACK: Prefix name by "@"
+			}
+
+			if !`omit_var' {
 				local unstripped	`unstripped' `vn'	//  add to list only if not omitted
 			}
+
+
 		}
 		else {								//  add varname to list even if
 			local unstripped		`unstripped' `vn'	//  could be omitted (b. or o.)
 		}
 	}
+
 // Now create list with b/n/o stripped out
+
 	foreach vn of local unstripped {
+
+		if strpos("`vn'", "@") == 1 {
+			loc svn : subinstr loc vn "@" ""
+			local fullstripped `fullstripped' `svn'
+			loc nobase `nobase' 0
+			continue
+		}
+
 		local svn ""							//  initialize
 		_ms_parse_parts `vn'
 		if "`r(type)'"=="variable" & "`r(op)'"=="" {			//  simplest case - no change
@@ -78,8 +124,8 @@ program define ms_fvstrip, rclass
 			if ("`addbn'"!="") ExpandBN `op'
 			local svn	`op'`bn'.`r(name)'				//  operator + . + varname
 		}
-		else if"`r(type)'"=="interaction" {				//  multiple variables
-			forvalues i=1/`r(k_names)' {
+		else if "`r(type)'"=="interaction" {				//  multiple variables
+			forvalues i=1/`=r(k_names)' {
 				local op	`r(op`i')'
 				local op	: subinstr local op "b" "", all
 				local op	: subinstr local op "n" "", all
@@ -107,14 +153,23 @@ program define ms_fvstrip, rclass
 			exit 198
 		}
 		local stripped `stripped' `svn'
+		local fullstripped `fullstripped' `svn'
+		loc nobase `nobase' 1
 	}
+	
 	local stripped	: list retokenize stripped				//  clean any extra spaces
+	local fullstripped	: list retokenize fullstripped		//  clean any extra spaces
+
 	
 	if "`noisily'"~="" {							//  for debugging etc.
-di as result "`stripped'"
+		di as result "varlist=`stripped'"
+		di as result "fullvarlist=`fullstripped'"
+		di as result "nobase=`nobase'"
 	}
 
 	return local varlist	`stripped'					//  return results in r(varnames)
+	return local nobase	`nobase'
+	return local fullvarlist	`fullstripped'
 end
 
 cap pr drop ExpandBN
