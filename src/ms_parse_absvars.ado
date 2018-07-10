@@ -1,4 +1,4 @@
-*! version 2.9.0 28mar2017
+*! version 2.28.1 10jul2018
 program ms_parse_absvars, sclass
 	syntax anything(id="absvars" name=absvars equalok everything), ///
 		[NOIsily] /// passed to -ms_fvunab-
