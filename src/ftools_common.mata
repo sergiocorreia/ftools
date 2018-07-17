@@ -4,8 +4,24 @@ mata:
 `Void' assert_msg(real scalar t, | string scalar msg)
 {
 	if (args()<2 | msg=="") msg = "assertion is false"
-        if (t==0) _error(msg)
+	if (t==0) _error(msg)
 }
+
+
+`Void' assert_in(`DataCell' value, `DataRow' valid_values, | string scalar msg)
+{
+	if (args()<2 | msg=="") msg = "assertion is false; value not in list"
+	// "anyof(valid_values, value)"  <==> "value in valid_values" [Python]
+	if (!anyof(valid_values, value)) _error(msg)
+}
+
+
+`Void' assert_boolean(`DataCell' value, | string scalar msg)
+{
+	if (args()<2 | msg=="") msg = "assertion is false; value not boolean"
+	assert_in(value, (0,1), msg)
+}
+
 
 
 `DataFrame' __fload_data(`Varlist' varlist,

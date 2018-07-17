@@ -1,4 +1,4 @@
-*! version 2.28.1 10jul2018
+*! version 2.29.0 17jul2018
 * This file is just used to compile ftools.mlib
 
 program define ftools
@@ -12,7 +12,7 @@ program define ftools
 		// maybe just add all fns explicitly?
 		loc functions Factor*() factor*() _factor*() join_factors() ///
 					  __fload_data() __fstore_data() ftools*() __factor*() ///
-					  assert_msg() /// bin_order()
+					  assert_msg() assert_in() assert_boolean() /// bin_order()
 					  aggregate_*() select_nm_*() rowproduct()
 		ms_compile_mata, package(ftools) version(`package_version') `force' fun(`functions') verbose // debug
 	}
