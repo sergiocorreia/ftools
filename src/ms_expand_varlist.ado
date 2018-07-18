@@ -1,4 +1,4 @@
-*! version 2.30.0 17jul2018
+*! version 2.30.1 18jul2018
 program ms_expand_varlist, rclass
 	syntax [varlist(ts fv numeric default=none)] if
 	fvexpand `varlist' `if'
@@ -9,9 +9,13 @@ program ms_expand_varlist, rclass
 		loc ok = r(omit) == 0
 		loc mask `mask' `ok'
 		if (`ok') {
-			// BUGBUG: Not sure if this is actually useful...
-			//di as error "BEFORE=[`part']"
-			// AddBN `part'
+			// If we don't run this, st_data will load some columns as vectors of ZEROES (!)
+			// EG:
+			// set obs 5
+			// gen id = _n
+			// mata: st_data(., "1.id 2.id") // The 1st column is empty!
+			// mata: st_data(., "1bn.id 2.id 3.id") // correct result
+			AddBN `part'
 			//di as error "AFTER=[`part']"
 			loc selected_vars `selected_vars' `part'
 		}
