@@ -13,7 +13,8 @@ program define ftools
 		loc functions Factor*() factor*() _factor*() join_factors() ///
 					  __fload_data() __fstore_data() ftools*() __factor*() ///
 					  assert_msg() assert_in() assert_boolean() /// bin_order()
-					  aggregate_*() select_nm_*() rowproduct()
+					  aggregate_*() select_nm_*() rowproduct() ///
+					  create_mask() update_mask()
 		ms_compile_mata, package(ftools) version(`package_version') `force' fun(`functions') verbose // debug
 	}
 	else if "`options'"=="version" {

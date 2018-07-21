@@ -23,6 +23,27 @@ mata:
 }
 
 
+// mask: a dummy variable indicating selection (like -touse-)
+// Example usage:
+// mata: idx = (1,2,5,9)'
+// mata: m = create_mask(12, 0, idx, 1)
+// mata: update_mask(m, idx, 2)
+// mata: update_mask(m, (1,3)', 10)
+
+`Void' update_mask(`Variable' mask, `Vector' index, `Real' value)
+{
+	mask[index] = J(rows(index), 1, value)
+}
+
+
+`Variable' create_mask(`Integer' obs, `Real' default_value, `Vector' index, `Real' value)
+{
+	`Variable'		mask
+	mask = J(obs, 1, default_value)
+	update_mask(mask, index, value)
+	return(mask)
+}
+
 
 `DataFrame' __fload_data(`Varlist' varlist,
                        | `DataCol' touse,
