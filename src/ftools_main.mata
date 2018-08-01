@@ -372,11 +372,11 @@ class Factor
 	num_singletons = sum(mask)
 	if (num_singletons == 0) return(J(0, 1, .))
 	counts = counts - mask
-	idx = `selectindex'(mask[levels])
+	idx = `selectindex'(mask[levels, .])
 
 	// Update and overwrite fweight
 	if (has_fweight) {
-		fweight = select(fweight, (!mask)[levels])
+		fweight = num_singletons == num_obs ? J(0, 1, .) : select(fweight, (!mask)[levels])
 	}
 	
 	// Update contents of F based on just idx and the updated F.counts
