@@ -1,10 +1,11 @@
 // Helper functions ----------------------------------------------------------
 mata:
 
-`Void' assert_msg(real scalar t, | string scalar msg)
+`Void' assert_msg(`Boolean' t, | `String' msg, `Integer' rc)
 {
 	if (args()<2 | msg=="") msg = "assertion is false"
-	if (t==0) _error(msg)
+	if (args()<3 | rc==.) rc = 3498
+	if (t==0) _error(rc, msg)
 }
 
 
