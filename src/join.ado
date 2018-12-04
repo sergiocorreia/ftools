@@ -1,4 +1,4 @@
-*! version 2.24.4 12mar2018
+*! version 2.31.0 04dec2018
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -109,6 +109,10 @@ program define join
 
 	if (`report') {
 		Table `generate'
+	}
+
+	if ("`nogenerate'" != "") {
+		label drop _merge
 	}
 end
 
@@ -268,7 +272,7 @@ void join(`String' using_keys,
 	`Varname'				var
 	`String'				msg
 
-	`StringVector'			varlabels, varvaluelabels
+	`StringVector'			varlabels, varvaluelabels, pk_varvaluelabels
 	`Dict'					label_values, label_text
 	`Vector'				values
 	`StringVector'			text
@@ -297,6 +301,7 @@ void join(`String' using_keys,
 	varformats = J(1, cols(deck), "")
 	varlabels = J(1, cols(deck), "")
 	varvaluelabels = J(1, cols(deck), "")
+	pk_varvaluelabels = J(1, cols(deck), "")
 	label_values = asarray_create("string", 1)
 	label_text = asarray_create("string", 1)
 	text = ""
@@ -338,8 +343,22 @@ void join(`String' using_keys,
 		}
 	}
 
+	// Save value labels from the by() variables
+	if (join_labels) {
+		for (i=1; i<=cols(pk_names); i++) {
+			var = pk_names[i]
+			label = st_varvaluelabel(var)
+			if (label != "" ? st_vlexists(label) : 0) {
+				pk_varvaluelabels[i] = label
+				st_vlload(label, values, text)
+				asarray(label_values, label, values)
+				asarray(label_text, label, text)
+			}
+		}
+	}
+
 	// Save chars
-	// Note: we are NOT saving chars (or labels) from the by() variables!
+	// Note: we are NOT saving chars from the by() variables
 	if (join_chars) {
 		chars = J(num_chars, 3, "")
 		j = 0
@@ -427,7 +446,7 @@ void join(`String' using_keys,
 	reshaped_num = reshaped_str = . // conserve memory
 	(void) setbreakintr(val)
 
-	// Add labels
+	// Add labels of new variables
 	msg = "{err}(warning: value label %s already exists; values overwritten)"
 	for (i=1; i<=cols(deck); i++) {
 		var = deck[i]
@@ -455,6 +474,20 @@ void join(`String' using_keys,
 				            asarray(label_values, label),
 				            asarray(label_text, label))
 			}
+		}
+	}
+
+	// Add value labels of by variables
+	if (join_labels) {
+		for (i=1; i<=cols(pk_names); i++) {
+			var = pk_names[i]
+			label = pk_varvaluelabels[i]
+			if (label == "") continue // Continue if no value label
+			if (st_vlexists(label)) printf(msg, label) // Warn
+			st_vlmodify(label, 
+			            asarray(label_values, label),
+			            asarray(label_text, label))
+			st_varvaluelabel(var, label)
 		}
 	}
 
