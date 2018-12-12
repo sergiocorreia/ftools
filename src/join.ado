@@ -1,4 +1,4 @@
-*! version 2.31.0 04dec2018
+*! version 2.31.1 12dec2018
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -301,7 +301,7 @@ void join(`String' using_keys,
 	varformats = J(1, cols(deck), "")
 	varlabels = J(1, cols(deck), "")
 	varvaluelabels = J(1, cols(deck), "")
-	pk_varvaluelabels = J(1, cols(deck), "")
+	pk_varvaluelabels = J(1, cols(pk_names), "")
 	label_values = asarray_create("string", 1)
 	label_text = asarray_create("string", 1)
 	text = ""
