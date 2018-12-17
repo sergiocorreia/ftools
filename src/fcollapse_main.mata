@@ -175,7 +175,6 @@ void f_collapse(`Factor' F,
 		// 1) Add obs
 		idx = ( st_nobs()) + 1 :: (st_nobs() + F.num_levels )
 		st_addobs(F.num_levels)
-		idx
 		// 2) Fill out -by- variables
 		if (substr(F.vartypes[1], 1, 3) == "str") {
 			st_sstore(idx, F.varlist, F.keys)
@@ -204,7 +203,9 @@ void f_collapse(`Factor' F,
 					(void) st_addvar(target_types[i], target)
 				}
 				else if (st_vartype(target) != target_types[i]) {
-					stata(sprintf("recast %s %s", target_types[i], target))
+					// Note that the recast attempt might fail if we ran this command with -if-
+					// This is b/c observations not loaded into Mata might be outside the valid range
+					stata(sprintf("qui recast %s %s", target_types[i], target))
 				}
 
 				// (sp. tricky with -merge-, but not so much otherwise, as touse will be always 1)
