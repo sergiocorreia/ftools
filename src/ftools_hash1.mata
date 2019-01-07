@@ -14,8 +14,8 @@ else {
 
 mata:
 
-// Open addressing hash function (linear probing) ----------------------------
- // Use this for non-integers (2.5, "Bank A") and big ints (e.g. 2014124233573)
+// Open addressing hash function (linear probing)
+// Use this for non-integers (2.5, "Bank A") and big ints (e.g. 2014124233573)
 
 `Factor' __factor_hash1_`is_vector'(
 	`DataFrame' data,

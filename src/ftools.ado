@@ -1,4 +1,4 @@
-*! version 2.31.2 17dec2018
+*! version 2.31.3 06jan2019
 * This file is just used to compile ftools.mlib
 
 program define ftools
@@ -14,7 +14,8 @@ program define ftools
 					  __fload_data() __fstore_data() ftools*() __factor*() ///
 					  assert_msg() assert_in() assert_boolean() /// bin_order()
 					  aggregate_*() select_nm_*() rowproduct() ///
-					  create_mask() update_mask()
+					  create_mask() update_mask() ///
+					  varlist_is_hybrid() varlist_is_integers()
 		ms_compile_mata, package(ftools) version(`package_version') `force' fun(`functions') verbose // debug
 	}
 	else if "`options'"=="version" {
@@ -37,6 +38,6 @@ program define ftools
 	}
 	else {
 		di as error "Wrong option for ftools: `options'"
-		assert 123
+		error 999
 	}
 end

@@ -436,7 +436,7 @@ class Factor
 	`Integer'				i
 	`Boolean'				integers_only
 	`Boolean'				touse_is_selectvar
-	`String'				type, var, lbl
+	`String'				var, lbl
 	`Dict'					map
 	`Vector'				keys
 	`StringVector'			values
@@ -472,23 +472,7 @@ class Factor
 	}
 	else {
 		data = __fload_data(vars, touse, touse_is_selectvar)
-
-		// Are the variables integers (so maybe we can use the fast hash)?
-		integers_only = 1
-		for (i=1; i<=cols(vars); i++) {
-			type = st_vartype(vars[i])
-			if (anyof(("byte", "int", "long"), type)) {
-				continue
-			}
-			else if (anyof(("float", "double"), type)) {
-				if (round(data[., i])==data[., i]) {
-					continue
-				}
-			}
-			integers_only = 0
-			break
-		}
-		
+		integers_only = varlist_is_integers(vars, data) // Are the variables integers (so maybe we can use the fast hash)?
 		F = _factor(data, integers_only, verbose, method,
 		            sort_levels, count_levels, hash_ratio,
 		            save_keys,

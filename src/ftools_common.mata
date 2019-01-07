@@ -46,6 +46,51 @@ mata:
 }
 
 
+// Return 1 if all the variables are integers 
+`Boolean' varlist_is_integers(`Varlist' varlist, `DataFrame' data)
+{
+	`Integer' 				i
+	`Integer' 				num_vars
+	`String'				type
+
+	if (eltype(data) == "string") {
+		return(0)
+	}
+
+	num_vars = cols(varlist)
+	for (i = 1; i <= num_vars; i++) {
+		type = st_vartype(varlist[i])
+		if (anyof(("byte", "int", "long"), type)) {
+			continue
+		}
+		if (round(data[., i])==data[., i]) {
+				continue
+		}
+		return(0)
+	}
+	return(1)
+}
+
+
+// Return 1 if the varlist has string and numeric types
+`Boolean' varlist_is_hybrid(`Varlist' varlist)
+{
+	`Boolean' 				first_is_num
+	`Integer' 				i
+	`Integer' 				num_vars
+
+	num_vars = cols(varlist)
+	first_is_num = st_isnumvar(varlist[1])
+	for (i = 2; i <= num_vars; i++) {
+		if (first_is_num != st_isnumvar(varlist[i])) {
+			return(1)
+			//_error(999, "variables must be all numeric or all strings")
+		}
+	}
+	return(0)
+}
+
+
 `DataFrame' __fload_data(`Varlist' varlist,
                        | `DataCol' touse,
                          `Boolean' touse_is_selectvar)
@@ -59,13 +104,9 @@ mata:
 	if (args()<3) touse_is_selectvar = 1 // can be selectvar (a 0/1 mask) or an index vector
 
 	varlist = tokens(invtokens(varlist)) // accept both types
-	num_vars = cols(varlist)
+	assert_msg(!varlist_is_hybrid(varlist), "variables must be all numeric or all strings", 999)
 	is_num = st_isnumvar(varlist[1])
-	for (i = 2; i <= num_vars; i++) {
-		if (is_num != st_isnumvar(varlist[i])) {
-			_error(999, "variables must be all numeric or all strings")
-		}
-	}
+
 	//     idx   = touse_is_selectvar ?   .   : touse
 	// selectvar = touse_is_selectvar ? touse :   .
 	if (is_num) {
