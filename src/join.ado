@@ -63,16 +63,21 @@ program define join
 	if (`is_from') {
 		preserve
         if (substr("`filename'", -8, 8) == ".parquet") {
-            cap noi parquet use "`filename'", clear
+            if ("`anything'" != "" | "`keepnone'" != "") {
+                loc vars "`using_keys' `anything' using"
+        	}
+            cap noi parquet use `vars' "`filename'", clear
             if (_rc != 0) {
-                di "parquet reading failed"
+				di as err "Parquet reading failed"
+                di as err "Try reading parquet file directly to see full error:"
+				di as err "    parquet use `vars' `filename'"
                 exit _rc
             }
         }
         else {
             use "`filename'", clear
+            unab using_keys : `using_keys' // continuation of ParseBy
         }
-		unab using_keys : `using_keys' // continuation of ParseBy
 		if (`"`if'"' != "") qui keep `if'
 
 		loc cmd restore
@@ -81,7 +86,7 @@ program define join
 		loc cmd `"qui use `if' using "`filename'", clear"'
 	}
 
-	if ("`anything'" != "" | "`keepnone'"!=""}) {
+	if ("`anything'" != "" | "`keepnone'" != "") {
 		keep `using_keys' `anything'
 	}
 	else {
