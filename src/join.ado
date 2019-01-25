@@ -23,7 +23,7 @@ program define join
 	_assert (`"`from'"' != "") + (`"`into'"' != "") == 1, ///
 		msg("specify either from() or into()")
 	ParseUsing `"`from'"' `"`into'"' // Return -filename- and -if-
-	
+
 	* Parse _merge indicator
 	_assert ("`generate'" != "") + ("`nogenerate'" != "") < 2, ///
 		msg("generate() and nogenerate are mutually exclusive")
@@ -34,7 +34,7 @@ program define join
 	else {
 		tempvar generate
 	}
-	
+
 	* Parse booleans
 	loc is_from = (`"`from'"' != "")
 	loc uniquemaster = ("`uniquemaster'" != "")
@@ -51,7 +51,7 @@ program define join
 		keep_nums: {1, 3, 1 3} depending on whether we keep master/match
 		assert_nums: as above but to assert only these exist (besides using)
 		keep_words assert_words: as above but with words instead of nums
-	*/ 
+	*/
 
 	* Parse -key- variables
 	ParseBy `is_from' `by' /// Return -master_keys- and -using_keys-
@@ -62,8 +62,22 @@ program define join
 	* Load -using- dataset
 	if (`is_from') {
 		preserve
-		use "`filename'", clear
-		unab using_keys : `using_keys' // continuation of ParseBy
+        if (substr("`filename'", -8, 8) == ".parquet") {
+            if ("`anything'" != "" | "`keepnone'" != "") {
+                loc vars "`using_keys' `anything' using"
+        	}
+            cap noi parquet use `vars' "`filename'", clear
+            if (_rc != 0) {
+				di as err "Parquet reading failed"
+                di as err "Try reading parquet file directly to see full error:"
+				di as err "    parquet use `vars' `filename'"
+                exit _rc
+            }
+        }
+        else {
+            use "`filename'", clear
+            unab using_keys : `using_keys' // continuation of ParseBy
+        }
 		if (`"`if'"' != "") qui keep `if'
 
 		loc cmd restore
@@ -72,7 +86,7 @@ program define join
 		loc cmd `"qui use `if' using "`filename'", clear"'
 	}
 
-	if ("`anything'" != "" | "`keepnone'"!=""}) {
+	if ("`anything'" != "" | "`keepnone'" != "") {
 		keep `using_keys' `anything'
 	}
 	else {
@@ -164,7 +178,7 @@ program define ParseMerge
 		c_local `cat'_nums `nums'
 	}
 	c_local keep_using `keep_using'
-	c_local assert_not_using `assert_not_using'	
+	c_local assert_not_using `assert_not_using'
 end
 
 
@@ -202,7 +216,7 @@ program define Table
 	forval i = 1/3 {
 		loc m`i' 0
 	}
-	
+
 	if (c(N)) {
 		tempname freqs values
 		tab `varlist', nolabel nofreq matcell(`freqs') matrow(`values')
@@ -223,7 +237,7 @@ program define Table
 	di as smcl as txt _col(5) "{hline 41}"
 	di as smcl as txt _col(5) "not matched" ///
 	        _col(30) as res %16.0fc (`m1'+`m2')
-	if (`m1'|`m2') { 
+	if (`m1'|`m2') {
 	        di as smcl as txt _col(9) "from master" ///
 	                _col(30) as res %16.0fc `m1' as txt "  `v1'"
 	        di as smcl as txt _col(9) "from using" ///
@@ -266,7 +280,7 @@ void join(`String' using_keys,
 	`Factor'				F
 	`DataFrame'				data_num, reshaped_num, data_str, reshaped_str
 	`Vector'				index, range, mask
-	
+
 	`Boolean'				integers_only
 	`Boolean'				has_using
 	`Varname'				var
@@ -407,7 +421,7 @@ void join(`String' using_keys,
 		}
 	}
 	if (verbose) printf("{txt}variables added: {res}%s{txt}\n", invtokens(deck))
-	
+
 	fk_names = tokens(master_keys)
 	fk = __fload_data(fk_names)
 	if (integers_only) {
@@ -442,7 +456,7 @@ void join(`String' using_keys,
 	if (cols(varnames_str) > 0) {
 		st_sstore(., st_addvar(vartypes_str, varnames_str, 1), reshaped_str)
 	}
-	
+
 	reshaped_num = reshaped_str = . // conserve memory
 	(void) setbreakintr(val)
 
@@ -455,11 +469,11 @@ void join(`String' using_keys,
 		if (varlabels[i] != "") {
 			st_varlabel(var, varlabels[i])
 		}
-		
+
 		st_varformat(var, varformats[i])
 
 		label = varvaluelabels[i]
-		
+
 		if (label != "") {
 			// label values <varlist> <label>
 			st_varvaluelabel(var, label)
@@ -470,7 +484,7 @@ void join(`String' using_keys,
 					printf(msg, label)
 				}
 				// label define <label> <#> <text> <...>
-				st_vlmodify(label, 
+				st_vlmodify(label,
 				            asarray(label_values, label),
 				            asarray(label_text, label))
 			}
@@ -484,7 +498,7 @@ void join(`String' using_keys,
 			label = pk_varvaluelabels[i]
 			if (label == "") continue // Continue if no value label
 			if (st_vlexists(label)) printf(msg, label) // Warn
-			st_vlmodify(label, 
+			st_vlmodify(label,
 			            asarray(label_values, label),
 			            asarray(label_text, label))
 			st_varvaluelabel(var, label)
@@ -520,7 +534,7 @@ void join(`String' using_keys,
 		}
 
 		if (keep_using & has_using) {
-			
+
 			// Store keys (numeric or string)
 			pk = select(pk, mask)
 			range = st_nobs() + 1 :: st_nobs() + rows(pk)
@@ -542,7 +556,7 @@ void join(`String' using_keys,
 				st_sstore(range, fk_names, pk)
 			}
 			else {
-				st_store(range, fk_names, pk)	
+				st_store(range, fk_names, pk)
 			}
 
 			// Store numeric vars
@@ -575,7 +589,7 @@ void join(`String' using_keys,
 	`Boolean'				integers_only
 	`Integer'				i
 	`String'				type
-	
+
 	// First look at the variable types
 	for (i = integers_only = 1; i <= cols(vars); i++) {
 		type = st_vartype(vars[i])
