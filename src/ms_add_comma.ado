@@ -8,9 +8,10 @@ ms_add_comma, loc(cmd) cmd("tab turn, nolabel") opt("sort") -> stores "tab turn,
 */
 
 program define ms_add_comma
-	syntax, cmd(string) [opt(string)] LOCal(name local)
+	syntax, [cmd(string)] [opt(string)] LOCal(name local)
 	cap TryWithComma `cmd' , `opt'
 	loc comma = cond(c(rc) | (`"`opt'"'== ""), "", ",")
+	if ("`cmd'" == "") & ("`opt'" != "") loc comma ","
 	c_local `local' `cmd'`comma' `opt'
 end
 
