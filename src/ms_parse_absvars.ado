@@ -1,11 +1,29 @@
-*! version 2.28.1 10jul2018
+*! version 2.33.0 26jan2019
 program ms_parse_absvars, sclass
-	syntax anything(id="absvars" name=absvars equalok everything), ///
+	syntax [anything(id="absvars" name=absvars equalok everything)], /// Allow for no abosvars
 		[NOIsily] /// passed to -ms_fvunab-
 		[SAVEfe Generate] /// Synonyms
 		[*] /// more options, that are returned in s(options)
 
 	loc save_all_fe = ("`savefe'" != "") | ("`generate'" != "")
+
+* Constant-only
+	if (`"`absvars'"' == "") {
+		sreturn clear
+		sreturn loc extended_absvars ""
+		sreturn loc num_slopes = "0"
+		sreturn loc intercepts = "1"
+		sreturn loc targets = `" """'
+		sreturn loc cvars = `" """'
+		sreturn loc ivars = `"_cons"'
+		sreturn loc absvars = `" """'
+		sreturn loc save_all_fe = 0
+		sreturn loc save_any_fe = 0
+		sreturn loc has_intercept = 1
+		sreturn loc G = 1
+		sreturn loc options = `"`options'"'
+		exit
+	}
 
 * Unabbreviate variables and trim spaces
 	UnabAbsvars `absvars', `noisily' target stringok
@@ -24,7 +42,6 @@ program ms_parse_absvars, sclass
 
 	loc g 0
 	loc any_has_intercept 0
-	loc equation_d_is_valid 1
 	loc save_any_fe 0
 
 	while ("`absvars'" != "") {
@@ -91,29 +108,20 @@ program ms_parse_absvars, sclass
 
 			* Build the absvar equation; assert that we can create the new vars
 			if (`has_intercept') {
-				loc equation_d `equation_d' + `target'
 				conf new var `target'
 			}
 			forval h = 1/`num_slopes' {
 				conf new var `target'Slope`h'
 				loc cvar : word `h' of `cvars'
-				loc equation_d `equation_d' + `target'Slope`h' * `cvar'
 			}
 		}
 		else {
-			loc equation_d_is_valid 0
 			loc all_targets `"`all_targets' """'
 		}
 
 	}
 
-	* Remove the trailing + in equation_d (Stata rejects "gen x = + y")
-	gettoken _ equation_d : equation_d // trim leading +
-	loc equation_d `equation_d' // trim leading whitespace
-	if (!`equation_d_is_valid') loc equation_d // clear it
-
 	sreturn clear
-	sreturn loc equation_d "`equation_d'"
 	sreturn loc extended_absvars "`extended'"
 	sreturn loc num_slopes = "`all_num_slopes'"
 	sreturn loc intercepts = "`all_has_intercept'"
