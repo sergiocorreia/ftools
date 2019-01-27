@@ -56,5 +56,6 @@ void fsort_inner(string scalar vars, string scalar sortindex, real scalar verbos
 end
 
 
-ftools, check
+findfile "ftools.mata"
+include "`r(fn)'"
 exit

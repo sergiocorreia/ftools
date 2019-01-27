@@ -276,9 +276,10 @@ program define GetTarget
 end
 
 
-ftools, check
-findfile "ftools_type_aliases.mata"
+findfile "ftools.mata"
 include "`r(fn)'"
+
 findfile "fcollapse_main.mata"
 include "`r(fn)'"
+
 exit

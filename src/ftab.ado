@@ -119,8 +119,8 @@ program define Display
 
 end
 
-ftools, check
-findfile "ftools_type_aliases.mata"
+
+findfile "ftools.mata"
 include "`r(fn)'"
 
 mata:

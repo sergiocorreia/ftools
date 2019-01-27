@@ -13,7 +13,6 @@ program define local_inlist
 	c_local inlist `"`inlist'"'
 end
 
-ftools, check
 findfile "ftools_type_aliases.mata"
 include "`r(fn)'"
 

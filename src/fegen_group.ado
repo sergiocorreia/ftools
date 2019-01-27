@@ -124,5 +124,6 @@ program define Group_FirstPrinciplesSorted
 end
 
 
-ftools, check
+findfile "ftools.mata"
+include "`r(fn)'"
 exit

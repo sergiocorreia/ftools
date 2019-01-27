@@ -46,5 +46,7 @@ void fisid(string rowvector varnames,
 }
 end
 
-ftools, check
+
+findfile "ftools.mata"
+include "`r(fn)'"
 exit

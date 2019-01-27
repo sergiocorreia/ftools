@@ -76,9 +76,7 @@ program define flevelsof, rclass
 	}
 end
 
-
-ftools, check
-findfile "ftools_type_aliases.mata"
+findfile "ftools.mata"
 include "`r(fn)'"
 
 mata:
@@ -129,4 +127,5 @@ void flevelsof(`String' varlist,
 }
 
 end
+
 exit
