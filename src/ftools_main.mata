@@ -58,6 +58,7 @@ class Factor
 	touse = ""
 	panel_is_setup = 0
 	extra = asarray_create("string", 1, 20)
+	is_sorted = 0
 }
 
 
@@ -480,7 +481,9 @@ class Factor
 	}
 
 	F.sortedby = st_macroexpand("`" + ": sortedby" + "'")
-	F.is_sorted = strpos(F.sortedby, invtokens(vars))==1
+	if (!F.is_sorted) {
+		F.is_sorted = strpos(F.sortedby, invtokens(vars)) == 1
+	}
 	if (!F.is_sorted & integers_only & cols(data)==1 & rows(data)>1) {
 		F.is_sorted = all( data :<= (data[| 2, 1 \ rows(data), 1 |] \ .) )
 	}
@@ -627,7 +630,7 @@ class Factor
 		msg = "{txt} method: {res}%s{txt}; dict size: {res}%s{txt})\n"
 		printf(msg, method, method == "join" ? "n/a" : strofreal(dict_size, "%12.0gc"))
 	}
-	F.is_sorted = 0
+	F.is_sorted = F.num_levels == 1 // if there is only one level it is already sorted
 	return(F)
 }
 
