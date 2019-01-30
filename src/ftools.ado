@@ -12,7 +12,7 @@ program define ftools
 		// maybe just add all fns explicitly?
 		loc functions Factor*() factor*() _factor*() join_factors() ///
 					  __fload_data() __fstore_data() ftools*() __factor*() ///
-					  assert_msg() assert_in() assert_boolean() /// bin_order()
+					  assert_msg() assert_in() assert_boolean() _assert_abort() /// bin_order()
 					  aggregate_*() select_nm_*() rowproduct() ///
 					  create_mask() update_mask() ///
 					  varlist_is_hybrid() varlist_is_integers()

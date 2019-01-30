@@ -1,11 +1,23 @@
 // Helper functions ----------------------------------------------------------
 mata:
 
-`Void' assert_msg(`Boolean' t, | `String' msg, `Integer' rc)
+`Void' _assert_abort(`Integer' rc, `String' msg, `Boolean' traceback) {
+	if (traceback) {
+		_error(rc, msg)
+	}
+	else {
+		printf("{err}%s\n", msg)
+		exit(rc) // exit(error(rc))
+	}
+}
+
+
+`Void' assert_msg(`Boolean' t, | `String' msg, `Integer' rc, `Boolean' traceback)
 {
 	if (args()<2 | msg=="") msg = "assertion is false"
 	if (args()<3 | rc==.) rc = 3498
-	if (t==0) _error(rc, msg)
+	if (args()<4 | rc==.) traceback = 1
+	if (t==0) _assert_abort(rc, msg, traceback)
 }
 
 
