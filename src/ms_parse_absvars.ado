@@ -3,6 +3,7 @@ program ms_parse_absvars, sclass
 	syntax [anything(id="absvars" name=absvars equalok everything)], /// Allow for no abosvars
 		[NOIsily] /// passed to -ms_fvunab-
 		[SAVEfe Generate] /// Synonyms
+		[REPLACE] ///
 		[*] /// more options, that are returned in s(options)
 
 	loc save_all_fe = ("`savefe'" != "") | ("`generate'" != "")
@@ -26,7 +27,7 @@ program ms_parse_absvars, sclass
 	}
 
 * Unabbreviate variables and trim spaces
-	UnabAbsvars `absvars', `noisily' target stringok
+	UnabAbsvars `absvars', `noisily' target stringok `replace'
 	loc absvars `s(varlist)'
 
 * Count the number of absvars
@@ -249,7 +250,7 @@ Like -fvunab- but with three exceptions:
 - Doesn't expand x#c.(y z) into x#c.y and x#c.z
 */
 	sreturn clear
-	syntax anything(name=remainder equalok) [, NOIsily TARGET STRingok]
+	syntax anything(name=remainder equalok) [, NOIsily TARGET STRingok REPLACE]
 
 	* Trim spaces around equal signs ("= ", " =", "  =   ", etc)
 	while (regexm("`remainder'", "[ ][ ]+")) {
@@ -284,6 +285,7 @@ Like -fvunab- but with three exceptions:
 		
 		* deal with newvar
 		if ("`target'" != "") & ("`next_char'" == "=") {
+			if ("`replace'" != "") novarabbrev cap drop `0'
 			syntax newvarname
 			loc 0 `varlist'
 		}

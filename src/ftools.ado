@@ -1,4 +1,4 @@
-*! version 2.34.0 26jan2019
+*! version 2.35.0 05feb2019
 * This file is just used to compile ftools.mlib
 
 program define ftools
@@ -14,7 +14,7 @@ program define ftools
 					  __fload_data() __fstore_data() ftools*() __factor*() ///
 					  assert_msg() assert_in() assert_boolean() _assert_abort() /// bin_order()
 					  aggregate_*() select_nm_*() rowproduct() ///
-					  create_mask() update_mask() ///
+					  create_mask() update_mask() is_rowvector() ///
 					  varlist_is_hybrid() varlist_is_integers()
 		ms_compile_mata, package(ftools) version(`package_version') `force' fun(`functions') verbose // debug
 	}

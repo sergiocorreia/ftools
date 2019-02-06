@@ -45,16 +45,35 @@ mata:
 
 `Void' update_mask(`Variable' mask, `Vector' index, `Real' value)
 {
-	mask[index] = J(rows(index), 1, value)
+	if (!length(index)) return
+
+	// Allow for vector and rowvector masks
+	if (is_rowvector(index)) {
+		mask[index] = J(1, cols(index), value)
+	}
+	else {
+		mask[index] = J(rows(index), 1, value)
+	}
 }
 
 
 `Variable' create_mask(`Integer' obs, `Real' default_value, `Vector' index, `Real' value)
 {
 	`Variable'		mask
-	mask = J(obs, 1, default_value)
+	// Allow for vector and rowvector masks
+	if (is_rowvector(index)) {
+		mask = J(1, obs, default_value)
+	}
+	else {
+		mask = J(obs, 1, default_value)
+	}
 	update_mask(mask, index, value)
 	return(mask)
+}
+
+
+`Boolean' is_rowvector(`DataFrame' x) {
+	return(orgtype(x) == "rowvector")
 }
 
 
