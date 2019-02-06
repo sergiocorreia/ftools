@@ -72,6 +72,17 @@ mata:
 }
 
 
+`Real' clip(`Real' x, `Real' min_x, `Real' max_x) {
+	return(x < min_x ? min_x : (x > max_x ? max_x : x))
+}
+
+
+`Matrix' inrange(`Matrix' x, `Matrix' lb, `Matrix' ub)
+{
+	return(lb :< x :& x :< ub)
+}
+
+
 `Boolean' is_rowvector(`DataFrame' x) {
 	return(orgtype(x) == "rowvector")
 }
