@@ -1,4 +1,4 @@
-*! version 2.33.0 26jan2019
+*! version 2.36.1 13feb2019
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -6,7 +6,7 @@ program define join
 	syntax ///
 		[anything]  /// Variables that will be added (default is _all unless keepnone is used)
 		, ///
-		[from(string) into(string)] /// -using- dataset
+		[from(string asis) into(string asis)] /// -using- dataset
 		[by(string)] /// Primary and foreign keys
 		[KEEP(string)] /// 1 master 2 using 3 match
 		[ASSERT(string)] /// 1 master 2 using 3 match
@@ -22,7 +22,7 @@ program define join
 	* Parse details of using dataset
 	_assert (`"`from'"' != "") + (`"`into'"' != "") == 1, ///
 		msg("specify either from() or into()")
-	ParseUsing `"`from'"' `"`into'"' // Return -filename- and -if-
+	ParseUsing `from'`into' // Return -filename- and -if-
 
 	* Parse _merge indicator
 	_assert ("`generate'" != "") + ("`nogenerate'" != "") < 2, ///
@@ -135,7 +135,8 @@ program define ParseUsing
 	* SAMPLE INPUT: somefile.dta if foreign==true
 	gettoken filename if : 0,
 	c_local filename `"`filename'"'
-	c_local if `if'
+	loc if `if' // remove leading/trailing spaces
+	c_local if `"`if'"'
 end
 
 
