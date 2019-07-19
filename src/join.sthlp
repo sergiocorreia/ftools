@@ -45,7 +45,7 @@ As above, but with the "using" dataset currently open instead of the "master"
 {synoptset 24 tabbed}{...}
 {synopthdr}
 {synoptline}
-{p2coldent:+ {cmd:from(}{help filename} [{help if}]{cmd:)}}filename of the {it:using} datasetm, where the keys are unique{p_end}
+{p2coldent:+ {cmd:from(}{help filename} [{help if}]{cmd:)}}filename of the {it:using} dataset, where the keys are unique{p_end}
 {...}
 {p2coldent:+ {cmd:into(}{help filename} [{help if}]{cmd:)}}filename of the {it:master} dataset{p_end}
 {...}
