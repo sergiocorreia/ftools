@@ -1,7 +1,8 @@
 * Setup
 
 	clear all
-	cap cls
+
+/*	cap cls
 	set more off
 	timer clear
 
@@ -9,7 +10,7 @@
 	cap ado uninstall ftools
 	net install ftools, from("C:/git/ftools/src")
 	ftools, compile
-
+*/
 
 * Create -using- dataset
 

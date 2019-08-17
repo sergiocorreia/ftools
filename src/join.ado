@@ -511,7 +511,7 @@ void join(`String' using_keys,
 			var = chars[i, 1]
 			char_name = chars[i, 2]
 			char_val = chars[i, 3]
-			if (char_name == "note0") {
+			if (anyof(("note0", "iis", "_TSpanel", "_TStvar"), char_name)) {
 				continue
 			}
 			else if (strpos(char_name, "note")==1) {
@@ -577,7 +577,7 @@ void join(`String' using_keys,
 	// Ensure that the keys are unique in master
 	// (This changes F so must be run at the end)
 	if (uniquemaster) {
-		F.keep_obs(N + 1 :: st_nobs())
+		F.drop_obs(1 :: N)
 		assert_is_id(F, master_keys, "master")
 	}
 
@@ -612,10 +612,15 @@ void join(`String' using_keys,
 void assert_is_id(`Factor' F, `String' keys, `String' dta)
 {
 	`String'				msg
-	msg = sprintf("<%s> do not uniquely identify obs. in the %s data",
-	              keys, dta)
+	`Boolean'				plural
+	plural = length(tokens(keys)) > 1
+	msg = sprintf("variable%s %s do%s not uniquely identify observations in the %s data",
+	              plural ? "s" : "", keys, plural ? "" : "es", dta)
 	if (!F.is_id()) {
-		_error(msg)
+		// Graceful error handling, as in The Mata Book (Appendix A.4)
+		errprintf(msg)
+		exit(459)
+		// NotReached
 	}
 }
 

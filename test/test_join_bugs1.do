@@ -1,5 +1,3 @@
-reghdfe, reload
-pr drop _all
 clear
 set obs 1
 gen x = "a string that is very long"

@@ -5,7 +5,10 @@ do test_mata
 do test_stata
 do test_fcollapse
 do test_flevelsof
-do test_bug_join
+
+*do test_join
+do test_join_bugs1
+do test_join_bugs2
 
 do benchmark
 
