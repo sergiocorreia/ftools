@@ -520,7 +520,7 @@ void join(`String' using_keys,
 			var = chars[i, 1]
 			char_name = chars[i, 2]
 			char_val = chars[i, 3]
-			if (anyof(("note0", "iis", "_TSpanel", "_TStvar"), char_name)) {
+			if (anyof(("note0", "iis", "tis", "_TSpanel", "_TStvar", "_TSitrvl", "_TSdelta"), char_name)) {
 				continue
 			}
 			else if (strpos(char_name, "note")==1) {
