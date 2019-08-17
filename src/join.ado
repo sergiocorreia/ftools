@@ -299,6 +299,10 @@ void join(`String' using_keys,
 	`StringVector'			charnames
 	`String'				char_name, char_val
 
+	// Note:
+	// - On the -using- dataset the keys will be unique, hence why they are the PKs (primary keys)
+	// - On the -master- dataset we allow duplicates (unless -uniquemaster- is set), hence whey they are FKs (foreign keys)
+
 	// Using
 	pk_names = tokens(using_keys)
 	pk = __fload_data(pk_names)
@@ -433,13 +437,18 @@ void join(`String' using_keys,
 	}
 	F = _factor(pk \ fk, integers_only, verbose, method, 0)
 
-	index = F.levels[| 1 \ N |]
+	// Fill -reshaped_num- matrix with data from -using-
+	// 1. Start with the matrix full of MVs, for levels that appear only in -master- (_merge==1)
 	reshaped_num = J(F.num_levels, cols(data_num)-1, .) , J(F.num_levels, 1, 1) // _merge==1
+	// 2. Get the levels that also appear in -using-
+	index = F.levels[| 1 \ N |] // Note that F.levels is unique in 1..N only because the keys are unique in -using-
+	// 3. Populate the rows that are also in -using- with the data from using
 	reshaped_num[index, .] = data_num
 	if (cols(varnames_str) > 0) {
 		reshaped_str = J(F.num_levels, cols(data_str), "")
 		reshaped_str[index, .] = data_str
 	}
+	// 4. Rearrange and optionally expand the matrix to conform to the -master- dataset
 	index = F.levels[| N+1 \ . |]
 	reshaped_num = reshaped_num[index , .]
 	if (cols(varnames_str) > 0) {
