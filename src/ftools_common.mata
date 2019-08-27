@@ -89,7 +89,7 @@ mata:
 
 
 // Return 1 if all the variables are integers 
-`Boolean' varlist_is_integers(`Varlist' varlist, `DataFrame' data)
+`Boolean' varlist_is_integers(`Varlist' varlist, `Anything' data)
 {
 	`Integer' 				i
 	`Integer' 				num_vars
@@ -97,6 +97,11 @@ mata:
 
 	if (eltype(data) == "string") {
 		return(0)
+	}
+
+	// Detect DataTable
+	if (eltype(data) == "class") {
+		return(data.is_integers(varlist))
 	}
 
 	num_vars = cols(varlist)

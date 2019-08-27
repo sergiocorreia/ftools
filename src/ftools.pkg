@@ -62,6 +62,7 @@ f local_inlist.sthlp
 f ftools.mata
 f ftools_type_aliases.mata
 f ftools_common.mata
+f ftools_data_table.mata
 f ftools_main.mata
 f ftools_hash1.mata
 f ftools_plugin.mata

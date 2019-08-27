@@ -32,6 +32,9 @@
 	findfile "ftools_common.mata"
 	include "`r(fn)'"
 
+	findfile "ftools_data_table.mata"
+	include "`r(fn)'"
+
 	findfile "ftools_main.mata"
 	include "`r(fn)'"
 

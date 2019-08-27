@@ -15,7 +15,9 @@ program define ftools
 					  assert_msg() assert_in() assert_boolean() _assert_abort() /// bin_order()
 					  aggregate_*() select_nm_*() rowproduct() ///
 					  create_mask() update_mask() is_rowvector() clip() inrange() ///
-					  varlist_is_hybrid() varlist_is_integers()
+					  varlist_is_hybrid() varlist_is_integers() ///
+					  DataTable*() data_table() _data_table()
+
 		ms_compile_mata, package(ftools) version(`package_version') `force' fun(`functions') verbose // debug
 	}
 	else if "`options'"=="version" {

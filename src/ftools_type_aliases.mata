@@ -35,6 +35,7 @@
         loc Anything          transmorphic matrix // General matrix
         loc Dict              transmorphic scalar // Use for asarray()
         loc Factor            class Factor scalar
+        loc DataTable         class DataTable scalar
 
         // Pointers
         local FunctionP       pointer(`Variables' function) scalar

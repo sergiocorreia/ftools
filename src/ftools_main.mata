@@ -20,6 +20,7 @@ class Factor
 	`Boolean'				is_sorted			// Is varlist==sorted(varlist)?
 	`String'				sortedby			// undocumented; save sort order of dataset
 	`Boolean'				panel_is_setup
+	`Integer'				key_type			// 1=Integers 2=Strings 3=Hybrid
 
 	`Void'					new()
 	`Void'					panelsetup()		// aux. vectors
@@ -59,6 +60,7 @@ class Factor
 	panel_is_setup = 0
 	extra = asarray_create("string", 1, 20)
 	is_sorted = 0
+	key_type = .
 }
 
 
@@ -433,7 +435,7 @@ class Factor
 {
 	`Factor'				F
 	`Varlist'				vars
-	`DataFrame'				data
+	`DataTable'				data
 	`Integer'				i
 	`Boolean'				integers_only
 	`Boolean'				touse_is_selectvar
@@ -472,7 +474,7 @@ class Factor
 		                    sort_levels, count_levels, save_keys)
 	}
 	else {
-		data = __fload_data(vars, touse, touse_is_selectvar)
+		data = data_table(vars, touse, touse_is_selectvar)
 		integers_only = varlist_is_integers(vars, data) // Are the variables integers (so maybe we can use the fast hash)?
 		F = _factor(data, integers_only, verbose, method,
 		            sort_levels, count_levels, hash_ratio,
@@ -484,8 +486,8 @@ class Factor
 	if (!F.is_sorted) {
 		F.is_sorted = strpos(F.sortedby, invtokens(vars)) == 1
 	}
-	if (!F.is_sorted & integers_only & cols(data)==1 & rows(data)>1) {
-		F.is_sorted = all( data :<= (data[| 2, 1 \ rows(data), 1 |] \ .) )
+	if (!F.is_sorted & integers_only & cols(data)==1 & rows(data)>1) { // BUGBUG!!!
+		F.is_sorted = all( data :<= (data[| 2, 1 \ rows(data), 1 |] \ .) ) // BUGBUG!!!
 	}
 	F.varlist = vars
 	if (touse_is_selectvar & touse!=.) F.touse = touse
@@ -514,7 +516,7 @@ class Factor
 }
 
 
-`Factor' _factor(`DataFrame' data,
+`Factor' _factor(`Anything' data,
                | `Boolean' integers_only,
                  `Boolean' verbose,
                  `String' method,
@@ -547,13 +549,25 @@ class Factor
 	base_method = method
 	msg = "invalid method: " + method
 	assert_msg(anyof(("mata", "hash0", "hash1"), method), msg)
+	assert_msg(count_levels == 0 | count_levels == 1, "count_levels")
+	assert_msg(save_keys == 0 | save_keys == 1, "save_keys")
 
+	if (eltype(data)=="class") {
+		if (data.is_all_numeric) {
+			return(_factor(data.data, integers_only, verbose, method, sort_levels, count_levels, hash_ratio, save_keys, vars, touse))
+		}
+		else if (data.is_all_string) {
+			return(_factor(data.sdata, integers_only, verbose, method, sort_levels, count_levels, hash_ratio, save_keys, vars, touse))
+		}
+		else {
+			return(__factor_hybrid(data, integers_only, verbose, method, sort_levels, count_levels, hash_ratio, save_keys, vars, touse))
+		}
+	}
+	
 	num_obs = rows(data)
 	num_vars = cols(data)
 	assert_msg(num_obs > 0, "no observations")
 	assert_msg(num_vars > 0, "no variables")
-	assert_msg(count_levels == 0 | count_levels == 1, "count_levels")
-	assert_msg(save_keys == 0 | save_keys == 1, "save_keys")
 
 	// Compute upper bound for number of levels
 	size0 = .
@@ -633,6 +647,66 @@ class Factor
 	F.is_sorted = F.num_levels == 1 // if there is only one level it is already sorted
 	return(F)
 }
+
+
+`Factor' __factor_hybrid(`Anything' data,
+                 `Boolean' integers_only,
+                 `Boolean' verbose,
+                 `String' method,
+                 `Boolean' sort_levels,
+                 `Boolean' count_levels,
+                 `Integer' hash_ratio,
+                 `Boolean' save_keys,
+                 `Varlist' vars,
+                 `DataCol' touse)
+{
+	`Factor'				F, F1, F2
+	`Integer'				num_obs, num_vars
+	`Integer'				i
+	`Integer'				limit0
+	`Integer'				size0, size1, dict_size, max_numkeys1
+	`Matrix'				min_max
+	`RowVector'				delta
+	`String'				msg, base_method
+
+	// Because we are in the hybrid case, integers_only is out of the question
+	// Method WILL be hash1 (modified)
+	method = "hash1"
+
+	assert(integers_only == 0)
+	assert_msg(data.rows > 0, "no observations")
+	assert_msg(data.cols > 0, "no variables")
+
+	// Compute upper bound for number of levels
+	if (hash_ratio == .) hash_ratio = 1.3 // Standard hash table load factor
+	msg = sprintf("invalid hash ratio %5.1f", hash_ratio)
+	assert_msg(hash_ratio > 1.0, msg)
+	dict_size = ceil(hash_ratio * data.rows)
+	dict_size = max((dict_size, 2 ^ 10)) // at least
+	assert_msg(dict_size <= 2 ^ 31, "dict size exceeds Mata limits") // Mata hard coded limit! (2,147,483,647 rows)
+
+	F = __factor_hash1_hybrid(data, verbose, dict_size, sort_levels, max_numkeys1, save_keys)
+	if (!count_levels) F.counts = J(0, 1, .)
+	F.method = method
+
+	F.num_obs = data.rows
+	assert_msg(rows(F.levels) == F.data.rows & cols(F.levels) == 1, "levels")
+	if (save_keys==1) assert_msg(rows(F.keys) == F.num_levels, "keys")
+	if (count_levels) {
+		assert_msg(rows(F.counts)==F.num_levels & cols(F.counts)==1, "counts")
+	}
+
+	if (verbose) {
+		msg = "{txt}(obs: {res}%s{txt}; levels: {res}%s{txt};"
+		printf(msg, strofreal(data.rows, "%12.0gc"), strofreal(F.num_levels, "%12.0gc"))
+		msg = "{txt} method: {res}%s{txt}; dict size: {res}%s{txt})\n"
+		printf(msg, method, strofreal(dict_size, "%12.0gc"))
+	}
+
+	F.is_sorted = F.num_levels == 1 // if there is only one level it is already sorted
+	return(F)
+}
+
 
 
 `Factor' join_factors(`Factor' F1,
