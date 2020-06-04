@@ -1,4 +1,4 @@
-*! version 2.39.0 03jun2020
+*! version 2.39.1 03jun2020
 * This file is just used to compile ftools.mlib
 
 program define ftools

@@ -664,8 +664,12 @@ class Factor
 		_error(123, "join_factors() with save_keys==1 requires the -keys- vector")
 	}
 
-	vars = invtokens((F1.varlist, F2.varlist))
-	is_sorted = (F1.sortedby == F2.sortedby) & (strpos(F2.sortedby, vars)==1)
+	is_sorted = 0
+	if (F1.sortedby == F2.sortedby & cols(F1.sortedby) > 0) {
+		vars = F1.varlist, F2.varlist
+		i = min(( cols(vars) , cols(F1.sortedby) ))
+		is_sorted = vars == F1.sortedby[1..i]
+	}
 
 	F1.panelsetup()
 	Y = F1.sort(F2.levels)
@@ -777,7 +781,7 @@ class Factor
     F.num_levels = num_levels
     F.method = "join"
     F.sortedby = F1.sortedby
-    F.varlist = tokens(vars)
+    F.varlist = vars
     if (levels_as_keys) asarray(F.extra, "levels_as_keys", 1)
 
     if (!is_sorted) levels = F1.invsort(levels)
