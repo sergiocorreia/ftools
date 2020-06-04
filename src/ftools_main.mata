@@ -18,7 +18,7 @@ class Factor
 	`String'				method				// Hash fn used
 	//`Vector'				sorted_levels
 	`Boolean'				is_sorted			// Is varlist==sorted(varlist)?
-	`String'				sortedby			// undocumented; save sort order of dataset
+	`StringRowVector'		sortedby			// undocumented; save sort order of dataset
 	`Boolean'				panel_is_setup
 
 	`Void'					new()
@@ -434,7 +434,7 @@ class Factor
 	`Factor'				F
 	`Varlist'				vars
 	`DataFrame'				data
-	`Integer'				i
+	`Integer'				i, k
 	`Boolean'				integers_only
 	`Boolean'				touse_is_selectvar
 	`String'				var, lbl
@@ -450,6 +450,7 @@ class Factor
 	}
 
 	vars = tokens(invtokens(varnames))
+	k = cols(vars)
 
 	// touse is a string with the -touse- variable (a 0/1 mask), unless
 	// we use an undocumented feature where it is an observation index
@@ -480,10 +481,13 @@ class Factor
 		            vars, touse)
 	}
 
-	F.sortedby = st_macroexpand("`" + ": sortedby" + "'")
+	F.sortedby = tokens(st_macroexpand("`" + ": sortedby" + "'"))
+	
 	if (!F.is_sorted) {
-		F.is_sorted = strpos(F.sortedby, invtokens(vars)) == 1
+		i = min((k, cols(F.sortedby)))
+		F.is_sorted = vars == F.sortedby[1..i]
 	}
+
 	if (!F.is_sorted & integers_only & cols(data)==1 & rows(data)>1) {
 		F.is_sorted = all( data :<= (data[| 2, 1 \ rows(data), 1 |] \ .) )
 	}
@@ -492,7 +496,7 @@ class Factor
 	F.varformats = F.varlabels = F.varvaluelabels = F.vartypes = J(1, cols(vars), "")
 	F.vl = asarray_create("string", 1)
 	
-	for (i = 1; i <= cols(vars); i++) {
+	for (i = 1; i <= k; i++) {
 		var = vars[i]
 		F.varformats[i] = st_varformat(var)
 		F.varlabels[i] = st_varlabel(var)
