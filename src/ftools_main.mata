@@ -483,7 +483,7 @@ class Factor
 
 	F.sortedby = tokens(st_macroexpand("`" + ": sortedby" + "'"))
 	
-	if (!F.is_sorted) {
+	if (!F.is_sorted & cols(F.sortedby)) {
 		i = min((k, cols(F.sortedby)))
 		F.is_sorted = vars == F.sortedby[1..i]
 	}
