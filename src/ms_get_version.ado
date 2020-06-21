@@ -39,10 +39,14 @@ mata:
 		line = fget(fh)
 		fclose(fh)
 		line = strtrim(line)
+
+		line = subinstr(line, "*!version ", "*! version ") // helps with rdrobust
+		
 		if (strpos(line, "*! version ")) {
 			line = strtrim(substr(line, 1 + strlen("*! version "), .))
 			return(line)
 		}
+		
 		if (strpos(line, sprintf("*! %s ", ado) )) {
 			line = strtrim(substr(line, 1 + strlen(sprintf("*! %s ", ado) ), .))
 			return(line)
