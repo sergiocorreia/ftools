@@ -169,17 +169,19 @@ program Compile
 	tokenize "$S_ADO", parse(";")
 	local ok 0
 	while (!`ok') {
-		
+
 		local path `"`1'"'
 		if `"`path'"'=="PLUS" local path `"`c(sysdir_plus)'"'
 		else if `"`path'"'=="PERSONAL" local path `"`c(sysdir_personal)'"'
 		else if `"`path'"'=="OLDPLACE" local path `"`c(sysdir_oldplace)'"'
 		
-		cap dir `"`path'"'
-		if _rc continue
+		mata : st_local("dir_ok", strofreal(direxists("`path'")))
+		if `dir_ok'==0 & `"`1'"' != ""{
+			macro shift
+			continue
+		}
 		
 		if "`path'"!="." TrySave "`path'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
-		di "`path'"
 		
 		* Final effort: try installing to current directory
 		if(`"`1'"' == "" & !`ok') {
