@@ -175,7 +175,10 @@ program Compile
 		else if `"`path'"'=="PERSONAL" local path `"`c(sysdir_personal)'"'
 		else if `"`path'"'=="OLDPLACE" local path `"`c(sysdir_oldplace)'"'
 		
-		if !inlist("`path'",".",";") TrySave "`path'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
+		cap dir `"`path'"'
+		if _rc continue
+		
+		if "`path'"!="." TrySave "`path'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
 		di "`path'"
 		
 		* Final effort: try installing to current directory
@@ -205,7 +208,7 @@ program TrySave
 		exit
 	}
 	else {
-		loc path = "`path'l/"
+		loc path = "`path'/l/"
 		cap conf new file "`path'`random_file'"
 		if (c(rc)) {
 			mkdir "`path'"
