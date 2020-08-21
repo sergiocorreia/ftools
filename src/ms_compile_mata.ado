@@ -155,13 +155,42 @@ program Compile
 	if (`debug') mata: mata desc
 
 	* Find out where can I save the .mlib
-	TrySave "`c(sysdir_plus)'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
-	if (!`ok') TrySave "`c(sysdir_personal)'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
-	if (!`ok') TrySave "." "current path" "`package'" "`functions'" `debug' `verbose'
-	if (!`ok') {
-		di as error "Could not compile file; ftools will not work correctly"
-		error 123
+	*TrySave "`c(sysdir_plus)'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
+	*if (!`ok') TrySave "`c(sysdir_personal)'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
+	*if (!`ok') TrySave "." "current path" "`package'" "`functions'" `debug' `verbose'
+	*if (!`ok') {
+	*	di as error "Could not compile file; ftools will not work correctly"
+	*	error 123
+	*}
+	
+	* Find out where can I save the .mlib
+	* Try directories in order specified by S_ADO, skipping "." (current working directory)
+	* If all fail, then try working directory
+	tokenize "$S_ADO", parse(";")
+	local ok 0
+	while (!`ok') {
+		
+		local path `"`1'"'
+		if `"`path'"'=="PLUS" local path `"`c(sysdir_plus)'"'
+		else if `"`path'"'=="PERSONAL" local path `"`c(sysdir_personal)'"'
+		else if `"`path'"'=="OLDPLACE" local path `"`c(sysdir_oldplace)'"'
+		
+		if !inlist("`path'",".",";") TrySave "`path'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
+		di "`path'"
+		
+		* Final effort: try installing to current directory
+		if(`"`1'"' == "" & !`ok') {
+			if (!`ok') TrySave "." "current path" "`package'" "`functions'" `debug' `verbose'
+			local ok = 1
+			
+			if (!`ok') {
+				di as error "Could not compile file; ftools will not work correctly"
+				error 123
+			}			
+		}
+		macro shift
 	}
+
 end
 
 
