@@ -25,6 +25,7 @@ mata: mata mlib index
 ftools, compile
 confirm file "`c(sysdir_plus)'/l/lftools.mlib"
 ado uninstall ftools , from("`c(sysdir_plus)'")
+rm "`c(sysdir_plus)'/l/lftools.mlib"
 
 
 
