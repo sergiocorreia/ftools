@@ -6,7 +6,6 @@
 * NOTE: be careful with `shell rmdir "mydir" /s /q`: this is recursive deletion 
 
 program drop _all
-assert "`c(os)'"=="Windows"
  
 di "`c(sysdir_plus)'"
 di "`c(sysdir_personal)'"
@@ -22,18 +21,20 @@ if "`c(os)'"=="Windows" {
 	local deletion2 `"shell rmdir "wd" /s /q"'
 }
 
-else if "`c(os)'"=="OsX" {
+else if "`c(os)'"=="OSX" {
 	local custom_lib ""
-	local deletion1 `"shell rmdir "`custom_lib'" /s /q"'
-	local deletion2 `"shell rmdir "wd" /s /q"'
+	local deletion1 `"shell rm -r "`custom_lib'""'
+	local deletion2 `"shell rm -r "wd""'
 	error 1
 }
 
-else if "`c(os)'"=="unix" {
-	local custom_lib ""
-	local deletion1 `"shell rmdir "`custom_lib'" /s /q"'
-	local deletion2 `"shell rmdir "wd" /s /q"'
-	error 1
+else if "`c(os)'"=="Unix" {
+	local custom_lib "~/custom_lib"
+	local deletion1 `"shell rm -r -f `custom_lib'"'
+	local deletion2 `"shell rm -r -f wd"'
+	
+	* Remove default NBER paths to ensure test script uses development version
+	adopath - /home/site/etc/stata/ado.nber
 }
 
 else error 1
