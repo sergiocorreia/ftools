@@ -11,8 +11,36 @@ assert "`c(os)'"=="Windows"
 di "`c(sysdir_plus)'"
 di "`c(sysdir_personal)'"
 
+* Because we are changing adopaths in this test script, reinstall tools from source each time
 local netfrom "https://github.com/reifjulian/ftools/raw/master/src/"
 
+* Custom installation and deletion commands differ by OS
+* CAUTION: these commands include a recursive deletion of a directory (temporarily) created by this test script
+if "`c(os)'"=="Windows" {
+	local custom_lib "C:/custom_lib"
+	local deletion1 `"shell rmdir "`custom_lib'" /s /q"'
+	local deletion2 `"shell rmdir "wd" /s /q"'
+}
+
+else if "`c(os)'"=="OsX" {
+	local custom_lib ""
+	local deletion1 `"shell rmdir "`custom_lib'" /s /q"'
+	local deletion2 `"shell rmdir "wd" /s /q"'
+	error 1
+}
+
+else if "`c(os)'"=="unix" {
+	local custom_lib ""
+	local deletion1 `"shell rmdir "`custom_lib'" /s /q"'
+	local deletion2 `"shell rmdir "wd" /s /q"'
+	error 1
+}
+
+else error 1
+
+***********
+* RUN TEST
+***********
 
 * Installing to PERSONAL
 net set ado "`c(sysdir_personal)'"
@@ -36,17 +64,16 @@ ado uninstall ftools , from("`c(sysdir_plus)'")
 rm "`c(sysdir_plus)'/l/lftools.mlib"
 
 
-
 * Installing to a custom directory
-mkdir "C:/custom_lib"
-adopath ++ "C:/custom_lib"
-net set ado "C:/custom_lib"
+mkdir "`custom_lib'"
+adopath ++ "`custom_lib'"
+net set ado "`custom_lib'"
 cap ado uninstall ftools
 net install ftools, from(`"`netfrom'"')
 mata: mata mlib index
 ftools, compile
-confirm file "C:/custom_lib/l/lftools.mlib"
-shell rmdir "C:/custom_lib" /s /q
+confirm file "`custom_lib'/l/lftools.mlib"
+`deletion1'
 
 * If there is nothing available (besides BASE/SITE/OLDPLACE, which are ignored), install to local dir
 adopath - 1
@@ -61,4 +88,4 @@ mata: mata mlib index
 ftools, compile
 confirm file "`pwd'/l/lftools.mlib"
 cd ..
-shell rmdir "wd" /s /q
+`deletion2'
