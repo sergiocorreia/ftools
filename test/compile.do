@@ -21,11 +21,10 @@ if "`c(os)'"=="Windows" {
 	local deletion2 `"shell rmdir "wd" /s /q"'
 }
 
-else if "`c(os)'"=="OSX" {
-	local custom_lib ""
-	local deletion1 `"shell rm -r "`custom_lib'""'
+else if "`c(os)'"=="MacOSX" {
+	local custom_lib "~/custom_lib"
+	local deletion1 `"shell rm -r `custom_lib'"'
 	local deletion2 `"shell rm -r "wd""'
-	error 1
 }
 
 else if "`c(os)'"=="Unix" {
