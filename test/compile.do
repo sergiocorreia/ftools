@@ -42,24 +42,6 @@ else error 1
 * RUN TEST
 ***********
 
-* Robustness test: user adds nonsense paths to adopath (these should be ignored)
-mkdir "`custom_lib'"
-adopath ++ "`custom_lib'"
-net set ado "`custom_lib'"
-cap ado uninstall ftools
-net install ftools, from(`"`netfrom'"')
-mata: mata mlib index
-adopath ++ "C:/does_not_exist"
-adopath ++ "~32"
-adopath ++ `"dfh"i"'
-adopath + "z"
-
-ftools, compile
-confirm file "`custom_lib'/l/lftools.mlib"
-`deletion1'
-
-stop
-
 * Installing to PERSONAL
 net set ado "`c(sysdir_personal)'"
 cap ado uninstall ftools
@@ -109,4 +91,18 @@ cd ..
 `deletion2'
 
 
+* Robustness test: user adds nonsense paths to adopath (these should be ignored)
+mkdir "`custom_lib'"
+adopath ++ "`custom_lib'"
+net set ado "`custom_lib'"
+cap ado uninstall ftools
+net install ftools, from(`"`netfrom'"')
+mata: mata mlib index
+adopath ++ "C:/does_not_exist"
+adopath ++ "~32"
+adopath ++ `"dfh"i"'
+adopath + "z"
+ftools, compile
+confirm file "`custom_lib'/l/lftools.mlib"
+`deletion1'
 
