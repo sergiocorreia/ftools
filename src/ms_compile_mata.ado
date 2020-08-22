@@ -164,8 +164,8 @@ program Compile
 	*}
 	
 	* Find out where can I save the .mlib
-	* Try directories in order specified by S_ADO, skipping "." (current working directory)
-	* If all fail, then try working directory
+	* Try directories in order specified by S_ADO, skipping BASE/SITE/OLDPLACE
+	* If all fail, then try current working directory
 	tokenize `"$S_ADO"', parse(";")
 	local ok 0
 	while (!`ok') {
@@ -173,7 +173,6 @@ program Compile
 		local path `"`1'"'
 		if `"`path'"'=="PLUS" local path `"`c(sysdir_plus)'"'
 		else if `"`path'"'=="PERSONAL" local path `"`c(sysdir_personal)'"'
-		else if `"`path'"'=="OLDPLACE" local path `"`c(sysdir_oldplace)'"'
 		
 		mata : st_local("dir_ok", strofreal(direxists("`path'")))
 		if `dir_ok'==0 & `"`1'"' != ""{
