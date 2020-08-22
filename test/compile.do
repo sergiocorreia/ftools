@@ -32,5 +32,12 @@ ado uninstall ftools , from("`c(sysdir_plus)'")
 
 
 
-
-
+* Installing to a custom directory
+mkdir "C:/custom_lib"
+adopath ++ "C:/custom_lib"
+net set ado "C:/custom_lib"
+cap ado uninstall ftools
+net install ftools, from(`"`netfrom'"')
+mata: mata mlib index
+ftools, compile
+confirm file "C:/custom_lib/l/lftools.mlib"

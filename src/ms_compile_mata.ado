@@ -203,7 +203,7 @@ program TrySave
 	args path name package functions debug verbose
 	assert "`package'"!=""
 	loc random_file = "`=int(runiform()*1e8)'"
-	cap conf new file "`path'`random_file'"
+	cap conf new file "`path'/`random_file'"
 	if (c(rc)) {
 		di as error `"cannot save compiled Mata file in `name' (`path')"'
 		c_local ok 0
