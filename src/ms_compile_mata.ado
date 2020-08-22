@@ -166,7 +166,7 @@ program Compile
 	* Find out where can I save the .mlib
 	* Try directories in order specified by S_ADO, skipping "." (current working directory)
 	* If all fail, then try working directory
-	tokenize "$S_ADO", parse(";")
+	tokenize `"$S_ADO"', parse(";")
 	local ok 0
 	while (!`ok') {
 
