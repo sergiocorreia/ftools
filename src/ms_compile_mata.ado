@@ -166,13 +166,13 @@ program Compile
 		else if `"`path'"'=="PERSONAL" local path `"`c(sysdir_personal)'"'
 		
 		* Skip directories in S_ADO that do no exist or are not accessible
-		mata : st_local("dir_ok", strofreal(direxists("`path'")))
+		mata : st_local("dir_ok", strofreal(direxists(`"`path'"')))
 		if `dir_ok'==0 & `"`1'"' != ""{
 			macro shift
 			continue
 		}
 		
-		if !inlist("`path'",".","") TrySave "`path'" "`1'" "`package'" "`functions'" `debug' `verbose'
+		if !inlist(`"`path'"',".","") TrySave `"`path'"' "`1'" "`package'" "`functions'" `debug' `verbose'
 		
 		* Final effort after reaching end of S_ADO: try installing to current directory
 		if(`"`1'"' == "" & !`ok') {
@@ -193,7 +193,7 @@ program TrySave
 	args path name package functions debug verbose
 	assert "`package'"!=""
 	loc random_file = "`=int(runiform()*1e8)'"
-	cap conf new file "`path'/`random_file'"
+	cap conf new file `"`path'/`random_file'"'
 	if (c(rc)) {
 		di as error `"cannot save compiled Mata file in `name' (`path')"'
 		c_local ok 0
