@@ -6,10 +6,6 @@ di "`c(sysdir_personal)'"
 local netfrom "https://github.com/reifjulian/ftools/raw/master/src/"
 
 
-*cap mkdir "$MyProject/scripts/libraries"
-*cap mkdir "$MyProject/scripts/libraries/stata"
-
-
 * Installing to PERSONAL
 net set ado "`c(sysdir_personal)'"
 cap ado uninstall ftools
@@ -41,16 +37,17 @@ net install ftools, from(`"`netfrom'"')
 mata: mata mlib index
 ftools, compile
 confirm file "C:/custom_lib/l/lftools.mlib"
-erase "C:/custom_lib"
+shell rmdir "C:/custom_lib" /s /q
 
 * If there is nothing available (besides BASE/SITE/OLDPLACE, which are ignored), install to local dir
 adopath - 1
-mkdir workdir
-cd workdir
-net set ado "`c(pwd)'"
+adopath - PLUS
+mkdir wd
+cd wd
+local pwd "`c(pwd)'"
+net set ado "`pwd'"
 cap ado uninstall ftools
 net install ftools, from(`"`netfrom'"')
 mata: mata mlib index
 ftools, compile
-confirm file "`c(pwd)'/l/lftools.mlib"
-erase "C:/custom_lib"
+confirm file "`pwd'/l/lftools.mlib"

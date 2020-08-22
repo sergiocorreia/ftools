@@ -180,7 +180,7 @@ program Compile
 			continue
 		}
 		
-		if "`path'"!="." TrySave "`path'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
+		if "`path'"!="." TrySave "`path'" "`1'" "`package'" "`functions'" `debug' `verbose'
 		
 		* Final effort: try installing to current directory
 		if(`"`1'"' == "" & !`ok') {
