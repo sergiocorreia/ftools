@@ -153,19 +153,10 @@ program Compile
 
 	if (`debug') di as error "Functions available for indexing:"
 	if (`debug') mata: mata desc
-
-	* Find out where can I save the .mlib
-	*TrySave "`c(sysdir_plus)'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
-	*if (!`ok') TrySave "`c(sysdir_personal)'" "sysdir_plus" "`package'" "`functions'" `debug' `verbose'
-	*if (!`ok') TrySave "." "current path" "`package'" "`functions'" `debug' `verbose'
-	*if (!`ok') {
-	*	di as error "Could not compile file; ftools will not work correctly"
-	*	error 123
-	*}
 	
 	* Find out where can I save the .mlib
-	* Try directories in order specified by S_ADO, skipping BASE/SITE/OLDPLACE
-	* If all fail, then try current working directory
+	* Try directories in order specified by S_ADO, skipping BASE/SITE/OLDPLACE/"."
+	* If all fail, then try current working directory (".")
 	tokenize `"$S_ADO"', parse(";")
 	local ok 0
 	while (!`ok') {
@@ -174,6 +165,7 @@ program Compile
 		if `"`path'"'=="PLUS" local path `"`c(sysdir_plus)'"'
 		else if `"`path'"'=="PERSONAL" local path `"`c(sysdir_personal)'"'
 		
+		* Skip directories in S_ADO that do no exist or are not accessible
 		mata : st_local("dir_ok", strofreal(direxists("`path'")))
 		if `dir_ok'==0 & `"`1'"' != ""{
 			macro shift
@@ -182,10 +174,9 @@ program Compile
 		
 		if !inlist("`path'",".","") TrySave "`path'" "`1'" "`package'" "`functions'" `debug' `verbose'
 		
-		* Final effort: try installing to current directory
+		* Final effort after reaching end of S_ADO: try installing to current directory
 		if(`"`1'"' == "" & !`ok') {
-			if (!`ok') TrySave "." "current path" "`package'" "`functions'" `debug' `verbose'
-			local ok = 1
+			TrySave "." "current path" "`package'" "`functions'" `debug' `verbose'
 			
 			if (!`ok') {
 				di as error "Could not compile file; ftools will not work correctly"
@@ -209,7 +200,7 @@ program TrySave
 		exit
 	}
 	else {
-		loc path = "`path'/l/"
+		loc path "`path'/l/"
 		cap conf new file "`path'`random_file'"
 		if (c(rc)) {
 			mkdir "`path'"

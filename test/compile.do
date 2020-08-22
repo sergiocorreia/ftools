@@ -1,5 +1,13 @@
 
+* Note: This test script won't run on Mac or Linux because:
+* (1) creation of directory "C:/custom_lib"
+* (2) deletion of directories using `shell rmdir "mydir" /s /q`
+
+* NOTE: be careful with `shell rmdir "mydir" /s /q`: this is recursive deletion 
+
 program drop _all
+assert "`c(os)'"=="Windows"
+ 
 di "`c(sysdir_plus)'"
 di "`c(sysdir_personal)'"
 
@@ -14,7 +22,7 @@ mata: mata mlib index
 ftools, compile
 confirm file "`c(sysdir_personal)'/l/lftools.mlib"
 ado uninstall ftools , from("`c(sysdir_personal)'")
-
+rm "`c(sysdir_personal)'/l/lftools.mlib"
 
 * Installing to PLUS
 adopath - PERSONAL
@@ -52,3 +60,5 @@ net install ftools, from(`"`netfrom'"')
 mata: mata mlib index
 ftools, compile
 confirm file "`pwd'/l/lftools.mlib"
+cd ..
+shell rmdir "wd" /s /q
