@@ -1,10 +1,3 @@
-
-* Note: This test script won't run on Mac or Linux because:
-* (1) creation of directory "C:/custom_lib"
-* (2) deletion of directories using `shell rmdir "mydir" /s /q`
-
-* NOTE: be careful with `shell rmdir "mydir" /s /q`: this is recursive deletion 
-
 program drop _all
  
 di "`c(sysdir_plus)'"
@@ -32,7 +25,7 @@ else if "`c(os)'"=="Unix" {
 	local deletion1 `"shell rm -r -f `custom_lib'"'
 	local deletion2 `"shell rm -r -f wd"'
 	
-	* Remove default NBER paths to ensure test script uses development version
+	* Remove default NBER paths to ensure test script uses development version of ftools
 	adopath - /home/site/etc/stata/ado.nber
 }
 
