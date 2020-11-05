@@ -1,6 +1,6 @@
-*! version 2.33.0 26jan2019
+*! version 2.41.0 02nov2020
 program ms_parse_absvars, sclass
-	syntax [anything(id="absvars" name=absvars equalok everything)], /// Allow for no abosvars
+	syntax [anything(id="absvars" name=absvars equalok everything)], /// Allow for no absvars
 		[NOIsily] /// passed to -ms_fvunab-
 		[SAVEfe Generate] /// Synonyms
 		[REPLACE] ///
@@ -17,6 +17,7 @@ program ms_parse_absvars, sclass
 		sreturn loc targets = `" """'
 		sreturn loc cvars = `" """'
 		sreturn loc ivars = `"_cons"'
+		sreturn loc basevars = `""'
 		sreturn loc absvars = `" """'
 		sreturn loc save_all_fe = 0
 		sreturn loc save_any_fe = 0
@@ -28,6 +29,7 @@ program ms_parse_absvars, sclass
 
 * Unabbreviate variables and trim spaces
 	UnabAbsvars `absvars', `noisily' target stringok `replace'
+	loc basevars `s(basevars)'
 	loc absvars `s(varlist)'
 
 * Count the number of absvars
@@ -129,6 +131,7 @@ program ms_parse_absvars, sclass
 	sreturn loc targets = `"`all_targets'"'
 	sreturn loc cvars = `"`all_cvars'"'
 	sreturn loc ivars = `"`all_ivars'"'
+	sreturn loc basevars = `"`basevars'"'
 	sreturn loc absvars = `"`all_absvars'"'
 	sreturn loc save_all_fe = `save_all_fe'
 	sreturn loc save_any_fe = `save_any_fe'

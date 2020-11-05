@@ -42,7 +42,27 @@ class Factor
 
 	`Vector'				intersect()			// 1 if Y intersects with F.keys
 	
+	// Undocumented
 	`Dict'					extra				// extra information
+
+	// Undocumented for reghdfe / groupreg
+	`String' 				absvar				// expression: "firm#year", "i.firm##c.(x1 x2)", etc.
+	`Varlist' 				ivars				// variables used for intercepts
+	`Varlist' 				cvars				// variables used for slopes
+	`Boolean'				has_intercept		// 1 for "firm" or "firm##c.year" ; 0 for "firm#c.year"
+	`Integer' 				num_slopes			// number of slopes
+	`String' 				target				// where the FE will be saved
+	`Boolean'				save_fe				// 1 if we save the FE
+
+	// Undocumented objects used for slope variables (cvars) in reghdfe/groupreg
+	`Matrix'				x					// standardized slope variables "x1 x2.."
+	`RowVector'				x_means				// means of slope variables
+	`RowVector'				x_stdevs			// standard deviations of slope variables
+	`Matrix'				inv_xx				// inv(x'x) for each fixed effect
+	
+	`Boolean'				has_weights
+	`Vector'				weights
+	`Vector'				weighted_counts
 	
 }
 
