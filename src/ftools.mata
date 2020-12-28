@@ -10,7 +10,6 @@
 	loc debug_off = cond(`debug', "off", "on")
 	
 	set matadebug `debug_on'
-	mata: mata clear
 	mata: mata set matastrict `debug_off'
 	mata: mata set mataoptimize on
     mata: mata set matadebug `debug_on'
