@@ -22,6 +22,7 @@ class Factor
 	`Boolean'				panel_is_setup
 
 	`Void'					new()
+	`Void'					swap()
 	`Void'					panelsetup()		// aux. vectors
 	`Void'					store_levels()		// Store levels in the dta
 	`Void'					store_keys()		// Store keys & format/lbls
@@ -44,26 +45,6 @@ class Factor
 	
 	// Undocumented
 	`Dict'					extra				// extra information
-
-	// Undocumented for reghdfe / groupreg
-	`String' 				absvar				// expression: "firm#year", "i.firm##c.(x1 x2)", etc.
-	`Varlist' 				ivars				// variables used for intercepts
-	`Varlist' 				cvars				// variables used for slopes
-	`Boolean'				has_intercept		// 1 for "firm" or "firm##c.year" ; 0 for "firm#c.year"
-	`Integer' 				num_slopes			// number of slopes
-	`String' 				target				// where the FE will be saved
-	`Boolean'				save_fe				// 1 if we save the FE
-
-	// Undocumented objects used for slope variables (cvars) in reghdfe/groupreg
-	`Matrix'				x					// standardized slope variables "x1 x2.."
-	`RowVector'				x_means				// means of slope variables
-	`RowVector'				x_stdevs			// standard deviations of slope variables
-	`Matrix'				inv_xx				// inv(x'x) for each fixed effect
-	
-	`Boolean'				has_weights
-	`Vector'				weights
-	`Vector'				weighted_counts
-	
 }
 
 
@@ -79,6 +60,31 @@ class Factor
 	panel_is_setup = 0
 	extra = asarray_create("string", 1, 20)
 	is_sorted = 0
+}
+
+
+`Void' Factor::swap(`Factor' other)
+{
+	::swap(this.num_levels, other.num_levels)
+	::swap(this.num_obs, other.num_obs)
+	::swap(this.touse, other.touse)
+	::swap(this.varlist, other.varlist)
+	::swap(this.varformats, other.varformats)
+	::swap(this.varlabels, other.varlabels)
+	::swap(this.varvaluelabels, other.varvaluelabels)
+	::swap(this.vartypes, other.vartypes)
+	::swap(this.vl, other.vl)
+	::swap(this.levels, other.levels)
+	::swap(this.keys, other.keys)
+	::swap(this.counts, other.counts)
+	::swap(this.info, other.info)
+	::swap(this.p, other.p)
+	::swap(this.inv_p, other.inv_p)
+	::swap(this.method, other.method)
+	::swap(this.is_sorted, other.is_sorted)
+	::swap(this.sortedby, other.sortedby)
+	::swap(this.panel_is_setup, other.panel_is_setup)
+	::swap(this.extra, other.extra)
 }
 
 
@@ -353,6 +359,7 @@ class Factor
 }
 
 
+// KEPT ONLY FOR BACKWARDS COMPAT
 `Vector' Factor::drop_singletons(| `Vector' fweight,
                                    `Boolean' zero_threshold)
 {
