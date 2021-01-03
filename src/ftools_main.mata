@@ -20,6 +20,7 @@ class Factor
 	`Boolean'				is_sorted			// Is varlist==sorted(varlist)?
 	`StringRowVector'		sortedby			// undocumented; save sort order of dataset
 	`Boolean'				panel_is_setup
+	`Boolean'				levels_as_keys		// when running F3=join_factors(F1, F2), use the levels of F1/F2 as keys for F3 (useful when F1.keys is missing)
 
 	`Void'					new()
 	`Void'					swap()
@@ -42,9 +43,6 @@ class Factor
 	`Boolean'				is_id()				// 1 if all(F.counts:==1)
 
 	`Vector'				intersect()			// 1 if Y intersects with F.keys
-	
-	// Undocumented
-	`Dict'					extra				// extra information
 }
 
 
@@ -58,7 +56,6 @@ class Factor
 	inv_p = J(0, 1, .)
 	touse = ""
 	panel_is_setup = 0
-	extra = asarray_create("string", 1, 20)
 	is_sorted = 0
 }
 
@@ -84,7 +81,6 @@ class Factor
 	::swap(this.is_sorted, other.is_sorted)
 	::swap(this.sortedby, other.sortedby)
 	::swap(this.panel_is_setup, other.panel_is_setup)
-	::swap(this.extra, other.extra)
 }
 
 
@@ -809,7 +805,7 @@ class Factor
     F.method = "join"
     F.sortedby = F1.sortedby
     F.varlist = vars
-    if (levels_as_keys) asarray(F.extra, "levels_as_keys", 1)
+    F.levels_as_keys = levels_as_keys
 
     if (!is_sorted) levels = F1.invsort(levels)
     if (count_levels) counts = counts[| 1 \ num_levels |]
