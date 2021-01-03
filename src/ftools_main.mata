@@ -43,6 +43,8 @@ class Factor
 	`Boolean'				is_id()				// 1 if all(F.counts:==1)
 
 	`Vector'				intersect()			// 1 if Y intersects with F.keys
+
+	`Dict'					extra				// keep for compatibility with reghdfe v5
 }
 
 
@@ -57,6 +59,7 @@ class Factor
 	touse = ""
 	panel_is_setup = 0
 	is_sorted = 0
+	extra = asarray_create("string", 1, 20) // keep for compatibility with reghdfe v5
 }
 
 
