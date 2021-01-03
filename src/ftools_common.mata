@@ -79,7 +79,7 @@ mata:
 
 `Matrix' inrange(`Matrix' x, `Matrix' lb, `Matrix' ub)
 {
-	return(lb :< x :& x :< ub)
+	return(lb :<= x :& x :<= ub)
 }
 
 
