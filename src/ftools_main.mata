@@ -24,7 +24,7 @@ class Factor
 
 	`Void'					new()
 	`Void'					swap()
-	`Void'					panelsetup()		// aux. vectors
+	virtual `Void'			panelsetup()		// aux. vectors
 	`Void'					store_levels()		// Store levels in the dta
 	`Void'					store_keys()		// Store keys & format/lbls
 	`DataFrame'				sort()				// Initialize panel view
@@ -35,8 +35,8 @@ class Factor
 	`Boolean'				equals()			// True if F1 == F2
 
 	`Void'					__inner_drop()		// Adjust to dropping obs.
-	`Vector'				drop_singletons()	// Adjust to dropping obs.
-	`Void'					drop_obs()			// Adjust to dropping obs.
+	virtual `Vector'		drop_singletons()	// Adjust to dropping obs.
+	virtual `Void'			drop_obs()			// Adjust to dropping obs.
 	`Void'					keep_obs()			// Adjust to dropping obs.
 	`Void'					drop_if()			// Adjust to dropping obs.
 	`Void'					keep_if()			// Adjust to dropping obs.
