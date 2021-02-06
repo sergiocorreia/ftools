@@ -555,7 +555,7 @@ class Factor
                  `Varlist' vars, 			// hack
                  `DataCol' touse)		 	// hack
 {
-	`Factor'				F, F1, F2
+	`Factor'				F
 	`Integer'				num_obs, num_vars
 	`Integer'				i
 	`Integer'				limit0
@@ -629,10 +629,7 @@ class Factor
 	// Hack: alternative approach
 	// all(delta :< num_obs) --> otherwise we should just run hash1
 	if (base_method == "mata" & method == "hash1" & integers_only & num_vars > 1 & cols(vars)==num_vars & num_obs > 1e5 & all(delta :< num_obs)) {
-		F1 = factor(vars[1], touse, verbose, "mata", sort_levels, 1, ., save_keys)
-		F2 = factor(vars[2..num_vars], touse, verbose, "mata", sort_levels, count_levels, ., save_keys)
-		F = join_factors(F1, F2, count_levels, save_keys)
-		F1 = F2 = Factor() // clear
+		F = _factor_alt(vars[1], vars[2..num_vars], touse, verbose, sort_levels, count_levels, save_keys)
 		method = "join"
 	}
 	else if (method == "hash0") {
@@ -661,6 +658,22 @@ class Factor
 		printf(msg, method, method == "join" ? "n/a" : strofreal(dict_size, "%12.0gc"))
 	}
 	F.is_sorted = F.num_levels == 1 // if there is only one level it is already sorted
+	return(F)
+}
+
+
+`Factor' _factor_alt(`Varname' first_var,
+					 `Varlist' other_vars,
+					 `DataCol' touse,
+					 `Boolean' verbose,
+					 `Boolean' sort_levels,
+					 `Boolean' count_levels,
+					 `Boolean' save_keys)
+{
+	`Factor'				F, F1, F2
+	F1 = factor(first_var, touse, verbose, "mata", sort_levels, 1, ., save_keys)
+	F2 = factor(other_vars, touse, verbose, "mata", sort_levels, count_levels, ., save_keys)
+	F = join_factors(F1, F2, count_levels, save_keys)
 	return(F)
 }
 
