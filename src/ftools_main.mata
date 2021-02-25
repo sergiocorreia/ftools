@@ -43,6 +43,7 @@ class Factor
 	`Boolean'				is_id()				// 1 if all(F.counts:==1)
 
 	`Vector'				intersect()			// 1 if Y intersects with F.keys
+	virtual `Void'			cleanup_before_saving() // set .vl and .extra to missing
 
 	`Dict'					extra				// keep for compatibility with reghdfe v5
 }
@@ -443,6 +444,12 @@ class Factor
 	index = F.levels[| rows(keys)+1 \ . |]
 	mask = mask[index] // expand mask
 	return(mask)
+}
+
+
+`Void' Factor::cleanup_before_saving()
+{
+	this.vl = this.extra = .
 }
 
 
