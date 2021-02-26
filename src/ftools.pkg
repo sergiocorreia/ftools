@@ -82,4 +82,8 @@ f ms_add_comma.ado
 f ms_fvstrip.ado
 f ms_fvstrip.sthlp
 
+f parallel_map.ado
+f parallel_map.sthlp
+f parallel_map_template.do.ado
+
 f ftab.ado
