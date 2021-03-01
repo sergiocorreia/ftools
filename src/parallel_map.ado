@@ -304,7 +304,7 @@ program define parallel_map_inner
 				* The process does not exist anymore but no sentinel file exists
 				* Maybe the filesystem just needs a bit of time to update, so we'll give it ten tics
 				if ("`tics`val''" == "") {
-					loc tics`val' 10
+					loc tics`val' 20 // 20*50ms = 1sec
 				}
 				else if (`tics`val''>0) {
 					loc --tics`val'
@@ -343,7 +343,7 @@ program define parallel_map_inner
 		* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		* Introduce some delay ...
 		* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		sleep 100
+		sleep 50
 
 	}
 

@@ -20,6 +20,7 @@ program define ViewInfo
 	di as text "{hline 64}"
 	di as text `"Date      {col `column'}: `c(current_date)' - `c(current_time)'"'
 	di as text `"Stata     {col `column'}: `c(stata_version)' `flavor' x`c(bit)' (build `c(born_date)')"'
+	di as text `"Processors{col `column'}: `c(processors)'/`c(processors_max)'"'
 	di as text `"System    {col `column'}: `c(os)' `c(osdtl)' `c(machine_type)'"'
 	di as text `"Host      {col `column'}: `c(hostname)' (user: `c(username)')"'
 	di as text `"Caller ID {col `column'}: `caller_id'"'
