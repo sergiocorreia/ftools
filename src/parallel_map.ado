@@ -298,7 +298,8 @@ program define parallel_map_inner
 			}
 
 			* Check if the process is not running anymore
-			cap procwait pid`val' // returns error if process does not exist
+			_assert ("`pid`val''" != ""), msg("PID IS EMPTY?")
+			cap procwait `pid`val'' // returns error if process does not exist
 			if (!c(rc)) {
 				* The process does not exist anymore but no sentinel file exists
 				* Maybe the filesystem just needs a bit of time to update, so we'll give it ten tics
