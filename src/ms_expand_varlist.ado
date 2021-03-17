@@ -1,6 +1,6 @@
-*! version 2.46.0 11mar2021
+*! version 2.47.0 17mar2021
 program ms_expand_varlist, rclass
-	syntax [varlist(ts fv numeric default=none)] if
+	syntax [varlist(ts fv numeric default=none)] [if]
 	fvexpand `varlist' `if'
 	loc varlist  `r(varlist)'`'
 
