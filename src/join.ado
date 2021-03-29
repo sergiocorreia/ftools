@@ -1,4 +1,4 @@
-*! version 2.36.1 13feb2019
+*! version 2.48.0 29mar2021
 program define join
 
 // Parse --------------------------------------------------------------------
@@ -121,6 +121,11 @@ program define join
 	if ("`keep_nums'" == "1") qui drop if inlist(`generate', 3)
 	if ("`keep_nums'" == "3") qui drop if inlist(`generate', 1)
 
+	* Adding data should clear the sort order of the master dataset
+	if (`keep_using') {
+		ClearSortOrder
+	}
+
 	if (`report') {
 		Table `generate'
 	}
@@ -206,6 +211,31 @@ program define ParseBy
 	if (!`is_from') unab using_keys : `using_keys'
 	c_local master_keys `master_keys'
 	c_local using_keys `using_keys'
+end
+
+
+program define ClearSortOrder
+	* Andrew Maurer's trick to clear `: sortedby'
+	* copied from fsort.ado
+	* see https://github.com/sergiocorreia/ftools/issues/32
+
+	loc sortvar : sortedby
+	if ("`sortvar'" != "") {
+		loc sortvar : word 1 of `sortvar'
+		loc sortvar_type : type `sortvar'
+		loc sortvar_is_str = strpos("`sortvar_type'", "str") == 1
+		loc val = `sortvar'[1]
+
+		if (`sortvar_is_str') {
+			qui replace `sortvar' = cond(mi(`"`val'"'), ".", "") in 1
+			qui replace `sortvar' = `"`val'"' in 1
+		}
+		else {
+			qui replace `sortvar' = cond(mi(`val'), 0, .) in 1
+			qui replace `sortvar' = `val' in 1
+		}
+		assert "`: sortedby'" == ""
+	}
 end
 
 
