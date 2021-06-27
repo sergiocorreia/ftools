@@ -1,7 +1,8 @@
 # FTOOLS: A faster Stata for large datasets
 
-- Current version: `2.31.3 06jan2019`
+- Current version: `2.48.0 29mar2021`
 - Jump to: [`usage`](#usage) [`benchmarks`](#benchmarks) [`install`](#installation)
+- [![DOI](https://zenodo.org/badge/63449974.svg)](https://zenodo.org/badge/latestdoi/63449974)
 
 -----------
 
