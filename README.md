@@ -1,8 +1,10 @@
 # FTOOLS: A faster Stata for large datasets
-
-- Current version: `2.48.0 29mar2021`
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/sergiocorreia/ftools?label=last%20version)
+![GitHub Release Date](https://img.shields.io/github/release-date/sergiocorreia/ftools)
+![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/sergiocorreia/ftools/latest)
+![StataMin](https://img.shields.io/badge/stata-%3E%3D%2012.1-blue)
+[![DOI](https://zenodo.org/badge/63449974.svg)](https://zenodo.org/badge/latestdoi/63449974)
 - Jump to: [`usage`](#usage) [`benchmarks`](#benchmarks) [`install`](#installation)
-- [![DOI](https://zenodo.org/badge/63449974.svg)](https://zenodo.org/badge/latestdoi/63449974)
 
 -----------
 
