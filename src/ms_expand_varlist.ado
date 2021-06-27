@@ -1,6 +1,6 @@
-*! version 2.30.1 18jul2018
+*! version 2.47.0 17mar2021
 program ms_expand_varlist, rclass
-	syntax [varlist(ts fv numeric default=none)] if
+	syntax [varlist(ts fv numeric default=none)] [if]
 	fvexpand `varlist' `if'
 	loc varlist  `r(varlist)'`'
 
@@ -15,18 +15,21 @@ program ms_expand_varlist, rclass
 			// gen id = _n
 			// mata: st_data(., "1.id 2.id") // The 1st column is empty!
 			// mata: st_data(., "1bn.id 2.id 3.id") // correct result
-			AddBN `part'
 			//di as error "AFTER=[`part']"
+			AddBN `part'
+			loc all_vars `all_vars' `part'
 			loc selected_vars `selected_vars' `part'
 		}
-		//else {
-		//	di as error "OMITTED/BASE: `part'"
-		//}
+		else {
+			loc all_vars `all_vars' `part'
+			*di as error "OMITTED/BASE: `part'"
+		}
 	}
 
-	return local fullvarlist	`varlist'
-	return local varlist		`selected_vars'
-	return local not_omitted	`mask'
+	return local fullvarlist	`varlist'			// i.rep78 -> 1b.rep78   2.rep78   3.rep78
+	return local fullvarlist_bn	`all_vars'			// i.rep78 -> 1b.rep78 2bn.rep78 3bn.rep78
+	return local varlist		`selected_vars'		// i.rep78 ->          2bn.rep78 3bn.rep78
+	return local not_omitted	`mask'				// i.rep78 ->    0        1			1
 end
 
 capture program drop AddBN

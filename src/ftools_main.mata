@@ -20,9 +20,11 @@ class Factor
 	`Boolean'				is_sorted			// Is varlist==sorted(varlist)?
 	`StringRowVector'		sortedby			// undocumented; save sort order of dataset
 	`Boolean'				panel_is_setup
+	`Boolean'				levels_as_keys		// when running F3=join_factors(F1, F2), use the levels of F1/F2 as keys for F3 (useful when F1.keys is missing)
 
 	`Void'					new()
-	`Void'					panelsetup()		// aux. vectors
+	`Void'					swap()
+	virtual `Void'			panelsetup()		// aux. vectors
 	`Void'					store_levels()		// Store levels in the dta
 	`Void'					store_keys()		// Store keys & format/lbls
 	`DataFrame'				sort()				// Initialize panel view
@@ -33,37 +35,17 @@ class Factor
 	`Boolean'				equals()			// True if F1 == F2
 
 	`Void'					__inner_drop()		// Adjust to dropping obs.
-	`Vector'				drop_singletons()	// Adjust to dropping obs.
-	`Void'					drop_obs()			// Adjust to dropping obs.
+	virtual `Vector'		drop_singletons()	// Adjust to dropping obs.
+	virtual `Void'			drop_obs()			// Adjust to dropping obs.
 	`Void'					keep_obs()			// Adjust to dropping obs.
 	`Void'					drop_if()			// Adjust to dropping obs.
 	`Void'					keep_if()			// Adjust to dropping obs.
 	`Boolean'				is_id()				// 1 if all(F.counts:==1)
 
 	`Vector'				intersect()			// 1 if Y intersects with F.keys
-	
-	// Undocumented
-	`Dict'					extra				// extra information
+	virtual `Void'			cleanup_before_saving() // set .vl and .extra to missing
 
-	// Undocumented for reghdfe / groupreg
-	`String' 				absvar				// expression: "firm#year", "i.firm##c.(x1 x2)", etc.
-	`Varlist' 				ivars				// variables used for intercepts
-	`Varlist' 				cvars				// variables used for slopes
-	`Boolean'				has_intercept		// 1 for "firm" or "firm##c.year" ; 0 for "firm#c.year"
-	`Integer' 				num_slopes			// number of slopes
-	`String' 				target				// where the FE will be saved
-	`Boolean'				save_fe				// 1 if we save the FE
-
-	// Undocumented objects used for slope variables (cvars) in reghdfe/groupreg
-	`Matrix'				x					// standardized slope variables "x1 x2.."
-	`RowVector'				x_means				// means of slope variables
-	`RowVector'				x_stdevs			// standard deviations of slope variables
-	`Matrix'				inv_xx				// inv(x'x) for each fixed effect
-	
-	`Boolean'				has_weights
-	`Vector'				weights
-	`Vector'				weighted_counts
-	
+	`Dict'					extra				// keep for compatibility with reghdfe v5
 }
 
 
@@ -77,8 +59,32 @@ class Factor
 	inv_p = J(0, 1, .)
 	touse = ""
 	panel_is_setup = 0
-	extra = asarray_create("string", 1, 20)
 	is_sorted = 0
+	extra = asarray_create("string", 1, 20) // keep for compatibility with reghdfe v5
+}
+
+
+`Void' Factor::swap(`Factor' other)
+{
+	::swap(this.num_levels, other.num_levels)
+	::swap(this.num_obs, other.num_obs)
+	::swap(this.touse, other.touse)
+	::swap(this.varlist, other.varlist)
+	::swap(this.varformats, other.varformats)
+	::swap(this.varlabels, other.varlabels)
+	::swap(this.varvaluelabels, other.varvaluelabels)
+	::swap(this.vartypes, other.vartypes)
+	::swap(this.vl, other.vl)
+	::swap(this.levels, other.levels)
+	::swap(this.keys, other.keys)
+	::swap(this.counts, other.counts)
+	::swap(this.info, other.info)
+	::swap(this.p, other.p)
+	::swap(this.inv_p, other.inv_p)
+	::swap(this.method, other.method)
+	::swap(this.is_sorted, other.is_sorted)
+	::swap(this.sortedby, other.sortedby)
+	::swap(this.panel_is_setup, other.panel_is_setup)
 }
 
 
@@ -353,6 +359,7 @@ class Factor
 }
 
 
+// KEPT ONLY FOR BACKWARDS COMPAT
 `Vector' Factor::drop_singletons(| `Vector' fweight,
                                    `Boolean' zero_threshold)
 {
@@ -437,6 +444,12 @@ class Factor
 	index = F.levels[| rows(keys)+1 \ . |]
 	mask = mask[index] // expand mask
 	return(mask)
+}
+
+
+`Void' Factor::cleanup_before_saving()
+{
+	this.vl = this.extra = .
 }
 
 
@@ -549,7 +562,7 @@ class Factor
                  `Varlist' vars, 			// hack
                  `DataCol' touse)		 	// hack
 {
-	`Factor'				F, F1, F2
+	`Factor'				F
 	`Integer'				num_obs, num_vars
 	`Integer'				i
 	`Integer'				limit0
@@ -623,10 +636,7 @@ class Factor
 	// Hack: alternative approach
 	// all(delta :< num_obs) --> otherwise we should just run hash1
 	if (base_method == "mata" & method == "hash1" & integers_only & num_vars > 1 & cols(vars)==num_vars & num_obs > 1e5 & all(delta :< num_obs)) {
-		F1 = factor(vars[1], touse, verbose, "mata", sort_levels, 1, ., save_keys)
-		F2 = factor(vars[2..num_vars], touse, verbose, "mata", sort_levels, count_levels, ., save_keys)
-		F = join_factors(F1, F2, count_levels, save_keys)
-		F1 = F2 = Factor() // clear
+		F = _factor_alt(vars[1], vars[2..num_vars], touse, verbose, sort_levels, count_levels, save_keys)
 		method = "join"
 	}
 	else if (method == "hash0") {
@@ -655,6 +665,22 @@ class Factor
 		printf(msg, method, method == "join" ? "n/a" : strofreal(dict_size, "%12.0gc"))
 	}
 	F.is_sorted = F.num_levels == 1 // if there is only one level it is already sorted
+	return(F)
+}
+
+
+`Factor' _factor_alt(`Varname' first_var,
+					 `Varlist' other_vars,
+					 `DataCol' touse,
+					 `Boolean' verbose,
+					 `Boolean' sort_levels,
+					 `Boolean' count_levels,
+					 `Boolean' save_keys)
+{
+	`Factor'				F, F1, F2
+	F1 = factor(first_var, touse, verbose, "mata", sort_levels, 1, ., save_keys)
+	F2 = factor(other_vars, touse, verbose, "mata", sort_levels, count_levels, ., save_keys)
+	F = join_factors(F1, F2, count_levels, save_keys)
 	return(F)
 }
 
@@ -802,7 +828,7 @@ class Factor
     F.method = "join"
     F.sortedby = F1.sortedby
     F.varlist = vars
-    if (levels_as_keys) asarray(F.extra, "levels_as_keys", 1)
+    F.levels_as_keys = levels_as_keys
 
     if (!is_sorted) levels = F1.invsort(levels)
     if (count_levels) counts = counts[| 1 \ num_levels |]

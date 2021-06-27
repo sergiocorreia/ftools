@@ -79,7 +79,7 @@ mata:
 
 `Matrix' inrange(`Matrix' x, `Matrix' lb, `Matrix' ub)
 {
-	return(lb :< x :& x :< ub)
+	return(lb :<= x :& x :<= ub)
 }
 
 
@@ -192,6 +192,34 @@ mata:
 		prod = prod :* X[,i]
 	}
 	return(prod)
+}
+
+
+
+`Void' unlink_folder(`String' path, `Boolean' verbose)
+{
+	// We are SUPER careful in only removing certain files... so if there are other files this function will fail
+	`StringVector'			fns, patterns
+	`Integer'				i, j, num_dropped
+	
+	if (!direxists(path)) exit()
+	if (verbose) printf("{txt}Removing folder and its contents: {res}%s{txt}\n", path)
+	
+	num_dropped = 0
+	patterns = ("*.tmp" \ "*.log" \ "parallel_code.do")
+
+	for (j=1; j<=rows(patterns); j++){
+		fns = dir(path, "files", patterns[j], 1)
+		for (i=1; i<=rows(fns); i++) {
+			unlink(fns[i])
+			++num_dropped
+		}
+	}
+
+	if (verbose) printf("{txt} - %f files removed\n", num_dropped)
+	
+	rmdir(path)
+	if (verbose) printf("{txt} - Folder removed\n")
 }
 
 
