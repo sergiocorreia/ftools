@@ -197,27 +197,28 @@ mata set matastrict on
 {
 	`Integer'	            i
 	`Vector'	            results, tmp_data, tmp_weights
+	`Boolean'				has_fweight
 	
 	results = J(F.num_levels, 1, .)
 	
 	if (wtype == "") {
 		for (i = 1; i <= F.num_levels; i++) {
-	        // SYNTAX: _mm_quantile(data, weights, quantiles, altdef)
-	        // SYNTAX: mm_quantile(data, | w, P, altdef)
+	        // SYNTAX: mm_quantile(data, | weights, P, def, fw?, ..)
 	        tmp_data = panelsubmatrix(data, i, F.info)
 	        tmp_data = select(tmp_data, tmp_data :< .)
 	        if (rows(tmp_data) == 0) continue
-	        results[i] = _mm_quantile(tmp_data, 1, P, 0)
+	        results[i] = mm_quantile(tmp_data, 1, P, 2)
 		}
 	}
 	else {
+		has_fweight = wtype == "fweight"
 		for (i = 1; i <= F.num_levels; i++) {
 	        tmp_data = panelsubmatrix(data, i, F.info)
 	        tmp_weights = panelsubmatrix(weights, i, F.info)
 	        tmp_weights = select(tmp_weights, tmp_data :< .)
 	        tmp_data = select(tmp_data, tmp_data :< .)
 	        if (rows(tmp_data) == 0) continue
-	        results[i] = _mm_quantile(tmp_data, tmp_weights, P, 0)
+	        results[i] = mm_quantile(tmp_data, tmp_weights, P, 2, has_fweight)
 		}
 	}
 
@@ -230,23 +231,23 @@ mata set matastrict on
 	`Integer'	            i
 	`Vector'	            results, tmp_data, tmp_weights, P
 	`RowVector'				tmp_iqr
+	`Boolean'				has_fweight
 
 	results = J(F.num_levels, 1, .)
 	P = (0.25\0.75)
 	
 	if (wtype == "") {
 		for (i = 1; i <= F.num_levels; i++) {
-	        // SYNTAX: _mm_quantile(data, weights, quantiles, altdef)
-	        // SYNTAX: mm_quantile(data, | w, P, altdef)
+	        // SYNTAX: mm_iqrange(X [, w, def, fw, wd])
 	        tmp_data = panelsubmatrix(data, i, F.info)
 	        tmp_data = select(tmp_data, tmp_data :< .)
 	        if (rows(tmp_data) == 1) results[i] = 0
 	        if (rows(tmp_data) <= 1) continue
-	        tmp_iqr = _mm_quantile(tmp_data, 1, P, 0)
-	        results[i] = tmp_iqr[2] - tmp_iqr[1]
+	        results[i] = mm_iqrange(tmp_data, 1, 2)
 		}
 	}
 	else {
+		has_fweight = wtype == "fweight"
 		for (i = 1; i <= F.num_levels; i++) {
 	        tmp_data = panelsubmatrix(data, i, F.info)
 	        tmp_weights = panelsubmatrix(weights, i, F.info)
@@ -254,8 +255,7 @@ mata set matastrict on
 	        tmp_data = select(tmp_data, tmp_data :< .)
 	        if (rows(tmp_data) == 1) results[i] = 0
 	        if (rows(tmp_data) <= 1) continue
-	        tmp_iqr = _mm_quantile(tmp_data, tmp_weights, P, 0)
-	        results[i] = tmp_iqr[2] - tmp_iqr[1]
+	        results[i] = mm_iqrange(tmp_data, tmp_weights, 2, has_fweight)
 		}
 	}
 

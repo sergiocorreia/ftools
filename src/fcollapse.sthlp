@@ -1,5 +1,5 @@
-2.27.1 23apr2018{smcl}
-{* *! version 2.27.0 20apr2018}{...}
+2.49.0 06may2022{smcl}
+{* *! version 2.49.0 06may2022}{...}
 {vieweralsosee "ftools" "help ftools"}{...}
 {vieweralsosee "[R] collapse" "help collapse"}{...}
 {vieweralsosee "[R] contract" "help contract"}{...}

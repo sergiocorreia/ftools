@@ -276,3 +276,8 @@ Similarly, once the identifiers are created, sorting other variables by these id
 
 Mata's `asarray()` has a key problem: it is very slow with hash collisions (which you see a lot in this use case). Thus, I avoid using `asarray()` and instead use `hash1()` to create a hash table with open addressing (see a comparision between both approaches [here](http://www.algolist.net/Data_structures/Hash_table/Open_addressing#open_addressing_vs_chaining)).
 
+
+
+## Updates
+
+- `2.49.0 06may2022`: fixed a bug in `fcollapse` with quantiles (p**, median, and iqr stats). `ftools` computes these statistics using `moremata` and had failed to update its function arguments as required by recent changes in moremata.

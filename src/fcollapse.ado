@@ -1,4 +1,4 @@
-*! version 2.31.2 17dec2018
+*! version 2.49.0 06may2022
 program define fcollapse
 	cap noi Inner `0'
 	loc rc = c(rc)
@@ -81,7 +81,7 @@ program define Inner
 	}
 
 	// Check dependencies
-	cap qui mata: mata which _mm_quantile()
+	cap qui mata: mata which mm_quantile()
 	loc rc = c(rc)
 	if (`rc') {
 		di as error "SSC Package Moremata required (to compute quantiles)"
