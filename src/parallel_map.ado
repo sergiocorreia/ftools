@@ -1,4 +1,4 @@
-*! version 0.2.0  26feb2021
+*! version 0.3.0  20aug2023
 program define parallel_map
 	
 	* Intercept -clean- option
@@ -249,7 +249,7 @@ program define parallel_map_inner
 				loc pid`val' = r(pid)
 				global pids $pids `pid`val''
 			}
-			else if ("`method'" == "unix-shell") {
+			else if ("`method'" == "unix-shell" | "`method'" == "macosx-shell") {
 				* PROBLEM:
 				* The first tells Stata to run in batch mode. Stata will execute the commands in filename.do and will automatically save the output in filename.log.
 				* https://www.stata.com/support/faqs/unix/batch-mode/
