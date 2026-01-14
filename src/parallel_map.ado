@@ -83,12 +83,11 @@ program define parallel_map_inner
 	* How many cores are available in total?
 	loc total_cores : env SLURM_CPUS_ON_NODE
 	if ("`total_cores'" == "") {
-		qui parallel numprocessors
-		loc total_cores = r(numprocessors)
+		loc total_cores = c(processors)
 	}
 
 	* How many cores for each worker process?
-	if (`cores_per_process' <= 0) loc cores_per_process = c(processors)
+	if (`cores_per_process' <= 0) loc cores_per_process = 1
 
 	* How many workers?
 	if (`max_processes' <= 0) {
